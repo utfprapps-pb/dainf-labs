@@ -33,6 +33,7 @@ pipeline {
         API_URL="https://od46s-test-labs-api.app.pb.utfpr.edu.br/api"
         CLIENT_HOST_URL="od46s-test-labs.app.pb.utfpr.edu.br"
         CLIENT_URL="https://od46s-test-labs.app.pb.utfpr.edu.br"
+        BASE_URL="https://od46s-test-labs.app.pb.utfpr.edu.br"
     }
 
     stages {   
