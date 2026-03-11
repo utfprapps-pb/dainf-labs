@@ -19,7 +19,7 @@ pipeline {
         MAIL_HOST="smtp.gmail.com"
         MAIL_PORT=587
         MAIL_USERNAME="${EMAIL_CRED_USR}"
-        MAIL_PASSWORD="${EMAIL_CRED_USR}"
+        MAIL_PASSWORD="${EMAIL_CRED_PSW}"
 
         MINIO_CRED = credentials('dainf_labs_minio_id')
         MINIO_URL="https://minio.app.pb.utfpr.edu.br"
