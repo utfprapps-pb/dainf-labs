@@ -15,11 +15,11 @@ pipeline {
         DATABASE_USERNAME="${POSTGRESQL_CRED_USR}"
         DATABASE_PASSWORD="${POSTGRESQL_CRED_PSW}"
         
-        EMAIL_CRED = credentials('od46s-test-labs-email-id')
-        MAIL_HOST="smtp.gmail.com"
-        MAIL_PORT=587
+        EMAIL_CRED = credentials('UTFPRAPPSEmailAndPassword')
         MAIL_USERNAME="${EMAIL_CRED_USR}"
         MAIL_PASSWORD="${EMAIL_CRED_PSW}"
+        MAIL_HOST="smtp.utfpr.edu.br"
+        MAIL_PORT=587
 
         MINIO_CRED = credentials('dainf_labs_minio_id')
         MINIO_URL="https://minio.app.pb.utfpr.edu.br"
