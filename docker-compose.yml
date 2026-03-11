@@ -46,6 +46,7 @@ services:
       - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}      
       - MINIO_PORT=${MINIO_PORT}
       - MINIO_SECURE=${MINIO_SECURE}
+      - BASE_URL=${BASE_URL}
       - TZ=America/Sao_Paulo
     labels:
         # Traefik Config
