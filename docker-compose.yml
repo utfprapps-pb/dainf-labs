@@ -1,50 +1,71 @@
 services:
-  client:
-    image: dainf-lab-client
-    container_name: dainf-lab-client
+  od46s-test-labs-client:
+    image: od46s-test-labs-client
+    container_name: od46s-test-labs-client
     build:
       context: ./dainf-lab-client
       dockerfile: Dockerfile
     ports:
-      - "8090:80"
+      - "${CLIENT_HOST_PORT}:${CLIENT_CONTAINER_PORT}"
     environment:
-      API_URL: http://localhost:8099/api
+      API_URL: ${API_URL}
+    labels:
+        # Traefik Config
+      - "traefik.enable=true"
+      - "traefik.http.routers.od46s-test-labs-client.rule=Host(`${CLIENT_HOST_URL}`)"
+      - "traefik.http.routers.od46s-test-labs-client.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.od46s-test-labs-client.entrypoints=websecure"
     restart: unless-stopped
     profiles: ["app"]
+    networks:
+      - web
 
-  server:
-    image: dainf-lab-server
-    container_name: dainf-lab-server
+  od46s-test-labs-api:
+    image: od46s-test-labs-api
+    container_name: od46s-test-labs-api
     build:
       context: ./dainf-lab-server
       dockerfile: Dockerfile
     ports:
-      - "8099:8080"
+      - "${API_HOST_PORT}:${API_CONTAINER_PORT}"
     restart: unless-stopped
-    env_file:
-      - .env
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - COMPOSE_PROJECT_NAME=od46s-test-labs
+      - SERVER_PORT=${API_CONTAINER_PORT}
+      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_USERNAME=${DATABASE_USERNAME}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+      - MAIL_HOST=${MAIL_HOST}
+      - MAIL_PORT=${MAIL_PORT}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - MINIO_URL=${MINIO_URL}
+      - MINIO_BUCKET=${MINIO_BUCKET}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}      
+      - MINIO_PORT=${MINIO_PORT}
+      - MINIO_SECURE=${MINIO_SECURE}
+      - TZ=America/Sao_Paulo
+    labels:
+        # Traefik Config
+      - "traefik.enable=true"
+      - "traefik.http.routers.od46s-test-labs-api.rule=Host(`${API_HOST_URL}`)"
+      - "traefik.http.routers.od46s-test-labs-api.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.od46s-test-labs-api.entrypoints=websecure"
     profiles: ["app"]
-
-  postgres:
-    image: postgres:16
-    container_name: dainf-lab-postgres
-    ports:
-      - "5434:5432"
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: dainf_lab
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 5432
-    profiles: ["infra"]
-
-  minio:
-    image: quay.io/minio/minio
-    container_name: dainf-lab-minio
-    command: server /data --console-address ":9001"
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    environment:
-      MINIO_ROOT_USER: admin
-      MINIO_ROOT_PASSWORD: minio123
-    profiles: ["infra"]
+    networks:
+      - web
+      - database
+########################### NETWORKS
+networks:
+  web:
+    name: web
+    driver: bridge
+    external: true
+    attachable: true
+  database:
+    name: database
+    driver: bridge
+    external: false
+    attachable: true
