@@ -4,8 +4,8 @@ pipeline {
     environment {        
         SPRING_PROFILES_ACTIVE="prod"
 
-        API_HOST_PORT=8150
-        API_CONTAINER_PORT=8150
+        API_HOST_PORT=8100
+        API_CONTAINER_PORT=8100
         
         CLIENT_IMAGE_NAME="dainf-labs-client"
         CLIENT_CONTAINER_NAME="dainf-labs-client"
@@ -13,7 +13,7 @@ pipeline {
         API_IMAGE_NAME="dainf-labs-api"
         API_CONTAINER_NAME="dainf-labs-api"
 
-        CLIENT_HOST_PORT=8151
+        CLIENT_HOST_PORT=8101
         CLIENT_CONTAINER_PORT=80
 
         POSTGRESQL_CRED = credentials('postgres-id')
