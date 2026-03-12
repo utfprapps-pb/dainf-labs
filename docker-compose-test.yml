@@ -1,7 +1,7 @@
 services:
-  labs-client:
-    image: ${CLIENT_IMAGE_NAME}
-    container_name: ${CLIENT_CONTAINER_NAME}
+  od46s-test-labs-client:
+    image: od46s-test-labs-client
+    container_name: od46s-test-labs-client
     build:
       context: ./dainf-lab-client
       dockerfile: Dockerfile
@@ -12,17 +12,17 @@ services:
     labels:
         # Traefik Config
       - "traefik.enable=true"
-      - "traefik.http.routers.${CLIENT_CONTAINER_NAME}.rule=Host(`${CLIENT_HOST_URL}`)"
-      - "traefik.http.routers.${CLIENT_CONTAINER_NAME}.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.${CLIENT_CONTAINER_NAME}.entrypoints=websecure"
+      - "traefik.http.routers.od46s-test-labs-client.rule=Host(`${CLIENT_HOST_URL}`)"
+      - "traefik.http.routers.od46s-test-labs-client.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.od46s-test-labs-client.entrypoints=websecure"
     restart: unless-stopped
     profiles: ["app"]
     networks:
       - web
 
-  labs-api:
-    image: ${API_IMAGE_NAME}
-    container_name: ${API_CONTAINER_NAME}
+  od46s-test-labs-api:
+    image: od46s-test-labs-api
+    container_name: od46s-test-labs-api
     build:
       context: ./dainf-lab-server
       dockerfile: Dockerfile
@@ -31,7 +31,7 @@ services:
     restart: unless-stopped
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
-      - COMPOSE_PROJECT_NAME=${API_CONTAINER_NAME}
+      - COMPOSE_PROJECT_NAME=od46s-test-labs
       - SERVER_PORT=${API_CONTAINER_PORT}
       - DATABASE_URL=${DATABASE_URL}
       - DATABASE_USERNAME=${DATABASE_USERNAME}
@@ -51,9 +51,9 @@ services:
     labels:
         # Traefik Config
       - "traefik.enable=true"
-      - "traefik.http.routers.${API_CONTAINER_NAME}.rule=Host(`${API_HOST_URL}`)"
-      - "traefik.http.routers.${API_CONTAINER_NAME}.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.${API_CONTAINER_NAME}.entrypoints=websecure"
+      - "traefik.http.routers.od46s-test-labs-api.rule=Host(`${API_HOST_URL}`)"
+      - "traefik.http.routers.od46s-test-labs-api.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.od46s-test-labs-api.entrypoints=websecure"
     profiles: ["app"]
     networks:
       - web
