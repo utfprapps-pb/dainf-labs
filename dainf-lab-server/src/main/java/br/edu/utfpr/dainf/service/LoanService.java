@@ -74,7 +74,9 @@ public class LoanService extends CrudService<Long, Loan, LoanRepository> {
         if (entity.getItems() != null) {
             for (LoanItem item : entity.getItems()) {
                 item.setLoan(entity);
-                inventoryService.handleTransaction(item.getItem(), item.getQuantity(), InventoryTransactionType.LOAN);
+                if (item.getId() == null) {
+                    inventoryService.handleTransaction(item.getItem(), item.getQuantity(), InventoryTransactionType.LOAN);
+                }
             }
         }
 
@@ -131,17 +133,14 @@ public class LoanService extends CrudService<Long, Loan, LoanRepository> {
     private LoanStatus resolveStatus(Loan loan) {
         BigDecimal expectedReturn = defaultZero(repository.sumReturnableQuantity(loan.getId()));
 
-        // Nothing to return → auto-completed
-        if (expectedReturn.compareTo(BigDecimal.ZERO) == 0) {
-            return LoanStatus.COMPLETED;
-        }
+        if (expectedReturn.compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal returned = defaultZero(returnRepository.sumQuantityReturnedByLoan(loan.getId()));
+            BigDecimal issued = defaultZero(returnRepository.sumQuantityIssuedByLoan(loan.getId()));
+            BigDecimal settled = returned.add(issued);
 
-        BigDecimal returned = defaultZero(returnRepository.sumQuantityReturnedByLoan(loan.getId()));
-        BigDecimal issued = defaultZero(returnRepository.sumQuantityIssuedByLoan(loan.getId()));
-        BigDecimal settled = returned.add(issued);
-
-        if (settled.compareTo(expectedReturn) >= 0) {
-            return LoanStatus.COMPLETED;
+            if (settled.compareTo(expectedReturn) >= 0) {
+                return LoanStatus.COMPLETED;
+            }
         }
 
         Instant deadline = loan.getDeadline();
