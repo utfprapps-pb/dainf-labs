@@ -8,6 +8,7 @@ import br.edu.utfpr.dainf.search.request.SearchRequest;
 import br.edu.utfpr.dainf.service.UserService;
 import br.edu.utfpr.dainf.shared.CrudController;
 import jakarta.annotation.security.RolesAllowed;
+import jakarta.validation.Valid;
 import org.springframework.data.web.PagedModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,7 +32,7 @@ public class UserController extends CrudController<Long, User, UserDTO, UserRepo
     @Override
     @PostMapping("/search")
     @RolesAllowed({UserRole.ADMIN, UserRole.LAB_TECHNICIAN})
-    public ResponseEntity<PagedModel<UserDTO>> search(SearchRequest request) {
+    public ResponseEntity<PagedModel<UserDTO>> search(@RequestBody @Valid SearchRequest request) {
         return super.search(request);
     }
 
