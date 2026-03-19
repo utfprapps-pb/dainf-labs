@@ -74,7 +74,9 @@ public class LoanService extends CrudService<Long, Loan, LoanRepository> {
         if (entity.getItems() != null) {
             for (LoanItem item : entity.getItems()) {
                 item.setLoan(entity);
-                inventoryService.handleTransaction(item.getItem(), item.getQuantity(), InventoryTransactionType.LOAN);
+                if (item.getId() == null) {
+                    inventoryService.handleTransaction(item.getItem(), item.getQuantity(), InventoryTransactionType.LOAN);
+                }
             }
         }
 

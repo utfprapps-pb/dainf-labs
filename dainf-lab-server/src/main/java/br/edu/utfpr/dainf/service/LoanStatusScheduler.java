@@ -19,7 +19,7 @@ public class LoanStatusScheduler {
         this.loanService = loanService;
     }
 
-    @Scheduled(cron = "* * 1 * * *")
+    @Scheduled(cron = "0 0 1 * * *")
     public void markOverdueLoans() {
         List<Loan> candidates = loanRepository.findNonCompletedPastDeadline(Instant.now());
         candidates.forEach(loanService::refreshStatus);
