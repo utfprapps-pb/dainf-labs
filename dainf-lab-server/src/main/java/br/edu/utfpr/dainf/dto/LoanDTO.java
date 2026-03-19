@@ -3,6 +3,7 @@ package br.edu.utfpr.dainf.dto;
 import br.edu.utfpr.dainf.enums.LoanStatus;
 import br.edu.utfpr.dainf.shared.Identifiable;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -31,6 +32,7 @@ public class LoanDTO implements Identifiable<Long> {
 
     private String observation;
 
+    @Valid
     @NotEmpty
     @NotNull(message = "O campo 'Itens' é obrigatório.")
     private List<LoanItemDTO> items;

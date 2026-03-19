@@ -18,6 +18,11 @@ class PositiveQuantityValidatorTest {
     }
 
     @Test
+    void validateNullQuantityThrows() {
+        assertThrows(InvalidTransactionException.class, () -> validator.validate(null, null, null));
+    }
+
+    @Test
     void validateDoesNotThrow() {
         assertDoesNotThrow(() -> validator.validate(null, BigDecimal.TEN, null));
     }
