@@ -8,7 +8,9 @@ import br.edu.utfpr.dainf.search.request.SearchRequest;
 import br.edu.utfpr.dainf.service.UserService;
 import br.edu.utfpr.dainf.shared.CrudController;
 import jakarta.annotation.security.RolesAllowed;
+import jakarta.validation.Valid;
 import org.springframework.data.web.PagedModel;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +21,14 @@ public class UserController extends CrudController<Long, User, UserDTO, UserRepo
 
     public UserController() {
         super(User.class, UserDTO.class);
+    }
+
+    @Override
+    @PostMapping
+    public ResponseEntity<Long> create(@RequestBody @Valid UserDTO dto) {
+        User entity = toEntity(dto);
+        User saved = service.register(entity);
+        return new ResponseEntity<>(saved.getId(), HttpStatus.CREATED);
     }
 
     @Override

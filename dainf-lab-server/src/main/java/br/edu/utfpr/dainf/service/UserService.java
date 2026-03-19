@@ -63,7 +63,7 @@ public class UserService extends CrudService<Long, User, UserRepository> impleme
         return repository.save(user);
     }
 
-    public void register(User user) {
+    public User register(User user) {
         user.setEnabled(false);
         user.setEmailVerificado(false);
         user.setEmailVerificationToken(UUID.randomUUID().toString());
@@ -81,6 +81,8 @@ public class UserService extends CrudService<Long, User, UserRepository> impleme
                 .to(List.of(saved.getEmail()))
                 .content(mailContent)
                 .build());
+
+        return saved;
     }
 
     public void confirmEmail(String token) {
