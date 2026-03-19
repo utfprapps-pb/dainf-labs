@@ -21,6 +21,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 
+import { CartService } from '@/shared/services/cart.service';
 import { ContextStore } from '@/shared/store/context-store.service';
 import { Router } from '@angular/router';
 import { TooltipModule } from 'primeng/tooltip';
@@ -54,10 +55,12 @@ export class ReservationComponent implements OnInit {
   reservationService = inject(ReservationService);
   userService = inject(UserService);
   itemService = inject(ItemService);
+  cartService = inject(CartService);
   formBuilder = inject(FormBuilder);
   datePipe = inject(DatePipe);
   router = inject(Router);
   context = inject(ContextStore);
+  private createdFromCart = false;
   hasAdvancedPrivileges = toSignal(this.userService.hasAdvancedPrivileges(), {
     initialValue: false,
   });
@@ -108,8 +111,16 @@ export class ReservationComponent implements OnInit {
   ngOnInit(): void {
     const data = this.context.consume('cart');
     if (data) {
+      this.createdFromCart = true;
       this.crud()?.openNew();
       this.form.patchValue({ items: data });
+    }
+  }
+
+  onSave(): void {
+    if (this.createdFromCart) {
+      this.createdFromCart = false;
+      this.cartService.clearCart();
     }
   }
 
