@@ -113,6 +113,13 @@ export class ReservationComponent implements OnInit {
     }
   }
 
+  onEntityLoad(reservation: Reservation) {
+    this.form.patchValue({
+      reservationDate: reservation.reservationDate ? new Date(reservation.reservationDate) : null,
+      withdrawalDate: reservation.withdrawalDate ? new Date(reservation.withdrawalDate) : null,
+    });
+  }
+
   createLoanFromReservation(reservation: Reservation) {
     const loanItems = reservation.items.map((item) => ({
       item: item.item,
