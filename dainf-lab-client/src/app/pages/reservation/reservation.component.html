@@ -6,6 +6,7 @@
   [form]="form"
   [formTemplate]="crudForm"
   [actionsTemplate]="customActions"
+  (saveClick)="onSave()"
   (entityLoad)="onEntityLoad($event)"
 ></app-crud>
 
