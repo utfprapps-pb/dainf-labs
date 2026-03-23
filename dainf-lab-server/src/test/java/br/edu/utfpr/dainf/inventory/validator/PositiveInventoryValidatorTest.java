@@ -26,4 +26,11 @@ class PositiveInventoryValidatorTest {
         inventory.setQuantity(BigDecimal.TEN);
         assertDoesNotThrow(() -> validator.validate(inventory, BigDecimal.ONE, null));
     }
+
+    @Test
+    void validateNullInventoryQuantityThrows() {
+        Inventory inventory = new Inventory();
+        inventory.setQuantity(null);
+        assertThrows(InvalidTransactionException.class, () -> validator.validate(inventory, BigDecimal.ONE, null));
+    }
 }

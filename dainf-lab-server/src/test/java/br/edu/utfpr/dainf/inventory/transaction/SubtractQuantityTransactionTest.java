@@ -19,4 +19,12 @@ class SubtractQuantityTransactionTest {
         transaction.apply(inventory, toSubtract, null);
         assertEquals(new BigDecimal("8"), inventory.getQuantity());
     }
+
+    @Test
+    void applyWithNullInventoryQuantityTreatsAsZero() {
+        Inventory inventory = new Inventory();
+        inventory.setQuantity(null);
+        transaction.apply(inventory, BigDecimal.TWO, null);
+        assertEquals(new BigDecimal("-2"), inventory.getQuantity());
+    }
 }

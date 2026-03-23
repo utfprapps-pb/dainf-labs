@@ -12,7 +12,8 @@ public class PositiveInventoryValidator implements TransactionValidator {
 
     @Override
     public void validate(Inventory inventory, BigDecimal quantity, Transaction transaction) {
-        BigDecimal remaining = inventory.getQuantity().subtract(quantity);
+        BigDecimal currentQuantity = inventory.getQuantity() != null ? inventory.getQuantity() : BigDecimal.ZERO;
+        BigDecimal remaining = currentQuantity.subtract(quantity);
 
         if (remaining.compareTo(BigDecimal.ZERO) < 0) {
             String itemName = Optional.ofNullable(inventory.getItem())
@@ -22,7 +23,7 @@ public class PositiveInventoryValidator implements TransactionValidator {
             throw new InvalidTransactionException(String.format(
                     "Não é possível remover %.2f unidades do item '%s'. " +
                             "O estoque atual é %.2f e ficaria negativo.",
-                    quantity, itemName, inventory.getQuantity()
+                    quantity, itemName, currentQuantity
             ));
         }
     }

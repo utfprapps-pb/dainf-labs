@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 public class PositiveQuantityValidator implements TransactionValidator {
     @Override
     public void validate(Inventory inventory, BigDecimal quantity, Transaction transaction) {
-        if (quantity.compareTo(BigDecimal.ZERO) <= 0) {
+        if (quantity == null || quantity.compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvalidTransactionException("A quantidade deve ser maior que 0.");
         }
     }
