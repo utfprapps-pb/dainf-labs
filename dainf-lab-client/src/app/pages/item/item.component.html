@@ -133,7 +133,7 @@
 </ng-template>
 
 <ng-template #assetFormTemplate>
-  <form [formGroup]="assetForm" class="grid grid-cols-12 gap-4">
+  <div [formGroup]="assetForm" class="grid grid-cols-12 gap-4">
     <app-input-container
       label="Patrimônio"
       class="col-span-12 md:col-span-6 lg:col-span-3"
@@ -152,7 +152,7 @@
     >
       <input type="text" pInputText id="location" formControlName="location" />
     </app-input-container>
-  </form>
+  </div>
 </ng-template>
 
 <ng-template #filters>

@@ -66,7 +66,7 @@
 </ng-template>
 
 <ng-template #purchaseItemFormTemplate>
-  <form
+  <div
     [formGroup]="purchaseItemForm"
     class="grid grid-cols-12 gap-x-6 gap-y-4 items-center"
   >
@@ -81,7 +81,7 @@
     <app-input-container label="Quantidade" class="col-span-6 md:col-span-3">
       <p-inputNumber locale="pt-BR" formControlName="quantity"></p-inputNumber>
     </app-input-container>
-  </form>
+  </div>
 </ng-template>
 
 <ng-template #filters>

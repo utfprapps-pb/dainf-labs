@@ -104,7 +104,7 @@
 </ng-template>
 
 <ng-template #purchaseItemFormTemplate>
-  <form
+  <div
     [formGroup]="purchaseItemForm"
     class="grid grid-cols-12 gap-x-6 gap-y-4 items-center"
   >
@@ -132,7 +132,7 @@
         [disabled]="true"
       ></p-inputNumber>
     </app-input-container>
-  </form>
+  </div>
 </ng-template>
 
 <ng-template #filters>

@@ -92,7 +92,7 @@
 </ng-template>
 
 <ng-template #loanItensFormTemplate>
-  <form
+  <div
     [formGroup]="loanItensForm"
     class="grid grid-cols-12 min-w-0 gap-4 pb-5"
   >
@@ -112,7 +112,7 @@
       <p-input-number locale="pt-BR" mode="decimal" formControlName="quantity">
       </p-input-number>
     </app-input-container>
-  </form>
+  </div>
 </ng-template>
 
 <ng-template #filters>
