@@ -7,7 +7,8 @@ COPY package*.json ./
 RUN npm ci --legacy-peer-deps
 
 COPY . .
-RUN npm run build -- --configuration production
+RUN npm run build -- --configuration production && \
+    node -e "const p=require('./package.json'); require('fs').writeFileSync('dist/dainf-client/browser/build-info.json', JSON.stringify({version:p.version,buildTime:new Date().toISOString()}))"
 
 # ---------- Stage 2: Runtime (nginx) ----------
 FROM nginx:alpine

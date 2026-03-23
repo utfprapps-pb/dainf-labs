@@ -86,6 +86,14 @@ public class MenuConfig {
             Map.entry("config", MenuItemDTO.builder()
                     .label("Configurações").icon("pi pi-cog").routerLink("configuration")
                     .allowedRoles(Set.of(UserRole.ROLE_ADMIN))
+                    .build()),
+
+            Map.entry("about", MenuItemDTO.builder()
+                    .label("Sobre").icon("pi pi-info-circle").routerLink("about")
+                    .allowedRoles(Set.of(
+                            UserRole.ROLE_ADMIN,
+                            UserRole.ROLE_LAB_TECHNICIAN
+                    ))
                     .build())
     );
 
@@ -122,7 +130,8 @@ public class MenuConfig {
                 MenuItemDTO.builder()
                         .label("Sistema")
                         .items(List.of(
-                                baseItems.get("config")
+                                baseItems.get("config"),
+                                baseItems.get("about")
                         ))
                         .build()
         );
