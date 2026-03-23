@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 public class SubtractQuantityTransaction implements Transaction {
     @Override
     public void apply(Inventory inventory, BigDecimal quantity, InventoryTransactionType type) {
-        inventory.setQuantity(inventory.getQuantity().subtract(quantity));
+        BigDecimal current = inventory.getQuantity() != null ? inventory.getQuantity() : BigDecimal.ZERO;
+        inventory.setQuantity(current.subtract(quantity));
     }
 }

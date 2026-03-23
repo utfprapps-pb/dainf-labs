@@ -1,5 +1,6 @@
 import { CommonModule, DatePipe } from '@angular/common';
 import { Component, inject, OnInit, viewChild } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import {
   FormBuilder,
   FormGroup,
@@ -7,7 +8,6 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { toSignal } from '@angular/core/rxjs-interop';
 
 import { InputContainerComponent } from '@/shared/components/input-container/input-container.component';
 import { SearchSelectComponent } from '@/shared/components/search-select/search-select.component';
@@ -122,6 +122,13 @@ export class ReservationComponent implements OnInit {
       this.createdFromCart = false;
       this.cartService.clearCart();
     }
+  }
+
+  onEntityLoad(reservation: Reservation) {
+    this.form.patchValue({
+      reservationDate: reservation.reservationDate ? new Date(reservation.reservationDate) : null,
+      withdrawalDate: reservation.withdrawalDate ? new Date(reservation.withdrawalDate) : null,
+    });
   }
 
   createLoanFromReservation(reservation: Reservation) {
