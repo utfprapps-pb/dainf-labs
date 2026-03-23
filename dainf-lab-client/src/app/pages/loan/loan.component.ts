@@ -125,7 +125,7 @@ export class LoanComponent implements OnInit {
     { field: 'loanDate', header: 'Data do empréstimo', transform: (row) => this.datePipe.transform(row.loanDate, 'dd/MM/yyyy') || '' },
     { field: 'deadline', header: 'Prazo de devolução', transform: (row) => this.datePipe.transform(row.deadline, 'dd/MM/yyyy') || '' },
     {
-      field: 'deadline',
+      field: 'status',
       header: 'Status',
       transform: (row) => this.labelValue.transform(row.status, this.status)
     },
