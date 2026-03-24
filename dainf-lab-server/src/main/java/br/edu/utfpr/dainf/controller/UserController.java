@@ -43,7 +43,7 @@ public class UserController extends CrudController<Long, User, UserDTO, UserRepo
     }
 
     @PostMapping(value = "clearance")
-    @RolesAllowed(UserRole.ADMIN)
+    @RolesAllowed({UserRole.ADMIN, UserRole.LAB_TECHNICIAN})
     public void grantClearance(@RequestBody User user) {
         service.grantClearance(user);
     }
