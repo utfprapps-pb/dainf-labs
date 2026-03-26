@@ -6,15 +6,15 @@ pipeline {
 
         API_HOST_PORT=8100
         API_CONTAINER_PORT=8100
-        
-        CLIENT_IMAGE_NAME="dainf-labs-client"
-        CLIENT_CONTAINER_NAME="dainf-labs-client"
 
         API_IMAGE_NAME="dainf-labs-api"
         API_CONTAINER_NAME="dainf-labs-api"
-
+        
         CLIENT_HOST_PORT=8101
         CLIENT_CONTAINER_PORT=80
+        
+        CLIENT_IMAGE_NAME="dainf-labs-client"
+        CLIENT_CONTAINER_NAME="dainf-labs-client"
 
         POSTGRESQL_CRED = credentials('postgres-id')
         DATABASE_URL="jdbc:postgresql://postgresql:5432/labs_dainf"
