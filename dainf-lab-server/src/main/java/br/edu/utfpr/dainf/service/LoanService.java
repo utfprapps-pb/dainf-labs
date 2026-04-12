@@ -29,11 +29,13 @@ public class LoanService extends CrudService<Long, Loan, LoanRepository> {
     private final InventoryService inventoryService;
     private final UserService userService;
     private final ReturnRepository returnRepository;
+    private final LoanMailService loanMailService;
 
-    public LoanService(InventoryService inventoryService, ReturnRepository returnRepository, UserService userService) {
+    public LoanService(InventoryService inventoryService, ReturnRepository returnRepository, UserService userService, LoanMailService loanMailService) {
         this.inventoryService = inventoryService;
         this.returnRepository = returnRepository;
         this.userService = userService;
+        this.loanMailService = loanMailService;
     }
 
     @Override
@@ -61,6 +63,7 @@ public class LoanService extends CrudService<Long, Loan, LoanRepository> {
     @Override
     public Loan save(Loan entity) {
         validateAccess(entity);
+        boolean isNew = entity.getId() == null;
         if (entity.getLoanDate() == null) {
             entity.setLoanDate(Instant.now());
         }
@@ -79,6 +82,9 @@ public class LoanService extends CrudService<Long, Loan, LoanRepository> {
         }
 
         Loan saved = super.save(entity);
+        if (isNew) {
+            loanMailService.sendLoanCreated(saved.getId());
+        }
         return refreshStatus(saved);
     }
 
@@ -120,10 +126,17 @@ public class LoanService extends CrudService<Long, Loan, LoanRepository> {
             return loan;
         }
 
+        LoanStatus previousStatus = persistedLoan.getStatus();
         LoanStatus newStatus = resolveStatus(persistedLoan);
-        if (newStatus != persistedLoan.getStatus()) {
+        if (newStatus != previousStatus) {
             persistedLoan.setStatus(newStatus);
-            return repository.save(persistedLoan);
+            Loan updated = repository.save(persistedLoan);
+            if (newStatus == LoanStatus.COMPLETED) {
+                loanMailService.sendLoanCompleted(updated.getId());
+            } else if (newStatus == LoanStatus.OVERDUE) {
+                loanMailService.sendLoanOverdue(updated.getId());
+            }
+            return updated;
         }
         return persistedLoan;
     }
