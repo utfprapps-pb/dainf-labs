@@ -145,12 +145,15 @@ export class LoanComponent implements OnInit {
 
     if (this.loanDateFilter()) {
       const dateValue = this.loanDateFilter();
-      const normalizedDate =
-        dateValue instanceof Date ? dateValue.toISOString() : dateValue;
+      const date = dateValue instanceof Date ? dateValue : new Date(dateValue as string);
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
       filters.push({
         field: 'loanDate',
-        value: normalizedDate,
-        type: 'EQUALS',
+        value: [startOfDay.toISOString(), endOfDay.toISOString()],
+        type: 'BETWEEN',
       });
     }
     if (this.hasAdvancedPrivileges() && this.borrowerFilter()) {
@@ -189,6 +192,7 @@ export class LoanComponent implements OnInit {
     this.loanDateFilter.set(undefined);
     this.borrowerFilter.set(undefined);
     this.raSiapeFilter.set(undefined);
+    this.statusFilter.set(undefined);
     this.crud()?.loadItems();
     this.crud()?.drawerVisible.set(false);
   }

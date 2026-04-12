@@ -6,6 +6,7 @@ import org.hibernate.query.sqm.PathElementException;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.lang.Nullable;
 
+import java.time.Instant;
 import java.util.List;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
@@ -23,7 +24,7 @@ public class SearchFilterAdapter implements Specification {
     @Nullable
     public Predicate toPredicate(Root root, @Nullable CriteriaQuery query, CriteriaBuilder cb) {
         Expression field = getNestedField(root, filter.getField());
-        Object value = filter.getValue();
+        Object value = convertValue(field, filter.getValue());
         return switch (filter.getType()) {
             case EQUALS -> cb.equal(field, value);
             case NOT_EQUALS -> cb.notEqual(field, value);
@@ -39,14 +40,27 @@ public class SearchFilterAdapter implements Specification {
             case IS_NULL -> cb.isNull(field);
             case IS_NOT_NULL -> cb.isNotNull(field);
             case BETWEEN -> {
-                List<?> values = (List<?>) value;
+                List<?> rawValues = (List<?>) filter.getValue();
                 yield cb.between(
                         field,
-                        (Comparable<Object>) values.get(0),
-                        (Comparable<Object>) values.get(1)
+                        (Comparable<Object>) convertValue(field, rawValues.get(0)),
+                        (Comparable<Object>) convertValue(field, rawValues.get(1))
                 );
             }
         };
+    }
+
+    @SuppressWarnings("unchecked")
+    private Object convertValue(Expression<?> fieldExpression, Object value) {
+        if (value == null) return null;
+        Class<?> javaType = fieldExpression.getJavaType();
+        if (javaType != null && javaType.isEnum() && value instanceof String strValue) {
+            return Enum.valueOf((Class<Enum>) javaType, strValue);
+        }
+        if (Instant.class.equals(javaType) && value instanceof String strValue) {
+            return Instant.parse(strValue);
+        }
+        return value;
     }
 
 
