@@ -52,11 +52,18 @@ public class UserService extends CrudService<Long, User, UserRepository> impleme
 
     @Override
     public User save(User user) {
-        // Keep existing password when updating without providing a new one
-        if (user.getId() != null && (user.getPassword() == null || user.getPassword().isBlank())) {
-            user.setPassword(repository.findById(user.getId())
-                    .orElseThrow(() -> new IllegalArgumentException("User not found"))
-                    .getPassword());
+        if (user.getId() != null) {
+            User existing = repository.findById(user.getId())
+                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
+            if (user.getPassword() == null || user.getPassword().isBlank()) {
+                user.setPassword(existing.getPassword());
+            } else {
+                user.setPassword(passwordEncoder.encode(user.getPassword()));
+            }
+            if (user.getClearanceCode() == null) {
+                user.setClearanceCode(existing.getClearanceCode());
+                user.setClearanceDate(existing.getClearanceDate());
+            }
         } else {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
         }
