@@ -1,6 +1,7 @@
 package br.edu.utfpr.dainf.dto;
 
 import br.edu.utfpr.dainf.shared.Identifiable;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -22,6 +23,7 @@ public class LoanItemDTO implements Identifiable<Long> {
     private boolean shouldReturn;
 
     @NotNull(message = "O campo 'Quantidade' é obrigatório.")
+    @DecimalMin(value = "1", message = "A quantidade deve ser maior ou igual a 1.")
     private BigDecimal quantity;
 
     public LoanItemDTO(Long id) {

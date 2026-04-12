@@ -109,7 +109,7 @@
       label="Quantidade"
       class="col-span-4 md:col-span-6 lg:col-span-3"
     >
-      <p-input-number locale="pt-BR" mode="decimal" formControlName="quantity">
+      <p-input-number locale="pt-BR" mode="decimal" [min]="1" formControlName="quantity">
       </p-input-number>
     </app-input-container>
   </div>

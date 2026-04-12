@@ -116,7 +116,7 @@ export class LoanComponent implements OnInit {
     id: [null],
     item: [null, Validators.required],
     shouldReturn: [false],
-    quantity: [1],
+    quantity: [1, [Validators.required, Validators.min(1)]],
   });
 
   cols: Column<Loan>[] = [
