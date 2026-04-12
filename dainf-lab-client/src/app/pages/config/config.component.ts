@@ -11,6 +11,7 @@ import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { ToastModule } from 'primeng/toast';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { tap } from 'rxjs';
 import { ConfigService } from './config.service';
 
@@ -22,8 +23,9 @@ import { ConfigService } from './config.service';
     InputContainerComponent,
     InputTextModule,
     ButtonModule,
+    ToggleSwitchModule,
     ReactiveFormsModule,
-    ToastModule
+    ToastModule,
   ],
   templateUrl: './config.component.html',
 })
@@ -43,7 +45,14 @@ export class ConfigurationComponent implements OnInit {
   }
 
   save() {
-    if (!this.form.valid) return;
+    if (!this.form.valid) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Atenção!',
+        detail: 'Por favor, preencha todos os campos obrigatórios.',
+      });
+      return;
+    }
     this._configService
       .update(this.form.getRawValue())
       .pipe(
@@ -72,6 +81,7 @@ export class ConfigurationComponent implements OnInit {
         null,
         Validators.compose([Validators.required, Validators.email]),
       ],
+      useMinimumStockValidator: [true],
     });
   }
 }
