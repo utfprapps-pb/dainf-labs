@@ -26,7 +26,7 @@ public class Configuration implements Identifiable<Long> {
     @Email(message = "O e-mail é inválido.")
     private String clearanceEmailRecipient;
 
-    @Column(name = "use_minimum_stock_validator", nullable = false)
-    private boolean useMinimumStockValidator = true;
+    @Column(name = "use_minimum_stock_validator")
+    private boolean useMinimumStockValidator = false;
 
 }
