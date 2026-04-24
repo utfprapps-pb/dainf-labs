@@ -3,6 +3,7 @@ package br.edu.utfpr.dainf.model;
 import br.edu.utfpr.dainf.shared.Identifiable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,7 +27,12 @@ public class Configuration implements Identifiable<Long> {
     @Email(message = "O e-mail é inválido.")
     private String clearanceEmailRecipient;
 
+    @Getter(AccessLevel.NONE)
     @Column(name = "use_minimum_stock_validator")
-    private boolean useMinimumStockValidator = false;
+    private Boolean useMinimumStockValidator;
+
+    public boolean isUseMinimumStockValidator() {
+        return Boolean.TRUE.equals(useMinimumStockValidator);
+    }
 
 }
