@@ -10,7 +10,7 @@
     </parent>
     <groupId>br.edu.utfpr</groupId>
     <artifactId>dainf</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.4</version>
     <name>dainf</name>
     <description>DAINF Lab Server</description>
     <url/>

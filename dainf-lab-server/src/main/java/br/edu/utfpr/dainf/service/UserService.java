@@ -208,6 +208,15 @@ public class UserService extends CrudService<Long, User, UserRepository> impleme
         return List.of(UserRole.ADMIN, UserRole.LAB_TECHNICIAN).contains(role);
     }
 
+    public void validateEnabled(User user) {
+        if (user == null || user.getId() == null) return;
+        User dbUser = findById(user.getId())
+                .orElseThrow(() -> new WarnException("Usuário não encontrado."));
+        if (!dbUser.isEnabled()) {
+            throw new WarnException("Não é possível realizar operações para um usuário inativo.");
+        }
+    }
+
     public Map<String, Object> validateClearance(String code) {
         User user = repository.findByClearanceCode(code)
                 .orElseThrow(() -> new UsernameNotFoundException("Código inválido"));

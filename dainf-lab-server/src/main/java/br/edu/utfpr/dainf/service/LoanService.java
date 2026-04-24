@@ -63,6 +63,9 @@ public class LoanService extends CrudService<Long, Loan, LoanRepository> {
     @Override
     public Loan save(Loan entity) {
         validateAccess(entity);
+        if (entity.getId() == null) {
+            userService.validateEnabled(entity.getBorrower());
+        }
         boolean isNew = entity.getId() == null;
         if (entity.getLoanDate() == null) {
             entity.setLoanDate(Instant.now());
