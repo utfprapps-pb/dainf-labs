@@ -9,6 +9,7 @@ export interface CrudConfig<T extends Identifiable> {
   title?: string;
   allowDeletion?: boolean;
   allowUpdate?: boolean;
+  dialogWidth?: string;
 }
 
 export interface Identifiable<T = number> {

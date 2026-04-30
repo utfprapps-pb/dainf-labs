@@ -17,6 +17,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import {
   FormBuilder,
   FormGroup,
@@ -24,7 +25,6 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { ButtonModule } from 'primeng/button';
 import { DatePickerModule } from 'primeng/datepicker';
 import { DialogService } from 'primeng/dynamicdialog';
@@ -101,6 +101,7 @@ export class LoanComponent implements OnInit {
 
   config: CrudConfig<Loan> = {
     title: 'Empréstimos',
+    dialogWidth: '80vw',
   };
 
   form: FormGroup = this.formBuilder.group({

@@ -4,7 +4,7 @@
   [header]="config()?.title"
   [modal]="true"
   (onHide)="cancel()"
-  [style]="{ 'max-width': '75vw' }"
+  [style]="{ 'max-width': config()?.dialogWidth ?? '75vw', 'width': config()?.dialogWidth ?? '75vw' }"
 >
   <ng-template #content>
     <ng-container *ngTemplateOutlet="formTemplate()"></ng-container>
