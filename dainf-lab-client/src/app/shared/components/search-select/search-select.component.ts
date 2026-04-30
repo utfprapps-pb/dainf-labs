@@ -53,6 +53,7 @@ export class SearchSelectComponent<T extends Identifiable>
   placeholder = input<string>();
 
   optionLabel = input.required<string>();
+  searchField = input<string>();
 
   service = input.required<CrudService<T>>();
   filters = input<SearchFilter[]>();
@@ -74,7 +75,6 @@ export class SearchSelectComponent<T extends Identifiable>
     this._lastQuery = event.query;
     this._currentPage = 0;
     this._hasMore = true;
-    this.suggestions.set([]);
     this._fetchPage(event.query, 0);
   }
 
@@ -162,13 +162,11 @@ export class SearchSelectComponent<T extends Identifiable>
   }
 
   private _mapFilters(query: string): SearchFilter[] {
+    const field = this.searchField() ?? this.optionLabel();
+    const type = field?.includes('id') ? 'IS_NOT_NULL' : 'ILIKE';
     return [
       ...(this.filters() ?? []),
-      {
-        field: this.optionLabel(),
-        type: this.optionLabel()?.includes('id') ? 'IS_NOT_NULL' : 'ILIKE',
-        value: query,
-      },
+      { field, type, value: query },
     ];
   }
 }

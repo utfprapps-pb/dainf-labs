@@ -46,8 +46,9 @@
               <app-search-select
                 formControlName="loan"
                 optionLabel="id"
+                searchField="borrower.nome"
                 [service]="loanService"
-                [itemLabel]="formatLoan"  
+                [itemLabel]="formatLoan"
                 placeholder="Vincular a um empréstimo"
               ></app-search-select>
             </app-input-container>

@@ -121,7 +121,7 @@ export class IssueComponent {
   }
   formatLoan(loan: Loan): string {
     const nome = loan.borrower ? loan.borrower.nome : 'N/A';
-    const data = loan.loanDate ? new Date(loan.loanDate).toLocaleDateString() : ''; 
+    const data = loan.loanDate ? new Date(loan.loanDate).toLocaleDateString('pt-BR') : '';
     
     return `${loan.id} - ${nome} - ${data}`;
   }
