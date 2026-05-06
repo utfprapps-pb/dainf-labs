@@ -1,6 +1,7 @@
 
 import { Routes } from '@angular/router';
 import { RoleGuard } from './auth/guards/role.guard';
+import { AboutComponent } from './about/about.component';
 import { CategoryComponent } from './category/category.component';
 import { ConfigurationComponent } from './config/config.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
@@ -29,6 +30,7 @@ export default [
       { path: 'reservation', component: ReservationComponent, canActivate: [RoleGuard] },
       { path: 'purchase-solicitation', component: PurchaseSolicitationComponent, canActivate: [RoleGuard] },
       { path: 'configuration', component: ConfigurationComponent, canActivate: [RoleGuard] },
+      { path: 'about', component: AboutComponent, canActivate: [RoleGuard] },
     ]
   },
 ] as Routes;

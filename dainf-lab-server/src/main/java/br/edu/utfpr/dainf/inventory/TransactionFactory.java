@@ -18,13 +18,22 @@ public class TransactionFactory {
     }
 
     public static TransactionValidator createValidators(InventoryTransactionType type) {
+        return createValidators(type, true);
+    }
+
+    public static TransactionValidator createValidators(InventoryTransactionType type, boolean useMinimumStockValidator) {
         return switch (type) {
             case PURCHASE, RETURN -> new CompositeValidator(List.of(new PositiveQuantityValidator()));
-            case ISSUE, LOAN -> new CompositeValidator(List.of(
-                    new PositiveQuantityValidator(),
-                    new PositiveInventoryValidator(),
-                    new MinimumStockValidator()
-            ));
+            case ISSUE, LOAN -> {
+                List<TransactionValidator> validators = new java.util.ArrayList<>(List.of(
+                        new PositiveQuantityValidator(),
+                        new PositiveInventoryValidator()
+                ));
+                if (useMinimumStockValidator) {
+                    validators.add(new MinimumStockValidator());
+                }
+                yield new CompositeValidator(validators);
+            }
         };
     }
 

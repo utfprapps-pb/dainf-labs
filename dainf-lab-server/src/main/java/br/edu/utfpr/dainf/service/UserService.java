@@ -52,18 +52,25 @@ public class UserService extends CrudService<Long, User, UserRepository> impleme
 
     @Override
     public User save(User user) {
-        // Keep existing password when updating without providing a new one
-        if (user.getId() != null && (user.getPassword() == null || user.getPassword().isBlank())) {
-            user.setPassword(repository.findById(user.getId())
-                    .orElseThrow(() -> new IllegalArgumentException("User not found"))
-                    .getPassword());
+        if (user.getId() != null) {
+            User existing = repository.findById(user.getId())
+                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
+            if (user.getPassword() == null || user.getPassword().isBlank()) {
+                user.setPassword(existing.getPassword());
+            } else {
+                user.setPassword(passwordEncoder.encode(user.getPassword()));
+            }
+            if (user.getClearanceCode() == null) {
+                user.setClearanceCode(existing.getClearanceCode());
+                user.setClearanceDate(existing.getClearanceDate());
+            }
         } else {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
         }
         return repository.save(user);
     }
 
-    public void register(User user) {
+    public User register(User user) {
         user.setEnabled(false);
         user.setEmailVerificado(false);
         user.setEmailVerificationToken(UUID.randomUUID().toString());
@@ -81,6 +88,8 @@ public class UserService extends CrudService<Long, User, UserRepository> impleme
                 .to(List.of(saved.getEmail()))
                 .content(mailContent)
                 .build());
+
+        return saved;
     }
 
     public void confirmEmail(String token) {
@@ -197,6 +206,15 @@ public class UserService extends CrudService<Long, User, UserRepository> impleme
     public boolean hasPrivilegedAcess() {
         String role = getCurrentUser().getRole().name();
         return List.of(UserRole.ADMIN, UserRole.LAB_TECHNICIAN).contains(role);
+    }
+
+    public void validateEnabled(User user) {
+        if (user == null || user.getId() == null) return;
+        User dbUser = findById(user.getId())
+                .orElseThrow(() -> new WarnException("Usuário não encontrado."));
+        if (!dbUser.isEnabled()) {
+            throw new WarnException("Não é possível realizar operações para um usuário inativo.");
+        }
     }
 
     public Map<String, Object> validateClearance(String code) {

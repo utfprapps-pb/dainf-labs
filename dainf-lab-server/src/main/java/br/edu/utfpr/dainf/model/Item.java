@@ -54,6 +54,8 @@ public class Item implements Identifiable<Long> {
 
     private String siorg;
 
+    private String location;
+
     private BigDecimal minimumStock;
 
     @Enumerated(EnumType.STRING)

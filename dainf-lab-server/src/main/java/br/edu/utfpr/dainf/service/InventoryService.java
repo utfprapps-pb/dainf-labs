@@ -19,9 +19,11 @@ import java.math.BigDecimal;
 public class InventoryService extends CrudService<Long, Inventory, InventoryRepository> {
 
     private final TransactionAuditor auditor;
+    private final ConfigurationService configurationService;
 
-    public InventoryService(TransactionAuditor auditor) {
+    public InventoryService(TransactionAuditor auditor, ConfigurationService configurationService) {
         this.auditor = auditor;
+        this.configurationService = configurationService;
     }
 
     /**
@@ -102,7 +104,8 @@ public class InventoryService extends CrudService<Long, Inventory, InventoryRepo
      */
     private TransactionProcessor createProcessor(InventoryTransactionType type) {
         Transaction transaction = TransactionFactory.create(type);
-        TransactionValidator validator = TransactionFactory.createValidators(type);
+        boolean useMinimumStockValidator = configurationService.get().isUseMinimumStockValidator();
+        TransactionValidator validator = TransactionFactory.createValidators(type, useMinimumStockValidator);
         return new TransactionProcessor(transaction, validator, auditor);
     }
 

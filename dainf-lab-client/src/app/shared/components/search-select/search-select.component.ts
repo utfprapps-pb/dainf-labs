@@ -10,6 +10,7 @@ import {
 } from '@angular/forms';
 import {
   AutoCompleteCompleteEvent,
+  AutoCompleteLazyLoadEvent,
   AutoCompleteModule,
 } from 'primeng/autocomplete';
 import { Observable, take, tap } from 'rxjs';
@@ -30,10 +31,13 @@ import { Observable, take, tap } from 'rxjs';
       class="w-full"
       [(ngModel)]="value"
       [virtualScroll]="true"
+      [lazy]="true"
       [suggestions]="suggestions()"
       [virtualScrollItemSize]="34"
       (completeMethod)="complete($event)"
+      (onLazyLoad)="onLazyLoad($event)"
       [dropdown]="true"
+      dropdownMode="current"
       [optionLabel]="resolvedOptionLabel()"
       [placeholder]="placeholder()"
       (onSelect)="handleChange($event)"
@@ -47,9 +51,10 @@ export class SearchSelectComponent<T extends Identifiable>
   implements ControlValueAccessor
 {
   placeholder = input<string>();
-  
+
   optionLabel = input.required<string>();
-  
+  searchField = input<string>();
+
   service = input.required<CrudService<T>>();
   filters = input<SearchFilter[]>();
 
@@ -61,8 +66,24 @@ export class SearchSelectComponent<T extends Identifiable>
 
   resolvedOptionLabel = computed(() => this.itemLabel() ? '_customLabel' : this.optionLabel());
 
+  private _currentPage = 0;
+  private _hasMore = true;
+  private _loading = false;
+  private _lastQuery = '';
+
   complete(event: AutoCompleteCompleteEvent) {
-    this.search(event.query);
+    this._lastQuery = event.query;
+    this._currentPage = 0;
+    this._hasMore = true;
+    this._fetchPage(event.query, 0);
+  }
+
+  onLazyLoad(event: AutoCompleteLazyLoadEvent) {
+    if (!this._hasMore || this._loading) return;
+    const loaded = this.suggestions().length;
+    if (event.last >= loaded - 3) {
+      this._fetchPage(this._lastQuery, ++this._currentPage, true);
+    }
   }
 
   onChange: (value: T | null) => void = () => {};
@@ -82,7 +103,7 @@ export class SearchSelectComponent<T extends Identifiable>
       return;
     }
 
-    this.search(value);
+    this._fetchPage(value, 0);
   }
 
   registerOnChange(fn: (value: T | null) => void): void {
@@ -104,43 +125,48 @@ export class SearchSelectComponent<T extends Identifiable>
     this.onTouched();
   }
 
-  search(query: string) {
+  private _fetchPage(query: string, page: number, append = false) {
+    if (this._loading) return;
+    this._loading = true;
+
     const filters = this._mapFilters(query);
-    return this._search(filters)
+    this._search(filters, page)
       .pipe(
         tap((res) => {
           const content = res.content;
-          
           const labelFn = this.itemLabel();
           if (labelFn) {
             content.forEach((item: any) => {
               item['_customLabel'] = labelFn(item);
             });
           }
-
-          this.suggestions.set(content);
+          if (append) {
+            this.suggestions.update(prev => [...prev, ...content]);
+          } else {
+            this.suggestions.set(content);
+          }
+          this._hasMore = res.page.number < res.page.totalPages - 1;
+          this._loading = false;
         }),
         take(1),
       )
       .subscribe();
   }
 
-  private _search(filters: SearchFilter[]): Observable<Page<T>> {
+  private _search(filters: SearchFilter[], page: number = 0): Observable<Page<T>> {
     return this.service()!.search({
-      page: 0,
+      page,
       rows: 10,
       filters: filters || [],
     });
   }
 
   private _mapFilters(query: string): SearchFilter[] {
+    const field = this.searchField() ?? this.optionLabel();
+    const type = field?.includes('id') ? 'IS_NOT_NULL' : 'ILIKE';
     return [
       ...(this.filters() ?? []),
-      {
-        field: this.optionLabel(),
-        type: this.optionLabel()?.includes('id') ? 'IS_NOT_NULL' : 'ILIKE',
-        value: query,
-      },
+      { field, type, value: query },
     ];
   }
 }

@@ -18,6 +18,7 @@ import {
 } from '@angular/router';
 import Aura from '@primeuix/themes/aura';
 import { providePrimeNG } from 'primeng/config';
+import { primeNGPtBR } from './i18n/primeng-pt-BR';
 import { appRoutes } from './app.routes';
 
 import { EnvironmentService } from '@/shared/services/config.service';
@@ -43,6 +44,7 @@ export const appConfig: ApplicationConfig = {
     provideAnimationsAsync(),
     providePrimeNG({
       theme: { preset: Aura, options: { darkModeSelector: '.app-dark' } },
+      translation: primeNGPtBR,
     }),
     MessageService,
     ConfirmationService,

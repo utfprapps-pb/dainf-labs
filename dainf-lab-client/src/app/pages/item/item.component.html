@@ -95,6 +95,15 @@
       <input type="text" pInputText id="siorg" formControlName="siorg" fluid />
     </app-input-container>
 
+    @if (form.get("type")?.value === "CONSUMABLE") {
+      <app-input-container
+        label="Localização"
+        class="col-span-12 md:col-span-6 lg:col-span-4"
+      >
+        <input type="text" pInputText id="location" formControlName="location" fluid />
+      </app-input-container>
+    }
+
     <app-input-container label="Fotos" class="col-span-12">
       <app-photo-attachment
         [service]="storageService"
@@ -115,7 +124,7 @@
         </app-subitem-form>
       </p-fieldset>
     }
-    
+
     @if (form.get('id')?.value) {
       <p-fieldset legend="Empréstimos Ativos" class="col-span-12">
         <p class="mb-3">
@@ -133,7 +142,7 @@
 </ng-template>
 
 <ng-template #assetFormTemplate>
-  <form [formGroup]="assetForm" class="grid grid-cols-12 gap-4">
+  <div [formGroup]="assetForm" class="grid grid-cols-12 gap-4">
     <app-input-container
       label="Patrimônio"
       class="col-span-12 md:col-span-6 lg:col-span-3"
@@ -152,7 +161,7 @@
     >
       <input type="text" pInputText id="location" formControlName="location" />
     </app-input-container>
-  </form>
+  </div>
 </ng-template>
 
 <ng-template #filters>

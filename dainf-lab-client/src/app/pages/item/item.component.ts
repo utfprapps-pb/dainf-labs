@@ -102,6 +102,7 @@ export class ItemComponent {
     assets: [null],
     images: [null],
     siorg: [null],
+    location: [null, Validators.compose([Validators.maxLength(255)])],
     type: [null, Validators.required],
     quantity: [
       { value: null, disabled: true },
@@ -136,7 +137,9 @@ export class ItemComponent {
       field: 'assets',
       header: 'Localização',
       transform: (item: Item) =>
-        item.assets?.map((asset) => asset?.location)?.join(', '),
+        item.type === 'CONSUMABLE'
+          ? item.location
+          : item.assets?.map((asset) => asset?.location)?.join(', '),
     },
   ];
 
@@ -171,7 +174,7 @@ export class ItemComponent {
       });
     if (this.locationFilter())
       filters.push({
-        field: 'assets.location',
+        field: this.typeFilter() === 'CONSUMABLE' ? 'location' : 'assets.location',
         value: this.locationFilter(),
         type: 'ILIKE',
       });

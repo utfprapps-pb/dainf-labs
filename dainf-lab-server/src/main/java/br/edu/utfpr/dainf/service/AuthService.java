@@ -34,6 +34,10 @@ public class AuthService {
             };
         }
         String email = jwtService.extractRefreshTokenSubject(refreshToken);
+        if (!userService.loadUserByUsername(email).isEnabled()) {
+            throw new AuthenticationException("User account is disabled") {
+            };
+        }
         String newToken = jwtService.generateToken(email);
         long expiresIn = jwtService.getJwtExpirationMs() / 1000;
         return new AuthResponse(newToken, expiresIn);
