@@ -37,6 +37,7 @@
   [actionsTemplate]="actionsTemplate()"
   [items]="items()"
   [loading]="loadingItems()"
+  [loadingEntity]="loadingEntity()"
   [templateMap]="templateMap()"
   (editClick)="edit($event)"
   (deleteOneClick)="deleteOne($event)"
@@ -48,6 +49,7 @@
   [(visible)]="dialogVisible"
   [config]="config()"
   [formTemplate]="formTemplate()"
+  [loadingSave]="loadingSave()"
   (cancelClick)="cancel()"
   (saveClick)="save()"
 ></app-crud-dialog>

@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, Renderer2, ViewChild } from '@angular/core';
-import { NavigationEnd, Router, RouterModule } from '@angular/router';
+import { Component, Renderer2, signal, ViewChild } from '@angular/core';
+import { NavigationCancel, NavigationEnd, NavigationError, NavigationStart, Router, RouterModule } from '@angular/router';
 import { filter, Subscription } from 'rxjs';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { LayoutService } from '../service/layout.service';
 import { AppFooter } from './app.footer';
 import { AppSidebar } from './app.sidebar';
@@ -10,7 +11,7 @@ import { AppTopbar } from './app.topbar';
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [CommonModule, AppTopbar, AppSidebar, RouterModule, AppFooter],
+  imports: [CommonModule, AppTopbar, AppSidebar, RouterModule, AppFooter, ProgressSpinnerModule],
   template: `
     <div class="layout-wrapper" [ngClass]="containerClass">
       <app-topbar></app-topbar>
@@ -24,12 +25,31 @@ import { AppTopbar } from './app.topbar';
       </div>
 
       <div class="layout-mask animate-fadein"></div>
+
+      @if (navigating()) {
+        <div class="layout-nav-loader">
+          <p-progressSpinner strokeWidth="4" />
+        </div>
+      }
     </div>
-  `
+  `,
+  styles: [`
+    .layout-nav-loader {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.25);
+      backdrop-filter: blur(2px);
+    }
+  `]
 })
 export class AppLayout {
   overlayMenuOpenSubscription: Subscription;
   menuOutsideClickListener: any;
+  navigating = signal(false);
 
   @ViewChild(AppSidebar) appSidebar!: AppSidebar;
   @ViewChild(AppTopbar) appTopBar!: AppTopbar;
@@ -53,8 +73,13 @@ export class AppLayout {
       }
     });
 
-    this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe(() => {
-      this.hideMenu();
+    this.router.events.subscribe((event) => {
+      if (event instanceof NavigationStart) {
+        this.navigating.set(true);
+      } else if (event instanceof NavigationEnd || event instanceof NavigationCancel || event instanceof NavigationError) {
+        this.navigating.set(false);
+        this.hideMenu();
+      }
     });
   }
 

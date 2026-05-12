@@ -35,6 +35,7 @@ export class CrudTableComponent<T extends Identifiable> {
   actionsTemplate = input<TemplateRef<any>>();
   items = input<Page<T> | undefined>(undefined);
   loading = input<boolean>(false);
+  loadingEntity = input<boolean>(false);
   templateMap = input<Map<keyof T | string, TemplateRef<any>> | undefined>(new Map());
 
   skeletonRows = Array(8).fill(0);

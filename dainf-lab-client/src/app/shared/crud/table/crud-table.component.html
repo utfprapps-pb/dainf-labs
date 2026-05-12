@@ -109,12 +109,15 @@
           icon="pi pi-pencil"
           class="mr-2"
           severity="secondary"
+          [loading]="loadingEntity()"
+          [disabled]="loadingEntity()"
           (click)="edit(row)"
         ></p-button>
         @if (config()?.allowDeletion !== false) {
           <p-button
             icon="pi pi-trash"
             severity="danger"
+            [disabled]="loadingEntity()"
             (click)="deleteOne(row)"
           ></p-button>
         }
