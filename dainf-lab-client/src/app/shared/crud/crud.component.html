@@ -30,25 +30,26 @@
   </ng-template>
 </p-toolbar>
 
-@if (!!items()) {
-  <app-crud-table
-    [config]="config()"
-    [columns]="columns()"
-    [globalFilterFields]="globalFilterFields()"
-    [actionsTemplate]="actionsTemplate()"
-    [items]="items()"
-    [templateMap]="templateMap()"
-    (editClick)="edit($event)"
-    (deleteOneClick)="deleteOne($event)"
-    (pageChange)="onPage($event)"
-  ></app-crud-table>
-}
+<app-crud-table
+  [config]="config()"
+  [columns]="columns()"
+  [globalFilterFields]="globalFilterFields()"
+  [actionsTemplate]="actionsTemplate()"
+  [items]="items()"
+  [loading]="loadingItems()"
+  [loadingEntity]="loadingEntity()"
+  [templateMap]="templateMap()"
+  (editClick)="edit($event)"
+  (deleteOneClick)="deleteOne($event)"
+  (pageChange)="onPage($event)"
+></app-crud-table>
 
 <p-confirmdialog [style]="{ width: '450px' }" />
 <app-crud-dialog
   [(visible)]="dialogVisible"
   [config]="config()"
   [formTemplate]="formTemplate()"
+  [loadingSave]="loadingSave()"
   (cancelClick)="cancel()"
   (saveClick)="save()"
 ></app-crud-dialog>

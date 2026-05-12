@@ -9,6 +9,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { RippleModule } from 'primeng/ripple';
 import { ToastModule } from 'primeng/toast';
 import { AuthService } from '../services/auth.service';
+import { extractErrorMessage } from '@/shared/utils/error.utils';
 
 @Component({
   selector: 'app-forgot-password',
@@ -45,7 +46,7 @@ export class ForgotPasswordComponent {
         this.isSubmitting = false;
       },
       error: (err) => {
-        this._messageService.add({ severity: 'error', summary: 'Falha ao enviar', detail: 'Não foi possível iniciar a recuperação de senha.' });
+        this._messageService.add({ severity: 'error', summary: 'Falha ao enviar', detail: extractErrorMessage(err, 'Não foi possível iniciar a recuperação de senha.') });
         console.error('Failed to send recovery e-mail', err);
         this.isSubmitting = false;
       }

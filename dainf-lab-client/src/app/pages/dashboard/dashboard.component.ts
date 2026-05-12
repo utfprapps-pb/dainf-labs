@@ -91,7 +91,10 @@ const DATE_RANGE_STORAGE_KEY = 'dashboardDateRange';
 
       @if (hasAdvancedPrivileges()) {
         @if (loading() || !loansByDay()) {
-          <!-- skeleton -->
+          <div class="card">
+            <p-skeleton width="12rem" height="1.5rem" borderRadius="0.5rem" styleClass="mb-4" />
+            <p-skeleton height="16rem" borderRadius="0.75rem" />
+          </div>
         } @else {
           <app-chart
             type="line"

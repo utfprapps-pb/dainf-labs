@@ -10,6 +10,7 @@ import { PasswordModule } from 'primeng/password';
 import { RippleModule } from 'primeng/ripple';
 import { ToastModule } from 'primeng/toast';
 import { AuthService } from '../services/auth.service';
+import { extractErrorMessage } from '@/shared/utils/error.utils';
 
 @Component({
   selector: 'app-reset-password',
@@ -78,7 +79,7 @@ export class ResetPasswordComponent {
         this._router.navigate(['/login']);
       },
       error: (err) => {
-        this._messageService.add({ severity: 'error', summary: 'Falha ao redefinir', detail: 'Não foi possível alterar a senha.' });
+        this._messageService.add({ severity: 'error', summary: 'Falha ao redefinir', detail: extractErrorMessage(err, 'Não foi possível alterar a senha.') });
         console.error('Failed to reset password', err);
         this.isSubmitting = false;
       }

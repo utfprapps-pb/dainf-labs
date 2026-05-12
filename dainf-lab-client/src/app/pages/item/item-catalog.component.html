@@ -28,11 +28,45 @@
     </div>
 
     @if (loading()) {
-      <div class="p-4 text-center">
-          <i class="pi pi-spin pi-spinner text-4xl text-blue-500"></i>
-          <p class="mt-2 text-muted-color">Carregando itens...</p>
-      </div>
-    } 
+      @if (layout === 'grid') {
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          @for (_ of skeletonItems; track $index) {
+            <div class="p-4 border border-surface-200 dark:border-surface-700 rounded-lg bg-surface-0 dark:bg-surface-900 flex flex-col gap-3">
+              <div class="flex justify-between items-center">
+                <p-skeleton width="5rem" height="1rem" />
+                <p-skeleton width="4rem" height="1.5rem" borderRadius="1rem" />
+              </div>
+              <p-skeleton height="10rem" borderRadius="8px" />
+              <p-skeleton width="75%" height="1.25rem" />
+              <p-skeleton width="90%" height="0.875rem" />
+              <p-skeleton width="90%" height="0.875rem" />
+              <div class="pt-3 border-t border-surface-200 dark:border-surface-700 flex items-center justify-between">
+                <p-skeleton width="3rem" height="1.75rem" />
+                <p-skeleton width="7rem" height="2rem" borderRadius="6px" />
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="flex flex-col gap-3">
+          @for (_ of skeletonItems; track $index) {
+            <div class="flex items-center p-4 gap-6 rounded-lg border border-surface-200 dark:border-surface-700">
+              <p-skeleton width="8rem" height="8rem" borderRadius="8px" styleClass="flex-shrink-0" />
+              <div class="flex-grow flex flex-col gap-2">
+                <p-skeleton width="50%" height="1.25rem" />
+                <p-skeleton width="30%" height="1rem" />
+                <p-skeleton width="80%" height="0.875rem" />
+                <p-skeleton width="65%" height="0.875rem" />
+              </div>
+              <div class="flex flex-col gap-2 items-end min-w-[140px]">
+                <p-skeleton width="3rem" height="2rem" />
+                <p-skeleton width="8rem" height="2rem" borderRadius="6px" />
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
     @else if (items().length === 0) {
       <div class="empty-state text-center p-12">
           <i class="pi pi-box text-6xl mb-4 text-muted-color"></i>
@@ -41,7 +75,7 @@
       </div>
     }
 
-    @if (items().length > 0) {
+    @if (!loading() && items().length > 0) {
       
       @if (layout === 'grid') {
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
