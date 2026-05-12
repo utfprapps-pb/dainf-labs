@@ -14,6 +14,7 @@ export class CrudDialogComponent<T extends Identifiable> {
   visible = input<boolean>(false);
   config = input<CrudConfig<T>>();
   formTemplate = input<TemplateRef<any>>();
+  loadingSave = input<boolean>(false);
 
   visibleChange = output<boolean>();
 

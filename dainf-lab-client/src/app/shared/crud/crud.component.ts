@@ -22,6 +22,7 @@ import {
   debounceTime,
   finalize,
   Observable,
+  skip,
   take,
   tap,
   throwError,
@@ -72,6 +73,7 @@ export class CrudComponent<T extends Identifiable> implements OnInit {
   dialogVisible = signal<boolean>(false);
   loadingItems = signal<boolean>(false);
   loadingEntity = signal<boolean>(false);
+  loadingSave = signal<boolean>(false);
 
   drawerVisible = model<boolean>(false);
 
@@ -82,6 +84,7 @@ export class CrudComponent<T extends Identifiable> implements OnInit {
 
   searchRequestChange$ = toObservable(this.searchRequest)
     .pipe(
+      skip(1),
       debounceTime(600),
       tap(() => this.loadItems()),
       takeUntilDestroyed(),
@@ -162,6 +165,7 @@ export class CrudComponent<T extends Identifiable> implements OnInit {
     }
 
     const item: T = this.form()?.getRawValue();
+    this.loadingSave.set(true);
     this._save(item)
       ?.pipe(
         tap(() => {
@@ -174,12 +178,14 @@ export class CrudComponent<T extends Identifiable> implements OnInit {
           this._showWarn(extractErrorMessage(error));
           return throwError(() => error);
         }),
+        finalize(() => this.loadingSave.set(false)),
         take(1),
       )
       .subscribe();
   }
 
   edit(item: T) {
+    this.loadingEntity.set(true);
     this.service()
       .get(item.id)
       .pipe(
@@ -188,6 +194,11 @@ export class CrudComponent<T extends Identifiable> implements OnInit {
           this.entityLoad.emit(item);
           this.dialogVisible.set(true);
         }),
+        catchError((error) => {
+          this._showWarn(`Falha ao carregar o registro: ${extractErrorMessage(error)}`);
+          return throwError(() => error);
+        }),
+        finalize(() => this.loadingEntity.set(false)),
         take(1),
       )
       .subscribe();
