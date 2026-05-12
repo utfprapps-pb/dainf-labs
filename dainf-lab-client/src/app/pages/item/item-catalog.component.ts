@@ -5,6 +5,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { PaginatorModule } from 'primeng/paginator';
 import { SelectButtonModule } from 'primeng/selectbutton';
+import { SkeletonModule } from 'primeng/skeleton';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 
@@ -26,6 +27,7 @@ import { ItemService } from './item.service';
     TooltipModule,
     SelectButtonModule,
     PaginatorModule,
+    SkeletonModule,
   ],
   providers: [ItemService],
   templateUrl: './item-catalog.component.html',
@@ -83,6 +85,7 @@ export class ItemCatalogComponent implements OnInit, OnDestroy {
 
   first = signal(0);
   rows = signal(12);
+  skeletonItems = Array(12).fill(0);
   private filterDebounceTimer: ReturnType<typeof setTimeout> | null = null;
   readonly placeholderImage = 'assets/images/placeholder.png';
 
