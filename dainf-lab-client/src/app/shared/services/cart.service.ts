@@ -4,6 +4,7 @@ import { MessageService } from 'primeng/api';
 import { catchError, tap, throwError } from 'rxjs';
 import { CartItem } from '../models/cart';
 import { BaseService } from './base.service';
+import { extractErrorMessage } from '@/shared/utils/error.utils';
 
 @Injectable({
   providedIn: 'root'
@@ -28,7 +29,7 @@ export class CartService extends BaseService {
       tap(items => this.cartItems.set(items)),
       catchError(err => {
         console.error("Failed to load cart", err);
-        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao carregar carrinho.' });
+        this.messageService.add({ severity: 'error', summary: 'Erro', detail: extractErrorMessage(err, 'Falha ao carregar carrinho.') });
         return throwError(() => err);
       })
     ).subscribe();
@@ -39,7 +40,7 @@ export class CartService extends BaseService {
       tap(updatedItems => this.cartItems.set(updatedItems)),
       catchError(err => {
         console.error("Failed to save cart", err);
-        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao salvar carrinho.' });
+        this.messageService.add({ severity: 'error', summary: 'Erro', detail: extractErrorMessage(err, 'Falha ao salvar carrinho.') });
         return throwError(() => err);
       })
     ).subscribe();

@@ -13,6 +13,7 @@ import { ToastModule } from 'primeng/toast';
 import { Observable } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { TokenService } from '../services/token.service';
+import { extractErrorMessage } from '@/shared/utils/error.utils';
 
 @Component({
   selector: 'app-login',
@@ -60,7 +61,7 @@ export class LoginComponent {
         this._messageService.add({
           severity: 'warn',
           summary: 'Falha ao realizar login',
-          detail: 'Email ou senha inválidos',
+          detail: extractErrorMessage(err, 'Email ou senha inválidos'),
         });
         console.error('Login failed', err);
       },
