@@ -62,7 +62,7 @@ export class ClearanceValidationComponent {
           this.status = 'success';
         },
         error: (err) => {
-          this.errorMessage = 'Código inválido ou não encontrado.';
+          this.errorMessage = err?.error?.message || 'Código inválido ou não encontrado.';
           this.status = 'error';
           console.error('Clearance validation failed', err);
         }

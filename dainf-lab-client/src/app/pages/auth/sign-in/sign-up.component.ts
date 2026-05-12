@@ -19,6 +19,7 @@ import { KeyFilterModule } from 'primeng/keyfilter';
 import { PasswordModule } from 'primeng/password';
 import { AuthService } from '../services/auth.service';
 import { phoneValidator } from '@/shared/validator/phone.validator';
+import { extractErrorMessage } from '@/shared/utils/error.utils';
 
 @Component({
   selector: 'app-sign-up',
@@ -106,7 +107,7 @@ export class SignUpComponent {
         this._messageService.add({
           severity: 'warn',
           summary: 'Falha ao realizar cadastro',
-          detail: 'Verifique os dados e tente novamente',
+          detail: extractErrorMessage(err, 'Verifique os dados e tente novamente'),
         });
         console.error('Falha no registro', err);
       },

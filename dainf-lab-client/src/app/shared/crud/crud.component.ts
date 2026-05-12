@@ -31,6 +31,7 @@ import { Column, CrudConfig, Identifiable } from './crud';
 import { CrudService } from './crud.service';
 import { CrudDialogComponent } from './dialog/crud-dialog.component';
 import { CrudTableComponent } from './table/crud-table.component';
+import { extractErrorMessage } from '@/shared/utils/error.utils';
 
 @Component({
   standalone: true,
@@ -139,7 +140,7 @@ export class CrudComponent<T extends Identifiable> implements OnInit {
         tap((page) => this._exportToCsv(page.content, columns)),
         catchError((error) => {
           this._showWarn(
-            `Falha ao exportar os dados: ${this._extractErrorMessage(error)}`,
+            `Falha ao exportar os dados: ${extractErrorMessage(error)}`,
           );
           return throwError(() => error);
         }),
@@ -170,7 +171,7 @@ export class CrudComponent<T extends Identifiable> implements OnInit {
           this._showSuccess('Registro salvo com sucesso.');
         }),
         catchError((error) => {
-          this._showWarn(this._extractErrorMessage(error));
+          this._showWarn(extractErrorMessage(error));
           return throwError(() => error);
         }),
         take(1),
@@ -217,23 +218,13 @@ export class CrudComponent<T extends Identifiable> implements OnInit {
           this.loadItems(this.lastPagination?.page, this.lastPagination?.rows),
         ),
         catchError((error) => {
-          this._showWarn(`Falha ao deletar o registro: ${error.error.message}`);
+          this._showWarn(`Falha ao deletar o registro: ${extractErrorMessage(error)}`);
           return throwError(() => error);
         }),
         take(1),
       )
       .subscribe();
     this.cancel();
-  }
-
-  private _extractErrorMessage(error: any): string {
-    if (!!error?.error?.errors) {
-      return Object.entries(error.error.errors)
-        .map(([field, message]) => `${message}`)
-        .join(', ');
-    }
-
-    return error?.error?.message || 'Informações inválidas';
   }
 
   private _showWarn(detail: string) {
