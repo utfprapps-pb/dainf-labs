@@ -55,6 +55,16 @@ export class ResetPasswordComponent {
       return;
     }
 
+    if (this.password.length < 6) {
+      this._messageService.add({ severity: 'warn', summary: 'Senha inválida', detail: 'A senha deve ter no mínimo 6 caracteres.' });
+      return;
+    }
+
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).*$/.test(this.password)) {
+      this._messageService.add({ severity: 'warn', summary: 'Senha inválida', detail: 'A senha deve conter ao menos uma letra maiúscula, uma minúscula e um número.' });
+      return;
+    }
+
     if (this.password !== this.confirmPassword) {
       this._messageService.add({ severity: 'warn', summary: 'Senhas diferentes', detail: 'As senhas informadas não coincidem.' });
       return;

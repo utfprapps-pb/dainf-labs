@@ -4,9 +4,11 @@ import { InputContainerComponent } from '@/shared/components/input-container/inp
 import { nameValidator } from '@/shared/validator/name.validator';
 import { Component, inject } from '@angular/core';
 import {
+  AbstractControl,
   FormBuilder,
   FormGroup,
   ReactiveFormsModule,
+  ValidationErrors,
   Validators,
 } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -19,6 +21,7 @@ import { KeyFilterModule } from 'primeng/keyfilter';
 import { PasswordModule } from 'primeng/password';
 import { AuthService } from '../services/auth.service';
 import { phoneValidator } from '@/shared/validator/phone.validator';
+import { passwordStrengthValidator } from '@/shared/validator/password.validator';
 
 @Component({
   selector: 'app-sign-up',
@@ -53,28 +56,25 @@ export class SignUpComponent {
         Validators.compose([Validators.required, Validators.email, Validators.maxLength(100)]),
       ],
       telefone: [null, Validators.compose([Validators.required, phoneValidator()])],
-      password: [null, Validators.compose([Validators.required, Validators.minLength(8), Validators.maxLength(32)])],
-      confirmPassword: [null, Validators.compose([Validators.required, Validators.minLength(8), Validators.maxLength(32)])],
+      password: [null, Validators.compose([Validators.required, Validators.minLength(6), passwordStrengthValidator()])],
+      confirmPassword: [null, Validators.required],
     },
-    // {
-    //   validators: this.passwordMatchValidator,
-    // },
+    { validators: this.passwordMatchValidator },
   );
-  // passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
-  //   const password = control.get('password');
-  //   const confirmPassword = control.get('confirmPassword');
-  //   if (
-  //     password &&
-  //     confirmPassword &&
-  //     password.value !== confirmPassword.value
-  //   ) {
-  //     confirmPassword.setErrors({ passwordMismatch: true });
-  //     return { passwordMismatch: true };
-  //   } else {
-  //     confirmPassword?.setErrors(null);
-  //     return null;
-  //   }
-  // }
+
+  passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
+    const password = group.get('password');
+    const confirmPassword = group.get('confirmPassword');
+    if (password && confirmPassword && password.value !== confirmPassword.value) {
+      confirmPassword.setErrors({ ...confirmPassword.errors, passwordMismatch: true });
+      return { passwordMismatch: true };
+    }
+    if (confirmPassword?.errors?.['passwordMismatch']) {
+      const { passwordMismatch, ...rest } = confirmPassword.errors as Record<string, unknown>;
+      confirmPassword.setErrors(Object.keys(rest).length ? rest : null);
+    }
+    return null;
+  }
 
   signUpClick(): void {
     if (this.form.invalid) {
