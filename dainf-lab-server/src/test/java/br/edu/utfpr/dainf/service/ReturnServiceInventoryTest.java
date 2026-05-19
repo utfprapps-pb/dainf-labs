@@ -147,12 +147,12 @@ class ReturnServiceInventoryTest {
 
         @Test
         void allItemsConsumedOrDamaged_noStockReturn() {
-            // Student borrowed 10, all were consumed in use (quantityIssued=10)
+            // Student borrowed 10, all were consumed — LOAN already decremented stock, no further change
             Item item = item();
             givenStock(item, "40");
             returnService.save(newReturn(ri(item, "0", "10")));
-            // RETURN(0) → no change; ISSUE(10) → 40 - 10 = 30
-            assertEquals(bd("30"), stockOf(item));
+            // RETURN(0) → no change; ISSUE does not affect inventory
+            assertEquals(bd("40"), stockOf(item));
         }
 
         @Test
@@ -161,8 +161,8 @@ class ReturnServiceInventoryTest {
             Item item = item();
             givenStock(item, "40");
             returnService.save(newReturn(ri(item, "7", "3")));
-            // RETURN(7) → +7 → 47; ISSUE(3) → -3 → 44
-            assertEquals(bd("44"), stockOf(item));
+            // RETURN(7) → +7 → 47; ISSUE does not affect inventory (LOAN covered the 3)
+            assertEquals(bd("47"), stockOf(item));
         }
 
         @Test
@@ -188,8 +188,8 @@ class ReturnServiceInventoryTest {
             ));
 
             assertEquals(bd("5"),   stockOf(scope));   // 4 + 1 = 5
-            assertEquals(bd("180"), stockOf(slides));  // 150 + 40 - 10 = 180
-            assertEquals(bd("460"), stockOf(covers));  // 400 + 80 - 20 = 460
+            assertEquals(bd("190"), stockOf(slides));  // 150 + 40 = 190 (ISSUE has no inventory effect)
+            assertEquals(bd("480"), stockOf(covers));  // 400 + 80 = 480
         }
 
         @Test
@@ -201,12 +201,12 @@ class ReturnServiceInventoryTest {
         }
 
         @Test
-        void onlyIssuedQuantity_stockDecreasesCorrectly() {
-            // Items were borrowed and all consumed; no physical return
+        void onlyIssuedQuantity_stockUnchanged() {
+            // Items were borrowed and all consumed — LOAN already removed them from stock
             Item item = item();
             givenStock(item, "40");
             returnService.save(newReturn(ri(item, "0", "8")));
-            assertEquals(bd("32"), stockOf(item));
+            assertEquals(bd("40"), stockOf(item));
         }
     }
 
@@ -245,34 +245,21 @@ class ReturnServiceInventoryTest {
         }
 
         @Test
-        void increaseIssuedQty_moreConsumed_stockGoesLower() {
+        void changedIssuedQty_stockUnaffected() {
+            // quantityIssued tracks consumed items for record-keeping only; LOAN covers the deduction
             Item item = item();
-            givenStock(item, "43"); // 50 purchased, 10 loaned, 3 issued
+            givenStock(item, "40"); // 50 purchased, 10 loaned
             Return existing = existingReturn(1L, ri(item, "0", "3"));
             when(returnRepository.findById(1L)).thenReturn(Optional.of(existing));
 
             returnService.save(existingReturn(1L, ri(item, "0", "5")));
 
-            // undo ISSUE(3) → +3 → 46; apply ISSUE(5) → -5 → 41
-            assertEquals(bd("41"), stockOf(item));
+            assertEquals(bd("40"), stockOf(item));
         }
 
         @Test
-        void decreaseIssuedQty_lessConsumed_stockGoesHigher() {
-            Item item = item();
-            givenStock(item, "43");
-            Return existing = existingReturn(1L, ri(item, "0", "3"));
-            when(returnRepository.findById(1L)).thenReturn(Optional.of(existing));
-
-            returnService.save(existingReturn(1L, ri(item, "0", "1")));
-
-            // undo ISSUE(3) → +3 → 46; apply ISSUE(1) → -1 → 45
-            assertEquals(bd("45"), stockOf(item));
-        }
-
-        @Test
-        void switchReturnedToIssued_stockNetChanges() {
-            // First recorded: 10 returned. Corrected: actually 0 returned, 10 consumed.
+        void switchReturnedToIssued_stockRevertedToLoanLevel() {
+            // First recorded: 10 returned. Corrected: actually all 10 consumed, none returned.
             Item item = item();
             givenStock(item, "50"); // 40 stock + 10 previously returned
             Return existing = existingReturn(1L, ri(item, "10", "0"));
@@ -280,21 +267,21 @@ class ReturnServiceInventoryTest {
 
             returnService.save(existingReturn(1L, ri(item, "0", "10")));
 
-            // undo RETURN(10) → -10 → 40; undo ISSUE(0) → no-op; apply RETURN(0) → no-op; apply ISSUE(10) → -10 → 30
-            assertEquals(bd("30"), stockOf(item));
+            // undo RETURN(10) → -10 → 40; ISSUE has no inventory effect
+            assertEquals(bd("40"), stockOf(item));
         }
 
         @Test
-        void switchIssuedToReturned_stockNetChanges() {
-            // First recorded: 10 issued. Corrected: actually 10 returned.
+        void switchIssuedToReturned_stockIncreasedByReturnQty() {
+            // First recorded: 10 consumed. Corrected: actually 10 physically returned.
             Item item = item();
-            givenStock(item, "30"); // 40 stock - 10 issued
+            givenStock(item, "40"); // 50 purchased, 10 loaned (ISSUE has no inventory effect)
             Return existing = existingReturn(1L, ri(item, "0", "10"));
             when(returnRepository.findById(1L)).thenReturn(Optional.of(existing));
 
             returnService.save(existingReturn(1L, ri(item, "10", "0")));
 
-            // undo ISSUE(10) → +10 → 40; apply RETURN(10) → +10 → 50
+            // apply RETURN(10) → +10 → 50
             assertEquals(bd("50"), stockOf(item));
         }
 
@@ -302,16 +289,16 @@ class ReturnServiceInventoryTest {
         void updateMultipleItems_eachRecalculatedIndependently() {
             Item a = item(), b = item();
             givenStock(a, "47"); // RETURN(7) already applied
-            givenStock(b, "43"); // ISSUE(3) already applied
+            givenStock(b, "40"); // 50 purchased, 10 loaned (ISSUE has no inventory effect)
             Return existing = existingReturn(1L, ri(a, "7", "0"), ri(b, "0", "3"));
             when(returnRepository.findById(1L)).thenReturn(Optional.of(existing));
 
             returnService.save(existingReturn(1L, ri(a, "9", "0"), ri(b, "0", "5")));
 
             // a: undo RETURN(7) → 40; apply RETURN(9) → 49
-            // b: undo ISSUE(3) → 46; apply ISSUE(5) → 41
+            // b: ISSUE has no inventory effect → stock unchanged
             assertEquals(bd("49"), stockOf(a));
-            assertEquals(bd("41"), stockOf(b));
+            assertEquals(bd("40"), stockOf(b));
         }
 
         @Test
@@ -404,9 +391,9 @@ class ReturnServiceInventoryTest {
             Item item = item();
             givenStock(item, "40"); // 50 stock after loan of 10
             returnService.save(newReturn(ri(item, "6", "2")));
-            // RETURN(6) → +6 → 46; ISSUE(2) → -2 → 44
+            // RETURN(6) → +6 → 46; ISSUE has no inventory effect (LOAN covered consumed items)
             // The 2 "missing" items are handled by a separate overdue process — not here
-            assertEquals(bd("44"), stockOf(item));
+            assertEquals(bd("46"), stockOf(item));
         }
 
         @Test
@@ -420,13 +407,9 @@ class ReturnServiceInventoryTest {
             // Physical recount: actually 8 returned, 2 consumed
             returnService.save(existingReturn(1L, ri(item, "8", "2")));
 
-            // a: undo RETURN(7) → -7 = 40; apply RETURN(8) → +8 = 48
-            // b: undo ISSUE(3) → +3 = 51; apply ISSUE(2) → -2 = 49 (Note: undo/apply order is RETURN first, then ISSUE)
-            // Let's trace carefully:
-            // currentStock = 47
-            // updateTransaction(item, old=7, RETURN, new=8): undo RETURN(7) → 47-7=40; apply RETURN(8) → 40+8=48
-            // updateTransaction(item, old=3, ISSUE, new=2): undo ISSUE(3) → 48+3=51; apply ISSUE(2) → 51-2=49
-            assertEquals(bd("49"), stockOf(item));
+            // undo RETURN(7) → 47-7=40; apply RETURN(8) → 40+8=48
+            // ISSUE has no inventory effect
+            assertEquals(bd("48"), stockOf(item));
         }
 
         @Test
@@ -445,7 +428,7 @@ class ReturnServiceInventoryTest {
             ));
 
             assertEquals(bd("5"),   stockOf(scope));   // 4 + 1 = 5
-            assertEquals(bd("180"), stockOf(slides));  // 150 + 40 - 10 = 180
+            assertEquals(bd("190"), stockOf(slides));  // 150 + 40 = 190 (ISSUE has no inventory effect)
             assertEquals(bd("490"), stockOf(covers));  // 400 + 90 = 490
         }
     }
