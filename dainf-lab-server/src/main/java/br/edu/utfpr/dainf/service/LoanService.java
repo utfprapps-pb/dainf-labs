@@ -12,6 +12,7 @@ import br.edu.utfpr.dainf.search.request.SearchRequest;
 import br.edu.utfpr.dainf.search.request.filter.SearchFilter;
 import br.edu.utfpr.dainf.repository.ReturnRepository;
 import br.edu.utfpr.dainf.shared.CrudService;
+import br.edu.utfpr.dainf.shared.ItemListValidator;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.security.access.AccessDeniedException;
@@ -62,6 +63,7 @@ public class LoanService extends CrudService<Long, Loan, LoanRepository> {
 
     @Override
     public Loan save(Loan entity) {
+        ItemListValidator.validateNoDuplicates(entity.getItems(), i -> i.getItem().getId());
         validateAccess(entity);
         if (entity.getId() == null) {
             userService.validateEnabled(entity.getBorrower());
@@ -78,16 +80,30 @@ public class LoanService extends CrudService<Long, Loan, LoanRepository> {
         }
 
         Loan existing = entity.getId() != null ? repository.findById(entity.getId()).orElse(null) : null;
-        if (entity.getItems() != null) {
-            for (LoanItem item : entity.getItems()) {
-                item.setLoan(entity);
-                LoanItem oldItem = findOldItem(existing, item);
-                inventoryService.updateTransaction(
-                        item.getItem(),
-                        oldItem != null ? oldItem.getQuantity() : BigDecimal.ZERO,
-                        InventoryTransactionType.LOAN,
-                        item.getQuantity()
-                );
+        List<LoanItem> newItems = entity.getItems() != null ? entity.getItems() : List.of();
+        for (LoanItem item : newItems) {
+            item.setLoan(entity);
+            LoanItem oldItem = findOldItem(existing, item);
+            inventoryService.updateTransaction(
+                    item.getItem(),
+                    oldItem != null ? oldItem.getQuantity() : BigDecimal.ZERO,
+                    InventoryTransactionType.LOAN,
+                    item.getQuantity()
+            );
+        }
+        // Undo inventory for items removed from the loan entirely (not just set to 0)
+        if (existing != null && existing.getItems() != null) {
+            for (LoanItem oldItem : existing.getItems()) {
+                boolean stillPresent = newItems.stream()
+                        .anyMatch(i -> Objects.equals(i.getItem().getId(), oldItem.getItem().getId()));
+                if (!stillPresent) {
+                    inventoryService.updateTransaction(
+                            oldItem.getItem(),
+                            oldItem.getQuantity(),
+                            InventoryTransactionType.LOAN,
+                            BigDecimal.ZERO
+                    );
+                }
             }
         }
 

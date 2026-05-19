@@ -5,10 +5,12 @@ import br.edu.utfpr.dainf.model.Issue;
 import br.edu.utfpr.dainf.model.IssueItem;
 import br.edu.utfpr.dainf.repository.IssueRepository;
 import br.edu.utfpr.dainf.shared.CrudService;
+import br.edu.utfpr.dainf.shared.ItemListValidator;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -33,22 +35,37 @@ public class IssueService extends CrudService<Long, Issue, IssueRepository> {
     }
 
     public Issue save(Issue entity, boolean handleTransaction) {
+        ItemListValidator.validateNoDuplicates(entity.getItems(), i -> i.getItem().getId());
         if (entity.getId() == null) {
             entity.setUser(userService.getCurrentUser());
         }
         Issue existing = (entity.getId() != null && handleTransaction)
                 ? repository.findById(entity.getId()).orElse(null)
                 : null;
-        if (entity.getItems() != null) {
-            for (IssueItem item : entity.getItems()) {
-                item.setIssue(entity);
-                if (handleTransaction) {
-                    IssueItem oldItem = findOldItem(existing, item);
+        List<IssueItem> newItems = entity.getItems() != null ? entity.getItems() : List.of();
+        for (IssueItem item : newItems) {
+            item.setIssue(entity);
+            if (handleTransaction) {
+                IssueItem oldItem = findOldItem(existing, item);
+                inventoryService.updateTransaction(
+                        item.getItem(),
+                        oldItem != null ? oldItem.getQuantity() : BigDecimal.ZERO,
+                        InventoryTransactionType.ISSUE,
+                        item.getQuantity()
+                );
+            }
+        }
+        // Undo inventory for items removed from the issue entirely (not just set to 0)
+        if (handleTransaction && existing != null && existing.getItems() != null) {
+            for (IssueItem oldItem : existing.getItems()) {
+                boolean stillPresent = newItems.stream()
+                        .anyMatch(i -> Objects.equals(i.getItem().getId(), oldItem.getItem().getId()));
+                if (!stillPresent) {
                     inventoryService.updateTransaction(
-                            item.getItem(),
-                            oldItem != null ? oldItem.getQuantity() : BigDecimal.ZERO,
+                            oldItem.getItem(),
+                            oldItem.getQuantity(),
                             InventoryTransactionType.ISSUE,
-                            item.getQuantity()
+                            BigDecimal.ZERO
                     );
                 }
             }

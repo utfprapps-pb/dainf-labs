@@ -6,6 +6,7 @@ import br.edu.utfpr.dainf.model.*;
 import br.edu.utfpr.dainf.repository.IssueRepository;
 import br.edu.utfpr.dainf.repository.ReturnRepository;
 import br.edu.utfpr.dainf.shared.CrudService;
+import br.edu.utfpr.dainf.shared.ItemListValidator;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Service;
 
@@ -40,6 +41,7 @@ public class ReturnService extends CrudService<Long, Return, ReturnRepository> {
 
     @Override
     public Return save(Return entity) {
+        ItemListValidator.validateNoDuplicates(entity.getItems(), i -> i.getItem().getId());
         // Fetch old entity if updating (to revert previous inventory operations)
         Return existing = entity.getId() != null ? repository.findById(entity.getId()).orElse(null) : null;
 
