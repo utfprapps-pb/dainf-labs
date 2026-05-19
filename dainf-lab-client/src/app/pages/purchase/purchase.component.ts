@@ -69,6 +69,7 @@ export class PurchaseComponent implements OnInit {
 
   config: CrudConfig<Purchase> = {
     title: 'Compras',
+    allowDeletion: false
   };
 
   form: FormGroup = this.formBuilder.group({

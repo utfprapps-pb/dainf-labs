@@ -61,6 +61,7 @@ export class IssueComponent {
 
   config: CrudConfig<Issue> = {
     title: 'Saídas de Estoque',
+    allowDeletion: false
   };
 
   form: FormGroup = this.formBuilder.group({
