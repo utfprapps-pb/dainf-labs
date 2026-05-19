@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { Button } from 'primeng/button';
 import { Paginator, PaginatorState } from 'primeng/paginator';
+import { SkeletonModule } from 'primeng/skeleton';
 import { Table, TableModule } from 'primeng/table';
 import { Column, CrudConfig, Identifiable } from '../crud';
 
@@ -22,6 +23,7 @@ import { Column, CrudConfig, Identifiable } from '../crud';
     Button,
     Paginator,
     DeepValuePipe,
+    SkeletonModule,
   ],
 })
 export class CrudTableComponent<T extends Identifiable> {
@@ -32,7 +34,11 @@ export class CrudTableComponent<T extends Identifiable> {
   globalFilterFields = input<string[]>([]);
   actionsTemplate = input<TemplateRef<any>>();
   items = input<Page<T> | undefined>(undefined);
+  loading = input<boolean>(false);
+  loadingEntity = input<boolean>(false);
   templateMap = input<Map<keyof T | string, TemplateRef<any>> | undefined>(new Map());
+
+  skeletonRows = Array(8).fill(0);
 
   editClick = output<T>();
   deleteOneClick = output<T>();

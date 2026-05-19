@@ -1,56 +1,81 @@
-<p-table
-  #dt
-  [value]="items()!.content"
-  [columns]="columns()"
-  [globalFilterFields]="globalFilterFields()"
-  [tableStyle]="{ 'min-width': '75rem' }"
-  [rowHover]="true"
-  dataKey="id"
->
-  <ng-template #caption>
-    <div class="flex items-center justify-between">
-      <h5 class="m-0">{{ config()?.title || "Sem título" }}</h5>
-      <!-- <p-iconfield>
-        <input
-          pInputText
-          type="text"
-          (input)="onGlobalFilter(dt, $event)"
-          placeholder="Pesquisar..."
-        />
-        <p-inputicon class="pi pi-search" />
-      </p-iconfield> -->
-    </div>
-  </ng-template>
+@if (loading() || !items()) {
+  <div class="overflow-x-auto">
+    <table class="w-full border-collapse" style="min-width: 75rem">
+      <thead>
+        <tr class="border-b border-surface-200 dark:border-surface-700">
+          @for (column of columns(); track $index) {
+            <th class="text-left p-4 font-semibold text-surface-700 dark:text-surface-100" [style.width]="column.width">
+              {{ column.header }}
+            </th>
+          }
+          <th class="text-left p-4 font-semibold text-surface-700 dark:text-surface-100" style="width: 12rem">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (_ of skeletonRows; track $index) {
+          <tr class="border-b border-surface-100 dark:border-surface-800">
+            @for (column of columns(); track $index) {
+              <td class="p-4">
+                <p-skeleton height="1.5rem" [style]="{ width: column.width ? '80%' : '70%' }" />
+              </td>
+            }
+            <td class="p-4">
+              <div class="flex gap-2">
+                <p-skeleton height="2rem" width="2.5rem" borderRadius="6px" />
+                <p-skeleton height="2rem" width="2.5rem" borderRadius="6px" />
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+} @else {
+  <p-table
+    #dt
+    [value]="items()!.content"
+    [columns]="columns()"
+    [globalFilterFields]="globalFilterFields()"
+    [tableStyle]="{ 'min-width': '75rem' }"
+    [rowHover]="true"
+    dataKey="id"
+  >
+    <ng-template #caption>
+      <div class="flex items-center justify-between">
+        <h5 class="m-0">{{ config()?.title || "Sem título" }}</h5>
+      </div>
+    </ng-template>
 
-  <ng-template #header>
-    <tr>
-      @for (column of columns(); track $index) {
-        <th [style.width]="column.width">{{ column.header }}</th>
-      }
-      <th style="width: 12rem">Ações</th>
-    </tr>
-  </ng-template>
-  <ng-template #body let-row>
-    <ng-container
-      *ngTemplateOutlet="item; context: { $implicit: row }"
-    ></ng-container>
-  </ng-template>
+    <ng-template #header>
+      <tr>
+        @for (column of columns(); track $index) {
+          <th [style.width]="column.width">{{ column.header }}</th>
+        }
+        <th style="width: 12rem">Ações</th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-row>
+      <ng-container
+        *ngTemplateOutlet="item; context: { $implicit: row }"
+      ></ng-container>
+    </ng-template>
 
-  <ng-template #emptymessage>
-    <ng-container *ngTemplateOutlet="empty"></ng-container>
-  </ng-template>
-</p-table>
+    <ng-template #emptymessage>
+      <ng-container *ngTemplateOutlet="empty"></ng-container>
+    </ng-template>
+  </p-table>
 
-<p-paginator
-  [rows]="10"
-  [totalRecords]="items()!.page.totalElements"
-  [rowsPerPageOptions]="[10, 20, 30]"
-  [showCurrentPageReport]="true"
-  currentPageReportTemplate="Exibindo {last} de {totalRecords} itens"
-  (onPageChange)="onPage($event)"
-  [rowsPerPageOptions]="[10, 20, 30]"
->
-</p-paginator>
+  <p-paginator
+    [rows]="10"
+    [totalRecords]="items()!.page.totalElements"
+    [rowsPerPageOptions]="[10, 20, 30]"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="Exibindo {last} de {totalRecords} itens"
+    (onPageChange)="onPage($event)"
+    [rowsPerPageOptions]="[10, 20, 30]"
+  >
+  </p-paginator>
+}
 
 <ng-template #item let-row>
   <tr>
@@ -84,12 +109,15 @@
           icon="pi pi-pencil"
           class="mr-2"
           severity="secondary"
+          [loading]="loadingEntity()"
+          [disabled]="loadingEntity()"
           (click)="edit(row)"
         ></p-button>
         @if (config()?.allowDeletion !== false) {
           <p-button
             icon="pi pi-trash"
             severity="danger"
+            [disabled]="loadingEntity()"
             (click)="deleteOne(row)"
           ></p-button>
         }

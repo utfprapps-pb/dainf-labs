@@ -10,6 +10,7 @@ import { PasswordModule } from 'primeng/password';
 import { RippleModule } from 'primeng/ripple';
 import { ToastModule } from 'primeng/toast';
 import { AuthService } from '../services/auth.service';
+import { extractErrorMessage } from '@/shared/utils/error.utils';
 
 @Component({
   selector: 'app-reset-password',
@@ -55,6 +56,16 @@ export class ResetPasswordComponent {
       return;
     }
 
+    if (this.password.length < 6) {
+      this._messageService.add({ severity: 'warn', summary: 'Senha inválida', detail: 'A senha deve ter no mínimo 6 caracteres.' });
+      return;
+    }
+
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).*$/.test(this.password)) {
+      this._messageService.add({ severity: 'warn', summary: 'Senha inválida', detail: 'A senha deve conter ao menos uma letra maiúscula, uma minúscula e um número.' });
+      return;
+    }
+
     if (this.password !== this.confirmPassword) {
       this._messageService.add({ severity: 'warn', summary: 'Senhas diferentes', detail: 'As senhas informadas não coincidem.' });
       return;
@@ -68,7 +79,7 @@ export class ResetPasswordComponent {
         this._router.navigate(['/login']);
       },
       error: (err) => {
-        this._messageService.add({ severity: 'error', summary: 'Falha ao redefinir', detail: 'Não foi possível alterar a senha.' });
+        this._messageService.add({ severity: 'error', summary: 'Falha ao redefinir', detail: extractErrorMessage(err, 'Não foi possível alterar a senha.') });
         console.error('Failed to reset password', err);
         this.isSubmitting = false;
       }
