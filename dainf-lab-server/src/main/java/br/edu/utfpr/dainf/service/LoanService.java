@@ -77,10 +77,17 @@ public class LoanService extends CrudService<Long, Loan, LoanRepository> {
             entity.setStatus(LoanStatus.ONGOING);
         }
 
+        Loan existing = entity.getId() != null ? repository.findById(entity.getId()).orElse(null) : null;
         if (entity.getItems() != null) {
             for (LoanItem item : entity.getItems()) {
                 item.setLoan(entity);
-                inventoryService.handleTransaction(item.getItem(), item.getQuantity(), InventoryTransactionType.LOAN);
+                LoanItem oldItem = findOldItem(existing, item);
+                inventoryService.updateTransaction(
+                        item.getItem(),
+                        oldItem != null ? oldItem.getQuantity() : BigDecimal.ZERO,
+                        InventoryTransactionType.LOAN,
+                        item.getQuantity()
+                );
             }
         }
 
@@ -109,6 +116,14 @@ public class LoanService extends CrudService<Long, Loan, LoanRepository> {
         if (!Objects.equals(dbEntity.getBorrower().getId(), userService.getCurrentUser().getId()) && !userService.hasPrivilegedAcess()) {
             throw new AccessDeniedException("Você não tem acesso para este registro");
         }
+    }
+
+    private LoanItem findOldItem(Loan existing, LoanItem current) {
+        if (existing == null || existing.getItems() == null) return null;
+        return existing.getItems().stream()
+                .filter(i -> Objects.equals(i.getItem().getId(), current.getItem().getId()))
+                .findFirst()
+                .orElse(null);
     }
 
     public List<LoanItem> getActiveLoansForItem(Long itemId) {
