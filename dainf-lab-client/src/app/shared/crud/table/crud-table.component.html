@@ -66,13 +66,13 @@
   </p-table>
 
   <p-paginator
-    [rows]="10"
+    [first]="first()"
+    [rows]="rows()"
     [totalRecords]="items()!.page.totalElements"
     [rowsPerPageOptions]="[10, 20, 30]"
     [showCurrentPageReport]="true"
     currentPageReportTemplate="Exibindo {last} de {totalRecords} itens"
     (onPageChange)="onPage($event)"
-    [rowsPerPageOptions]="[10, 20, 30]"
   >
   </p-paginator>
 }
