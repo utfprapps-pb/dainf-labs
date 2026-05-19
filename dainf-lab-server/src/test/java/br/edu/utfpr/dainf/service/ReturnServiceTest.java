@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -74,51 +75,14 @@ class ReturnServiceTest {
         verify(inventoryService).updateTransaction(item, oldQty, InventoryTransactionType.RETURN, newQty);
     }
 
-    // --- ISSUE quantity ---
-
-    @Test
-    void save_newReturn_callsUpdateTransactionWithZeroOldQtyForIssued() {
-        Item item = item(1L);
-        BigDecimal qty = new BigDecimal("2");
-        Return entity = aReturn(null, item, BigDecimal.ZERO, qty);
-
-        when(loanService.findById(any())).thenReturn(Optional.of(entity.getLoan()));
-        when(issueRepository.findByLoan(any())).thenReturn(Optional.empty());
-        when(userService.getCurrentUser()).thenReturn(new User());
-        when(repository.save(any())).thenReturn(entity);
-
-        returnService.save(entity);
-
-        verify(inventoryService).updateTransaction(item, BigDecimal.ZERO, InventoryTransactionType.ISSUE, qty);
-    }
-
-    @Test
-    void save_updateReturn_callsUpdateTransactionWithOldQtyForIssued() {
-        Item item = item(1L);
-        BigDecimal oldQty = new BigDecimal("1");
-        BigDecimal newQty = new BigDecimal("4");
-        Return existing = aReturn(1L, item, BigDecimal.ZERO, oldQty);
-        Return entity = aReturn(1L, item, BigDecimal.ZERO, newQty);
-
-        when(repository.findById(1L)).thenReturn(Optional.of(existing));
-        when(loanService.findById(any())).thenReturn(Optional.of(entity.getLoan()));
-        when(issueRepository.findByLoan(any())).thenReturn(Optional.empty());
-        when(userService.getCurrentUser()).thenReturn(new User());
-        when(repository.save(any())).thenReturn(entity);
-
-        returnService.save(entity);
-
-        verify(inventoryService).updateTransaction(item, oldQty, InventoryTransactionType.ISSUE, newQty);
-    }
-
     // --- Switching from returned to issued ---
 
     @Test
-    void save_updateReturn_switchReturnedToIssued_recalculatesBothTransactions() {
+    void save_updateReturn_switchReturnedToIssued_undoesReturnOnly() {
         Item item = item(1L);
         // First save: returned=1, issued=0
         Return existing = aReturn(1L, item, new BigDecimal("1"), BigDecimal.ZERO);
-        // Update: returned=0, issued=1
+        // Update: returned=0, issued=1 (item was consumed, not returned)
         Return entity = aReturn(1L, item, BigDecimal.ZERO, new BigDecimal("1"));
 
         when(repository.findById(1L)).thenReturn(Optional.of(existing));
@@ -129,18 +93,18 @@ class ReturnServiceTest {
 
         returnService.save(entity);
 
-        // Old RETURN of 1 should be undone (new qty=0)
+        // Old RETURN of 1 should be undone (stock back to loan-time level)
         verify(inventoryService).updateTransaction(item, new BigDecimal("1"), InventoryTransactionType.RETURN, BigDecimal.ZERO);
-        // New ISSUE of 1 should be applied (old qty=0)
-        verify(inventoryService).updateTransaction(item, BigDecimal.ZERO, InventoryTransactionType.ISSUE, new BigDecimal("1"));
+        // ISSUE must NOT touch inventory — LOAN already decremented stock
+        verify(inventoryService, never()).updateTransaction(any(), any(), eq(InventoryTransactionType.ISSUE), any());
     }
 
     @Test
-    void save_updateReturn_switchIssuedToReturned_recalculatesBothTransactions() {
+    void save_updateReturn_switchIssuedToReturned_appliesReturnOnly() {
         Item item = item(1L);
         // First save: returned=0, issued=1
         Return existing = aReturn(1L, item, BigDecimal.ZERO, new BigDecimal("1"));
-        // Update: returned=1, issued=0
+        // Update: returned=1, issued=0 (item came back after all)
         Return entity = aReturn(1L, item, new BigDecimal("1"), BigDecimal.ZERO);
 
         when(repository.findById(1L)).thenReturn(Optional.of(existing));
@@ -151,10 +115,10 @@ class ReturnServiceTest {
 
         returnService.save(entity);
 
-        // New RETURN of 1 should be applied (old qty=0)
+        // New RETURN of 1 should be applied (item back in stock)
         verify(inventoryService).updateTransaction(item, BigDecimal.ZERO, InventoryTransactionType.RETURN, new BigDecimal("1"));
-        // Old ISSUE of 1 should be undone (new qty=0)
-        verify(inventoryService).updateTransaction(item, new BigDecimal("1"), InventoryTransactionType.ISSUE, BigDecimal.ZERO);
+        // ISSUE must NOT touch inventory
+        verify(inventoryService, never()).updateTransaction(any(), any(), eq(InventoryTransactionType.ISSUE), any());
     }
 
     // --- helpers ---
