@@ -8,6 +8,9 @@ import br.edu.utfpr.dainf.shared.CrudService;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.util.Objects;
+
 @Service
 public class IssueService extends CrudService<Long, Issue, IssueRepository> {
 
@@ -33,14 +36,31 @@ public class IssueService extends CrudService<Long, Issue, IssueRepository> {
         if (entity.getId() == null) {
             entity.setUser(userService.getCurrentUser());
         }
+        Issue existing = (entity.getId() != null && handleTransaction)
+                ? repository.findById(entity.getId()).orElse(null)
+                : null;
         if (entity.getItems() != null) {
             for (IssueItem item : entity.getItems()) {
                 item.setIssue(entity);
                 if (handleTransaction) {
-                    inventoryService.handleTransaction(item.getItem(), item.getQuantity(), InventoryTransactionType.ISSUE);
+                    IssueItem oldItem = findOldItem(existing, item);
+                    inventoryService.updateTransaction(
+                            item.getItem(),
+                            oldItem != null ? oldItem.getQuantity() : BigDecimal.ZERO,
+                            InventoryTransactionType.ISSUE,
+                            item.getQuantity()
+                    );
                 }
             }
         }
         return super.save(entity);
+    }
+
+    private IssueItem findOldItem(Issue existing, IssueItem current) {
+        if (existing == null || existing.getItems() == null) return null;
+        return existing.getItems().stream()
+                .filter(i -> Objects.equals(i.getItem().getId(), current.getItem().getId()))
+                .findFirst()
+                .orElse(null);
     }
 }
