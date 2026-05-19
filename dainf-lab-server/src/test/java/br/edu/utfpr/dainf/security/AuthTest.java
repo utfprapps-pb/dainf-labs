@@ -1,6 +1,7 @@
 package br.edu.utfpr.dainf.security;
 
 import br.edu.utfpr.dainf.model.User;
+import br.edu.utfpr.dainf.repository.UserRepository;
 import br.edu.utfpr.dainf.service.UserService;
 import br.edu.utfpr.dainf.shared.ApplicationTest;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,9 @@ public class AuthTest {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Test
     public void loginComCredenciaisCorretas() throws Exception {
@@ -75,21 +79,23 @@ public class AuthTest {
     }
 
     private void createUser() {
-        userService.save(new User(
-                null,
-                "admin@utfpr.edu.br",
-                "Teste123456!",
-                "Teste",
-                "2562529",
-                "5546988358080",
-                "teste",
-                true,
-                null,
-                Instant.now(),
-                null,
-                false,
-                null,
-                null
-        ));
+        if (userRepository.findByEmail("admin@utfpr.edu.br").isEmpty()) {
+            userService.save(new User(
+                    null,
+                    "admin@utfpr.edu.br",
+                    "Teste123456!",
+                    "Teste",
+                    "2562529",
+                    "5546988358080",
+                    "teste",
+                    true,
+                    null,
+                    null,
+                    null,
+                    true,
+                    null,
+                    null
+            ));
+        }
     }
 }

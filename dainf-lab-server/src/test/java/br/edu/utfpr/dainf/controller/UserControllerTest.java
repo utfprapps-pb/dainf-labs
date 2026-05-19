@@ -16,7 +16,7 @@ class UserControllerTest extends CrudControllerTest<UserDTO> {
     protected UserDTO createValidObject() {
         Integer random = (int) (Math.random() * 10000);
         return UserDTO.builder()
-                .email(random + "teste@mail.com")
+                .email(random + "@utfpr.edu.br")
                 .password("Teste123456!")
                 .nome("teste")
                 .documento("odfdso")

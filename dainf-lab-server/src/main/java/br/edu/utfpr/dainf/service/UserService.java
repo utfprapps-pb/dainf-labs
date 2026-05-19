@@ -200,7 +200,14 @@ public class UserService extends CrudService<Long, User, UserRepository> impleme
         if (authentication == null || !authentication.isAuthenticated()) {
             return null;
         }
-        return (User) authentication.getPrincipal();
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof User user) {
+            return user;
+        }
+        if (principal instanceof UserDetails userDetails) {
+            return repository.findByEmail(userDetails.getUsername()).orElse(null);
+        }
+        return null;
     }
 
     public boolean hasPrivilegedAcess() {
