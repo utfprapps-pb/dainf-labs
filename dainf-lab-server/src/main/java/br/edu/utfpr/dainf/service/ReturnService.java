@@ -50,13 +50,20 @@ public class ReturnService extends CrudService<Long, Return, ReturnRepository> {
             for (ReturnItem item : entity.getItems()) {
                 item.setAReturn(entity);
 
-                // --- Handle RETURN quantity updates ---
                 ReturnItem oldItem = findOldItem(existing, item);
+
                 inventoryService.updateTransaction(
                         item.getItem(),
                         oldItem != null ? oldItem.getQuantityReturned() : BigDecimal.ZERO,
                         InventoryTransactionType.RETURN,
                         item.getQuantityReturned()
+                );
+
+                inventoryService.updateTransaction(
+                        item.getItem(),
+                        oldItem != null ? oldItem.getQuantityIssued() : BigDecimal.ZERO,
+                        InventoryTransactionType.ISSUE,
+                        item.getQuantityIssued()
                 );
             }
             createIssue(entity);
