@@ -9,15 +9,15 @@ export class TokenService {
 
   setToken(token: string) {
     this.accessToken = token;
-    sessionStorage.setItem(this.TOKEN_KEY, token);
+    localStorage.setItem(this.TOKEN_KEY, token);
   }
 
   getToken(): string | null {
-    return this.accessToken ?? sessionStorage.getItem(this.TOKEN_KEY);
+    return this.accessToken ?? localStorage.getItem(this.TOKEN_KEY);
   }
 
   clearToken() {
     this.accessToken = null;
-    sessionStorage.removeItem(this.TOKEN_KEY);
+    localStorage.removeItem(this.TOKEN_KEY);
   }
 }

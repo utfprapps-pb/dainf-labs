@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.ServletRequestBindingException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -51,6 +52,14 @@ public class ExceptionHandlerAdvice {
     @ExceptionHandler({WarnException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public WarnMessage handlerWarnException(WarnException exception, HttpServletRequest request) {
+        Map<String, String> errors = new HashMap<>();
+        errors.put("message", exception.getMessage());
+        return new WarnMessage(HttpStatus.BAD_REQUEST.value(), exception.getMessage(), request.getServletPath(), errors);
+    }
+
+    @ExceptionHandler({ServletRequestBindingException.class})
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public WarnMessage handlerServletRequestBindingException(ServletRequestBindingException exception, HttpServletRequest request) {
         Map<String, String> errors = new HashMap<>();
         errors.put("message", exception.getMessage());
         return new WarnMessage(HttpStatus.BAD_REQUEST.value(), exception.getMessage(), request.getServletPath(), errors);
