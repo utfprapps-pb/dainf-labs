@@ -46,7 +46,9 @@ public class ReservationService extends CrudService<Long, Reservation, Reservati
     public Reservation save(Reservation entity) {
         validateAccess(entity);
         if (entity.getId() == null) {
-            entity.setUser(userService.getCurrentUser());
+            if (entity.getUser() == null || !userService.hasPrivilegedAcess()) {
+                entity.setUser(userService.getCurrentUser());
+            }
         }
         if (entity.getItems() != null) {
             entity.getItems().forEach(item -> item.setReservation(entity));

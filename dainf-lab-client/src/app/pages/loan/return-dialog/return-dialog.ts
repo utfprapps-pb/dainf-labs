@@ -35,8 +35,6 @@ import { LoanService } from '../loan.service';
     InputTextModule,
     TextareaModule,
     DatePickerModule,
-    InputContainerComponent,
-    SearchSelectComponent,
     TableModule,
     InputNumber,
     ChipModule,
@@ -56,27 +54,67 @@ export class LoanReturnDialog implements OnInit {
   form!: FormGroup;
   loan!: Loan;
   savedReturn: Return | null = null;
+  items: any[] = [];
 
   ngOnInit(): void {
     this.loan = this.config.data?.loan;
+    this.items = this.loan.items.map(item => ({
+      ...item,
+      tempReturnQty: 0
+    }));
+    
     this._searchReturnByLoan(this.loan).subscribe((res) => {
       this.savedReturn = res;
       if (this.savedReturn) {
-        this.savedReturn.items?.forEach((item: any) => {
-          item.quantity = this.loan.items.find(
-            (loanItem: any) => loanItem.item.id === item.item.id,
-          )?.quantity;
+        this.items.forEach((item: any) => {
+          const savedItem = this.savedReturn?.items?.find(
+            (ri: any) => ri.item.id === item.item.id,
+          );
+          if (savedItem) {
+            item.returnedQuantity = savedItem.quantityReturned; // Fix field name
+            item.quantityIssued = savedItem.quantityIssued;
+          }
         });
       }
     });
     this._initForm();
   }
 
-  save() {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
+  getGroupedItems() {
+    const groups: { [key: string]: any[] } = {};
+    if (this.items && this.items.length > 0) {
+      this.items.forEach(item => {
+        let groupName = item.item?.category?.description || 'Outros';
+        if (groupName.toLowerCase().includes('ferramenta')) groupName = 'Ferramentas emprestadas';
+        else groupName = 'Componentes emprestados';
+
+        if (!groups[groupName]) groups[groupName] = [];
+        groups[groupName].push(item);
+      });
     }
+    return Object.entries(groups).map(([name, items]) => ({ name, items }));
+  }
+
+  incrementReturn(item: any) {
+    const max = item.quantity - (item.quantityReturned || 0);
+    if ((item.tempReturnQty || 0) < max) {
+      item.tempReturnQty = (item.tempReturnQty || 0) + 1;
+    }
+  }
+
+  decrementReturn(item: any) {
+    if ((item.tempReturnQty || 0) > 0) {
+      item.tempReturnQty = (item.tempReturnQty || 0) - 1;
+    }
+  }
+
+  markAllReturned() {
+    this.items.forEach(item => {
+      item.tempReturnQty = item.quantity - (item.returnedQuantity || 0);
+    });
+  }
+
+  save() {
     const payload = this._createPayload();
     this._save(payload as Return).subscribe((res) => {
       this.ref.close({ success: true, data: res });
@@ -116,35 +154,18 @@ export class LoanReturnDialog implements OnInit {
     return {
       id: this.savedReturn?.id,
       loan: this.loan,
-      returnDate: formValue.returnDate,
+      returnDate: formValue.returnDate || new Date().toISOString(),
       observation: formValue.observation,
       items: this._createItemsPayload(),
     } as Return;
   }
 
   private _createItemsPayload(): ReturnItem[] {
-    if (this.savedReturn?.items) {
-      return this._createItemsFromReturn(this.savedReturn);
-    }
-    return this._createItemsFromLoan(this.loan);
-  }
-
-  private _createItemsFromReturn(obj: Return): ReturnItem[] {
-    return obj.items!.map((item) => {
+    return this.items.map((item: any) => {
       return {
         item: item.item,
         quantityIssued: item.quantityIssued || 0,
-        quantityReturned: item.quantityReturned || 0,
-      } as ReturnItem;
-    });
-  }
-
-  private _createItemsFromLoan(loan: Loan): ReturnItem[] {
-    return loan.items.map((loanItem: any) => {
-      return {
-        item: loanItem.item,
-        quantityIssued: loanItem.quantityIssued || 0,
-        quantityReturned: loanItem.quantityReturned || 0,
+        quantityReturned: (item.returnedQuantity || 0) + (item.tempReturnQty || 0),
       } as ReturnItem;
     });
   }

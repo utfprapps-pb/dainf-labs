@@ -32,7 +32,12 @@ public class MenuConfig {
 
             Map.entry("issue", MenuItemDTO.builder()
                     .label("Saída").icon("pi pi-sign-out").routerLink("issue")
-                    .allowedRoles(Set.of(UserRole.ROLE_ADMIN, UserRole.ROLE_LAB_TECHNICIAN))
+                    .allowedRoles(Set.of(
+                            UserRole.ROLE_ADMIN,
+                            UserRole.ROLE_LAB_TECHNICIAN,
+                            UserRole.ROLE_STUDENT,
+                            UserRole.ROLE_PROFESSOR
+                    ))
                     .build()),
 
             Map.entry("reservation", MenuItemDTO.builder()

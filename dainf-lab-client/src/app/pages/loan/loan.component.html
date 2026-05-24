@@ -1,17 +1,101 @@
-<app-crud
-  #crud
-  [columns]="cols"
-  [service]="loanService"
-  [config]="config"
-  [form]="form"
-  [formTemplate]="crudForm"
-  [filtersTemplate]="filters"
-  [searchRequest]="searchRequest()"
-  (entityLoad)="onEntityLoad($event)"
-  (cancelClick)="onCancel()"
-  [actionsTemplate]="actions"
-  [allowCreation]="hasAdvancedPrivileges()"
-></app-crud>
+<div class="flex flex-col gap-6">
+  <!-- Toolbar customizada -->
+  <div class="bg-white rounded-md p-2 shadow-sm flex items-center gap-2 max-w-fit border border-gray-100">
+    <button
+      (click)="crud.openNew()"
+      class="flex items-center gap-2 text-[13px] font-medium text-gray-500 hover:text-gray-800 bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded transition-colors"
+    >
+      <i class="pi pi-plus text-gray-400"></i> Novo
+    </button>
+    <button
+      (click)="crud.drawerVisible.set(true)"
+      class="flex items-center gap-2 text-[13px] font-medium text-gray-500 hover:text-gray-800 bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded transition-colors"
+    >
+      <i class="pi pi-filter text-gray-400"></i> Filtrar
+    </button>
+    <button
+      (click)="toggleView()"
+      class="flex items-center gap-2 text-[13px] font-medium text-gray-500 hover:text-gray-800 bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded transition-colors"
+    >
+      <i
+        [class]="viewMode() === 'cards' ? 'pi pi-list' : 'pi pi-th-large'"
+        class="text-gray-400"
+      ></i>
+      <span>{{ viewMode() === 'cards' ? 'Lista' : 'Cards' }}</span>
+    </button>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 min-h-[calc(100vh-180px)]">
+    <h1 class="text-[22px] text-gray-800 mb-6 font-medium">Empréstimos</h1>
+
+    <!-- VISÃO 1: CARDS KANBAN -->
+    @if (viewMode() === 'cards') {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-start">
+        @for (loan of crud.items()?.content; track loan.id) {
+          <div class="bg-[#FFFDF4] border border-[#FDE08B] rounded-sm flex flex-col h-[340px]">
+            <div class="bg-white border-b border-[#FDE08B] p-3 flex items-center gap-3 shrink-0">
+              <span class="text-gray-500 font-normal text-lg w-4">{{ loan.id }}</span>
+              <span class="text-gray-800 text-[15px] font-normal">{{ loan.borrower.nome }}</span>
+            </div>
+            <div class="flex text-center py-4 text-gray-800 shrink-0 px-2">
+              <div class="flex-1 flex flex-col items-center">
+                <span class="text-[12px] mb-1">Empréstimo</span>
+                <span class="text-[13px]">{{ loan.loanDate | date: 'dd/MM/yyyy' }}</span>
+              </div>
+              <div class="w-px bg-gray-300 mx-2"></div>
+              <div class="flex-1 flex flex-col items-center">
+                <span class="text-[12px] mb-1">Devolução</span>
+                <span class="text-[13px]">{{ loan.deadline | date: 'dd/MM/yyyy' }}</span>
+              </div>
+            </div>
+            <div class="bg-white mx-3 mb-2 rounded-sm overflow-y-auto flex-1 border border-transparent">
+              @for (item of loan.items; track item.id) {
+                <div class="flex justify-between items-center px-4 py-2.5 border-b border-[#FDE08B] text-[13px] text-gray-700">
+                  <span>{{ item.item.name }}</span>
+                  <span>{{ item.quantity }}</span>
+                </div>
+              }
+            </div>
+            <div class="px-4 pb-3 pt-1 flex justify-between items-center shrink-0">
+              <button
+                (click)="openReturnDialog(loan)"
+                class="text-[#0EA5E9] hover:text-blue-600 transition-colors text-lg"
+                title="Registrar Devolução"
+              >
+                <i class="pi pi-undo"></i>
+              </button>
+              <button
+                (click)="openEdit(loan)"
+                class="text-[#F97316] hover:text-orange-600 transition-colors text-lg"
+                title="Expandir Ficha"
+              >
+                <i class="pi pi-external-link"></i>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- VISÃO 2: TABELA DE LISTA -->
+    <div [class.hide-crud-list]="viewMode() === 'cards'">
+      <app-crud
+        #crud
+        [columns]="cols"
+        [service]="loanService"
+        [config]="config"
+        [form]="form"
+        [formTemplate]="crudForm"
+        [filtersTemplate]="filters"
+        [searchRequest]="searchRequest()"
+        (entityLoad)="onEntityLoad($event)"
+        (cancelClick)="onCancel()"
+        [actionsTemplate]="actions"
+        [allowCreation]="hasAdvancedPrivileges()"
+      ></app-crud>
+    </div>
+  </div>
+</div>
 
 <ng-template #crudForm>
   <div class="p-fluid p-4">

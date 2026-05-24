@@ -28,6 +28,9 @@ public class Reservation implements Identifiable<Long> {
     @Column(name = "description")
     private String description;
 
+    @Column(name = "status")
+    private String status = "PENDENTE";
+
     @Column(name = "observation")
     private String observation;
 
@@ -37,6 +40,9 @@ public class Reservation implements Identifiable<Long> {
 
     @Column(name = "withdrawal_date")
     private Instant withdrawalDate;
+
+    @Column(name = "return_date")
+    private Instant returnDate;
 
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")

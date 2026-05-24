@@ -8,6 +8,7 @@ import { DashboardComponent } from './dashboard/dashboard.component';
 import { IssueComponent } from './issue/issue.component';
 import { ItemComponent } from './item/item.component';
 import { LoanComponent } from './loan/loan.component';
+import { ReturnComponent } from './return/return.component';
 import { PurchaseSolicitationComponent } from './purchase-solicitation/purchase-solicitation.component';
 import { PurchaseComponent } from './purchase/purchase.component';
 import { ReservationComponent } from './reservation/reservation.component';
@@ -27,6 +28,7 @@ export default [
       { path: 'purchase', component: PurchaseComponent, canActivate: [RoleGuard] },
       { path: 'loan', component: LoanComponent, canActivate: [RoleGuard] },
       { path: 'issue', component: IssueComponent, canActivate: [RoleGuard] },
+      { path: 'return', component: ReturnComponent, canActivate: [RoleGuard] },
       { path: 'reservation', component: ReservationComponent, canActivate: [RoleGuard] },
       { path: 'purchase-solicitation', component: PurchaseSolicitationComponent, canActivate: [RoleGuard] },
       { path: 'configuration', component: ConfigurationComponent, canActivate: [RoleGuard] },

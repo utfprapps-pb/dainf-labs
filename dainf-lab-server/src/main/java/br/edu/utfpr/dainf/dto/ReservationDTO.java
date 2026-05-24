@@ -15,9 +15,11 @@ import java.util.List;
 public class ReservationDTO implements Identifiable<Long> {
     private Long id;
     private String description;
+    private String status;
     private String observation;
     private Instant reservationDate;
     private Instant withdrawalDate;
+    private Instant returnDate;
     private SimpleUserDTO user;
     private List<ReservationItemDTO> items;
 

@@ -2,11 +2,11 @@ import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LoanService } from '../loan/loan.service';
+import { ReturnService } from './return.service';
 import { Loan, LoanItem } from '../loan/loan';
-import { ReturnService } from '../return/return.service';
-import { DialogService } from 'primeng/dynamicdialog';
-import { Return, ReturnItem } from '../return/return';
+import { Return, ReturnItem } from './return';
 import { SearchRequest } from '@/shared/models/search';
+import { DialogService } from 'primeng/dynamicdialog';
 import { LoanReturnDialog } from '../loan/return-dialog/return-dialog';
 import { UserService } from '../user/user.service';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -24,11 +24,11 @@ interface LoanWithTemp extends Loan {
 @Component({
   standalone: true,
   imports: [CommonModule, FormsModule],
-  providers: [LoanService, ReturnService, DialogService, UserService],
-  selector: 'app-issue',
-  templateUrl: './issue.component.html',
+  providers: [LoanService, ReturnService, DialogService],
+  selector: 'app-return',
+  templateUrl: './return.component.html',
 })
-export class IssueComponent {
+export class ReturnComponent {
   loanService = inject(LoanService);
   returnService = inject(ReturnService);
   dialogService = inject(DialogService);
@@ -98,6 +98,10 @@ export class IssueComponent {
     });
   }
 
+  hasItemsToReturn(loan: any): boolean {
+    return loan.items.some((item: any) => (item.tempReturnQty || 0) > 0);
+  }
+
   get filteredLoansList() {
     let list = this.loans() || [];
     const name = this.filterName?.toLowerCase() || '';
@@ -141,10 +145,6 @@ export class IssueComponent {
     return list;
   }
 
-  hasItemsToReturn(loan: any): boolean {
-    return loan.items.some((item: any) => (item.tempReturnQty || 0) > 0);
-  }
-
   incrementQty(item: any) {
     const max = item.quantity - (item.returnedQuantity || 0);
     if ((item.tempReturnQty || 0) < max) {
@@ -177,7 +177,7 @@ export class IssueComponent {
     const itemsToReturn = loan.items.filter((item: any) => item.tempReturnQty > 0);
     if (itemsToReturn.length === 0) return;
 
-    // Buscar se jÃ¡ existe um return para esse loan
+    // Buscar se já existe um return para esse loan
     this.returnService.findByLoan(loan).pipe(
       catchError(() => of(null))
     ).subscribe({

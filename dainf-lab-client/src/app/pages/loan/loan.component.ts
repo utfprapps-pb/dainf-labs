@@ -41,6 +41,7 @@ import { UserService } from '../user/user.service';
 import { Loan, LoanItem } from './loan';
 import { LoanService } from './loan.service';
 import { LoanReturnDialog } from './return-dialog/return-dialog';
+import { LoanDetailDialog } from './loan-detail/loan-detail.component';
 
 @Component({
   standalone: true,
@@ -73,6 +74,10 @@ import { LoanReturnDialog } from './return-dialog/return-dialog';
   ],
   selector: 'app-loan',
   templateUrl: 'loan.component.html',
+  styles: [`
+    :host ::ng-deep .hide-crud-list app-crud-table { display: none !important; }
+    :host ::ng-deep .hide-crud-list p-toolbar { display: none !important; }
+  `]
 })
 export class LoanComponent implements OnInit {
   loanService = inject(LoanService);
@@ -98,6 +103,7 @@ export class LoanComponent implements OnInit {
   ]
 
   disabled = signal(false);
+  viewMode = signal<'list' | 'cards'>('cards');
 
   config: CrudConfig<Loan> = {
     title: 'Empréstimos',
@@ -177,6 +183,12 @@ export class LoanComponent implements OnInit {
         value: this.statusFilter(),
         type: 'EQUALS',
       });
+    } else {
+      filters.push({
+        field: 'status',
+        value: ['ONGOING', 'OVERDUE'],
+        type: 'IN',
+      });
     }
     return <SearchRequest>{ filters };
   });
@@ -184,8 +196,10 @@ export class LoanComponent implements OnInit {
   ngOnInit(): void {
     const data = this.context.consume('reservation');
     if (data) {
-      this.crud()?.openNew();
-      this.form.patchValue({ items: data.items, borrower: data.borrower });
+      setTimeout(() => {
+        this.crud()?.openNew();
+        this.form.patchValue({ items: data.items, borrower: data.borrower });
+      });
     }
   }
 
@@ -240,7 +254,22 @@ export class LoanComponent implements OnInit {
     });
   }
 
-  openEdit(row: Loan) {
-    this.crud()?.edit(row);
+  openEdit(loan: Loan) {
+    const ref = this.dialogService.open(LoanDetailDialog, {
+      header: 'Ficha de Empréstimo',
+      width: '80vw',
+      modal: true,
+      data: { loan },
+    });
+
+    ref.onClose.subscribe((updatedLoan: Loan) => {
+      if (updatedLoan) {
+        this.crud()?.loadItems();
+      }
+    });
+  }
+
+  toggleView() {
+    this.viewMode.update(v => v === 'list' ? 'cards' : 'list');
   }
 }
