@@ -2,10 +2,11 @@ package br.edu.utfpr.dainf.controller;
 
 import br.edu.utfpr.dainf.dto.CategoryDTO;
 import br.edu.utfpr.dainf.shared.CrudControllerTest;
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
-import org.springframework.test.web.servlet.request.RequestPostProcessor;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
+
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class CategoryControllerTest extends CrudControllerTest<CategoryDTO> {
 
@@ -29,6 +30,18 @@ class CategoryControllerTest extends CrudControllerTest<CategoryDTO> {
     @Override
     protected void onBeforeUpdate(CategoryDTO dto) {
         dto.setDescription("Teste Alterado");
+    }
+
+    @Test
+    void createWithNullDescription_returns400() throws Exception {
+        CategoryDTO dto = new CategoryDTO(null, null, "icon", List.of());
+        performCreate(dto).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createWithEmptyDescription_returns400() throws Exception {
+        CategoryDTO dto = new CategoryDTO(null, "", "icon", List.of());
+        performCreate(dto).andExpect(status().isBadRequest());
     }
 
     private CategoryDTO createChild(String description) {

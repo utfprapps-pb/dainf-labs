@@ -58,6 +58,7 @@ public class Item implements Identifiable<Long> {
 
     private BigDecimal minimumStock;
 
+    @NotNull(message = "O campo 'Tipo' é obrigatório")
     @Enumerated(EnumType.STRING)
     private ItemType type;
 }

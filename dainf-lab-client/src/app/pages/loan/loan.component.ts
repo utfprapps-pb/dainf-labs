@@ -110,7 +110,7 @@ export class LoanComponent implements OnInit {
     loanDate: [new Date(), Validators.required],
     deadline: [null, Validators.required],
     observation: [null],
-    items: [[]],
+    items: [[], [Validators.required, Validators.minLength(1)]],
   });
 
   loanItensForm: FormGroup = this.formBuilder.group({

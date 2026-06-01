@@ -1,15 +1,21 @@
 package br.edu.utfpr.dainf.controller;
 
 import br.edu.utfpr.dainf.dto.FornecedorDTO;
+import br.edu.utfpr.dainf.dto.ItemDTO;
 import br.edu.utfpr.dainf.dto.PurchaseDTO;
+import br.edu.utfpr.dainf.dto.PurchaseItemDTO;
 import br.edu.utfpr.dainf.enums.UnidadeFederativa;
 import br.edu.utfpr.dainf.shared.CrudControllerTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class PurchaseControllerTest extends CrudControllerTest<PurchaseDTO> {
 
@@ -17,7 +23,6 @@ class PurchaseControllerTest extends CrudControllerTest<PurchaseDTO> {
 
     @Inject
     FornecedorController fornecedorController;
-
 
     @BeforeEach
     protected void setUp() {
@@ -49,5 +54,78 @@ class PurchaseControllerTest extends CrudControllerTest<PurchaseDTO> {
     @Override
     protected void onBeforeUpdate(PurchaseDTO dto) {
         dto.setDate(Instant.now());
+    }
+
+    @Test
+    void createWithNullDate_returns400() throws Exception {
+        PurchaseDTO dto = PurchaseDTO.builder()
+                .fornecedor(fornecedor)
+                .items(List.of())
+                .build();
+        performCreate(dto).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createWithNullFornecedor_returns400() throws Exception {
+        PurchaseDTO dto = PurchaseDTO.builder()
+                .date(Instant.now())
+                .items(List.of())
+                .build();
+        performCreate(dto).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createWithNullItems_returns400() throws Exception {
+        PurchaseDTO dto = PurchaseDTO.builder()
+                .date(Instant.now())
+                .fornecedor(fornecedor)
+                .items(null)
+                .build();
+        performCreate(dto).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createWithItemHavingNullQuantity_returns400() throws Exception {
+        PurchaseItemDTO invalidItem = PurchaseItemDTO.builder()
+                .item(ItemDTO.builder().id(1L).build())
+                .quantity(null)
+                .price(BigDecimal.ONE)
+                .build();
+        PurchaseDTO dto = PurchaseDTO.builder()
+                .date(Instant.now())
+                .fornecedor(fornecedor)
+                .items(List.of(invalidItem))
+                .build();
+        performCreate(dto).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createWithItemHavingNullPrice_returns400() throws Exception {
+        PurchaseItemDTO invalidItem = PurchaseItemDTO.builder()
+                .item(ItemDTO.builder().id(1L).build())
+                .quantity(BigDecimal.ONE)
+                .price(null)
+                .build();
+        PurchaseDTO dto = PurchaseDTO.builder()
+                .date(Instant.now())
+                .fornecedor(fornecedor)
+                .items(List.of(invalidItem))
+                .build();
+        performCreate(dto).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createWithItemHavingNullItem_returns400() throws Exception {
+        PurchaseItemDTO invalidItem = PurchaseItemDTO.builder()
+                .item(null)
+                .quantity(BigDecimal.ONE)
+                .price(BigDecimal.ONE)
+                .build();
+        PurchaseDTO dto = PurchaseDTO.builder()
+                .date(Instant.now())
+                .fornecedor(fornecedor)
+                .items(List.of(invalidItem))
+                .build();
+        performCreate(dto).andExpect(status().isBadRequest());
     }
 }

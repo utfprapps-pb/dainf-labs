@@ -1,7 +1,7 @@
 package br.edu.utfpr.dainf.dto;
 
 import br.edu.utfpr.dainf.shared.Identifiable;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,7 +17,7 @@ public class CategoryDTO implements Identifiable<Long> {
 
     private Long id;
 
-    @NotNull(message = "O nome da categoria não pode ser nulo")
+    @NotBlank(message = "O nome da categoria não pode ser nulo ou vazio")
     private String description;
 
     private String icon;

@@ -35,6 +35,7 @@ public class Reservation implements Identifiable<Long> {
     @NotNull(message = "Deve ser informado a data de reserva.")
     private Instant reservationDate;
 
+    @NotNull(message = "Deve ser informada a data de retirada.")
     @Column(name = "withdrawal_date")
     private Instant withdrawalDate;
 
