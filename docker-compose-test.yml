@@ -68,5 +68,5 @@ networks:
   database:
     name: database
     driver: bridge
-    external: false
+    external: true
     attachable: true
