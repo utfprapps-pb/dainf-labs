@@ -30,9 +30,33 @@
       </div>
     </div>
 
+    <!-- Datas e Observações -->
+    <div class="mb-8">
+      <h2 class="text-xl font-bold text-[#1E293B] mb-3">2. Datas e Observações</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div class="flex flex-col">
+          <label class="font-bold text-sm text-gray-700 mb-1">Data do Empréstimo</label>
+          <input type="date" [(ngModel)]="editLoanDate" class="border border-[#FACC15] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-yellow-400 bg-white">
+        </div>
+        <div class="flex flex-col">
+          <label class="font-bold text-sm text-gray-700 mb-1">Prazo de Devolução</label>
+          <input type="date" [(ngModel)]="editDeadline" class="border border-[#FACC15] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-yellow-400 bg-white">
+        </div>
+        @if (!isDateValid()) {
+          <div class="col-span-1 md:col-span-2 text-red-500 text-xs font-semibold">
+            O prazo de devolução não pode ser anterior à data do empréstimo.
+          </div>
+        }
+      </div>
+      <div class="flex flex-col">
+        <label class="font-bold text-sm text-gray-700 mb-1">Observações</label>
+        <textarea [(ngModel)]="editObservation" rows="3" class="border border-[#FACC15] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-yellow-400 resize-none bg-white"></textarea>
+      </div>
+    </div>
+
     <!-- Empréstimos Ativos -->
     <div>
-      <h2 class="text-xl font-bold text-[#1E293B] mb-3">2. Empréstimos ativos</h2>
+      <h2 class="text-xl font-bold text-[#1E293B] mb-3">3. Empréstimos ativos</h2>
 
       @for (group of getGroupedItems(); track group.name) {
         <div class="border border-[#FACC15] rounded-lg bg-white mb-6 overflow-hidden">
@@ -80,12 +104,21 @@
   </div>
 
   <div class="px-8 py-5 flex justify-between items-center rounded-b-xl shrink-0">
-    <button
-      (click)="openAddModal()"
-      class="bg-[#9395D3] hover:bg-indigo-400 text-[#1E293B] font-semibold px-4 py-2 rounded shadow-sm flex items-center gap-2 transition-colors"
-    >
-      Adicionar Novo Item <i class="pi pi-barcode"></i>
-    </button>
+    <div class="flex gap-3">
+      <button
+        (click)="openAddModal()"
+        class="bg-[#9395D3] hover:bg-indigo-400 text-[#1E293B] font-semibold px-4 py-2 rounded shadow-sm flex items-center gap-2 transition-colors"
+      >
+        Adicionar Novo Item <i class="pi pi-barcode"></i>
+      </button>
+      <button
+        (click)="saveChanges()"
+        [disabled]="!isDateValid()"
+        class="bg-[#22C55E] hover:bg-green-600 text-white font-bold px-6 py-2 rounded shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        Salvar Alterações
+      </button>
+    </div>
     <button
       (click)="close()"
       class="bg-[#FACC15] hover:bg-[#EAB308] text-white font-bold px-6 py-2 rounded shadow-sm transition-colors"

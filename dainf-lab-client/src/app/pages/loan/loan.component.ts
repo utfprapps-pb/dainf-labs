@@ -76,7 +76,7 @@ import { LoanDetailDialog } from './loan-detail/loan-detail.component';
   templateUrl: 'loan.component.html',
   styles: [`
     :host ::ng-deep .hide-crud-list app-crud-table { display: none !important; }
-    :host ::ng-deep .hide-crud-list p-toolbar { display: none !important; }
+    :host ::ng-deep p-toolbar { display: none !important; }
   `]
 })
 export class LoanComponent implements OnInit {

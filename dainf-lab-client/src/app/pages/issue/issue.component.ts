@@ -21,9 +21,11 @@ interface LoanWithTemp extends Loan {
   items: LoanItemWithTemp[];
 }
 
+import { TableModule } from 'primeng/table';
+
 @Component({
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TableModule],
   providers: [LoanService, ReturnService, DialogService, UserService],
   selector: 'app-issue',
   templateUrl: './issue.component.html',
@@ -36,6 +38,11 @@ export class IssueComponent {
 
   loans = signal<LoanWithTemp[]>([]);
   loading = signal(false);
+  viewMode: 'cards' | 'list' = 'cards';
+
+  toggleViewMode() {
+    this.viewMode = this.viewMode === 'cards' ? 'list' : 'cards';
+  }
 
   // Filtros
   filterName = '';

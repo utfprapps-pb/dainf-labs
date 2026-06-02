@@ -43,8 +43,16 @@ export class LoanDetailDialog implements OnInit {
   selectedItem: any = null;
   itemQuantity: number = 1;
 
+  editLoanDate: string = '';
+  editDeadline: string = '';
+  editObservation: string = '';
+
   ngOnInit(): void {
     this.loan = this.config.data?.loan;
+    this.editLoanDate = this.loan.loanDate ? new Date(this.loan.loanDate).toISOString().split('T')[0] : '';
+    this.editDeadline = this.loan.deadline ? new Date(this.loan.deadline).toISOString().split('T')[0] : '';
+    this.editObservation = this.loan.observation || '';
+
     this.returnService.findByLoan(this.loan).subscribe({
       next: (ret) => {
         if (ret && ret.items) {
@@ -56,6 +64,34 @@ export class LoanDetailDialog implements OnInit {
       },
       error: () => {}
     });
+  }
+
+  saveChanges() {
+    if (!this.isDateValid()) return;
+    
+    const payload = {
+      ...this.loan,
+      loanDate: this.editLoanDate ? new Date(this.editLoanDate.replace(/-/g, '\/')).toISOString() : this.loan.loanDate,
+      deadline: this.editDeadline ? new Date(this.editDeadline.replace(/-/g, '\/')).toISOString() : this.loan.deadline,
+      observation: this.editObservation
+    };
+
+    this.loanService.update(this.loan.id, payload).subscribe({
+      next: (res) => {
+        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Alterações salvas com sucesso' });
+        this.ref.close(res);
+      },
+      error: (err) => {
+        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao atualizar empréstimo' });
+      }
+    });
+  }
+
+  isDateValid(): boolean {
+    if (!this.editLoanDate || !this.editDeadline) return true; // Se não estiver preenchido, deixa a API ou o required lidar
+    const loanD = new Date(this.editLoanDate.replace(/-/g, '\/'));
+    const returnD = new Date(this.editDeadline.replace(/-/g, '\/'));
+    return returnD >= loanD;
   }
 
   getGroupedItems() {

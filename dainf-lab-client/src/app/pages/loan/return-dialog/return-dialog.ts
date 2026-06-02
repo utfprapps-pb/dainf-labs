@@ -140,7 +140,7 @@ export class LoanReturnDialog implements OnInit {
         { value: new Date(this.loan.deadline), disabled: true },
         Validators.required,
       ],
-      returnDate: [new Date(), Validators.required],
+      returnDate: [new Date().toISOString().split('T')[0], Validators.required],
       observation: [null],
     });
   }
@@ -154,7 +154,7 @@ export class LoanReturnDialog implements OnInit {
     return {
       id: this.savedReturn?.id,
       loan: this.loan,
-      returnDate: formValue.returnDate || new Date().toISOString(),
+      returnDate: formValue.returnDate ? new Date(formValue.returnDate.replace(/-/g, '\/')).toISOString() : new Date().toISOString(),
       observation: formValue.observation,
       items: this._createItemsPayload(),
     } as Return;

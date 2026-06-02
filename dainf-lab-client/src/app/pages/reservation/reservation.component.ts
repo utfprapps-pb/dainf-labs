@@ -13,6 +13,7 @@ import { CrudComponent } from '@/shared/crud/crud.component';
 import { DatePickerModule } from 'primeng/datepicker';
 import { FieldsetModule } from 'primeng/fieldset';
 import { InputNumberModule } from 'primeng/inputnumber';
+import { ButtonModule } from 'primeng/button';
 
 import { ContextStore } from '@/shared/store/context-store.service';
 import { ItemService } from '../item/item.service';
@@ -20,7 +21,7 @@ import { UserService } from '../user/user.service';
 import { Reservation, ReservationItem } from './reservation';
 import { ReservationService } from './reservation.service';
 import { LoanService } from '../loan/loan.service';
-
+import { CartService } from '@/shared/services/cart.service';
 @Component({
   standalone: true,
   imports: [
@@ -33,14 +34,15 @@ import { LoanService } from '../loan/loan.service';
     CrudComponent,
     DatePickerModule,
     FieldsetModule,
-    InputNumberModule
+    InputNumberModule,
+    ButtonModule
   ],
   providers: [ReservationService, UserService, ItemService, DatePipe, LoanService],
   selector: 'app-reservation',
   templateUrl: 'reservation.component.html',
   styles: [`
+    :host ::ng-deep .hide-crud-toolbar p-toolbar { display: none !important; }
     :host ::ng-deep .hide-crud-list app-crud-table { display: none !important; }
-    :host ::ng-deep .hide-crud-list p-toolbar { display: none !important; }
   `]
 })
 export class ReservationComponent implements OnInit {
@@ -51,7 +53,7 @@ export class ReservationComponent implements OnInit {
   router = inject(Router);
   context = inject(ContextStore);
   formBuilder = inject(FormBuilder);
-
+  cartService = inject(CartService);
   crud = viewChild(CrudComponent);
 
   config: CrudConfig<Reservation> = {
@@ -62,6 +64,7 @@ export class ReservationComponent implements OnInit {
   form: FormGroup = this.formBuilder.group({
     id: [{ value: null, disabled: true }],
     user: [null, Validators.required],
+    status: ['PENDENTE'],
     reservationDate: [new Date(), Validators.required],
     withdrawalDate: [null, Validators.required],
     returnDate: [null],
@@ -105,6 +108,7 @@ export class ReservationComponent implements OnInit {
   modalDateReturn: string = '';
   modalDescription: string = '';
   modalObservations: string = '';
+  currentUser: any = null;
 
   toggleViewMode() {
     this.viewMode = this.viewMode === 'cards' ? 'list' : 'cards';
@@ -125,26 +129,66 @@ export class ReservationComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    const cartData = this.context.consume('cart');
-    if (cartData && Array.isArray(cartData)) {
-      const newRes = {
-        reservationDate: new Date(),
-        items: cartData
-      };
-      this.reservationService.create(newRes as any).subscribe({
-        next: () => {
-          this.crud()?.loadItems();
-        },
-        error: (err) => {
-          console.error('Erro ao gerar reserva do carrinho', err);
-          this.crud()?.loadItems();
+    // Monitora o reset do formulário pelo crud.component e restaura os defaults
+    this.form.valueChanges.subscribe(val => {
+      let needsPatch = false;
+      const patch: any = {};
+      
+      if (!this.hasAdvancedPrivileges() && !val.user && this.currentUser) {
+        patch.user = this.currentUser;
+        needsPatch = true;
+      }
+      if (!val.status) {
+        patch.status = 'PENDENTE';
+        needsPatch = true;
+      }
+      if (!val.reservationDate) {
+        patch.reservationDate = new Date();
+        needsPatch = true;
+      }
+
+      if (needsPatch) {
+        this.form.patchValue(patch, { emitEvent: false });
+      }
+    });
+
+    this.userService.getCurrentUser().subscribe({
+      next: (user) => {
+        this.currentUser = user;
+        // Se for criação de nova reserva para Aluno, já preenche o usuário
+        if (!this.hasAdvancedPrivileges()) {
+           this.form.get('user')?.setValue(user);
         }
-      });
-    }
+        
+        const cartData = this.context.consume('cart');
+        if (cartData && Array.isArray(cartData)) {
+          const newRes = {
+            user: user,
+            status: 'PENDENTE',
+            reservationDate: new Date(),
+            items: cartData
+          };
+          this.reservationService.create(newRes as any).subscribe({
+            next: () => {
+              this.cartService.clearCart();
+              this.crud()?.loadItems();
+            },
+            error: (err) => {
+              console.error('Erro ao gerar reserva do carrinho', err);
+              this.crud()?.loadItems();
+            }
+          });
+        }
+      },
+      error: (err) => {
+        console.error('Erro ao obter usuário atual', err);
+      }
+    });
   }
 
   onEntityLoad(reservation: Reservation) {
     this.form.patchValue({
+      user: reservation.user ? reservation.user : (!this.hasAdvancedPrivileges() ? this.currentUser : null),
       reservationDate: reservation.reservationDate ? new Date(reservation.reservationDate) : null,
       withdrawalDate: reservation.withdrawalDate ? new Date(reservation.withdrawalDate) : null,
       returnDate: reservation.returnDate ? new Date(reservation.returnDate) : null,
@@ -165,6 +209,9 @@ export class ReservationComponent implements OnInit {
     this.modalDescription = reservation.description || '';
     this.modalObservations = reservation.observation || '';
     
+    // Injetando os itens no formGroup para que o app-subitem-form possa gerenciá-los
+    this.form.patchValue({ items: reservation.items ? [...reservation.items] : [] });
+    
     this.isModalOpen = true;
   }
 
@@ -174,15 +221,18 @@ export class ReservationComponent implements OnInit {
   }
 
   handleConfirm(): void {
-    if (!this.selectedReservation) return;
+    if (!this.selectedReservation || !this.isDateValid()) return;
+
+    const formItems = this.form.get('items')?.value || [];
 
     const updatedReservation: Reservation = {
       ...this.selectedReservation,
       status: this.modalStatus,
       description: this.modalDescription,
       observation: this.modalObservations,
-      withdrawalDate: this.modalDatePickup ? new Date(this.modalDatePickup) : undefined,
-      returnDate: this.modalDateReturn ? new Date(this.modalDateReturn) : undefined
+      withdrawalDate: this.modalDatePickup ? new Date(this.modalDatePickup.replace(/-/g, '\/')) : undefined,
+      returnDate: this.modalDateReturn ? new Date(this.modalDateReturn.replace(/-/g, '\/')) : undefined,
+      items: formItems
     };
 
     this.reservationService.update(updatedReservation.id, updatedReservation).subscribe({
@@ -196,6 +246,13 @@ export class ReservationComponent implements OnInit {
         this.closeModal();
       }
     });
+  }
+
+  isDateValid(): boolean {
+    if (!this.modalDatePickup || !this.modalDateReturn) return true;
+    const pickupD = new Date(this.modalDatePickup.replace(/-/g, '\/'));
+    const returnD = new Date(this.modalDateReturn.replace(/-/g, '\/'));
+    return returnD >= pickupD;
   }
 
   loanService = inject(LoanService);
@@ -212,8 +269,8 @@ export class ReservationComponent implements OnInit {
       borrower: reservation.user,
       raSiape: reservation.user.documento,
       items: loanItems,
-      loanDate: this.modalDatePickup ? new Date(this.modalDatePickup).toISOString() : new Date().toISOString(),
-      deadline: this.modalDateReturn ? new Date(this.modalDateReturn).toISOString() : undefined,
+      loanDate: this.modalDatePickup ? new Date(this.modalDatePickup.replace(/-/g, '\/')).toISOString() : new Date().toISOString(),
+      deadline: this.modalDateReturn ? new Date(this.modalDateReturn.replace(/-/g, '\/')).toISOString() : undefined,
       observation: this.modalObservations,
       status: 'ONGOING'
     };
@@ -235,7 +292,8 @@ export class ReservationComponent implements OnInit {
       },
       error: (err) => {
         console.error(err);
-        this.messageService.add({severity:'error', summary:'Erro', detail:'Não foi possível gerar o empréstimo'});
+        const errorMsg = err.error?.message || err.error?.detail || 'Não foi possível gerar o empréstimo';
+        this.messageService.add({severity:'error', summary:'Erro', detail: errorMsg});
       }
     });
   }
