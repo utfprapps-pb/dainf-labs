@@ -101,6 +101,25 @@ const DATE_RANGE_STORAGE_KEY = 'dashboardDateRange';
           />
         }
 
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+           @if (!loading() && returnRateSummary()) {
+             <app-chart
+                type="doughnut"
+                [chartData]="returnRateSummary()!.data"
+                [chartOptions]="returnRateSummary()!.options"
+                [title]="returnRateSummary()!.title"
+             />
+           }
+           @if (!loading() && topBorrowedItems()) {
+             <app-chart
+                type="bar"
+                [chartData]="topBorrowedItems()!.data"
+                [chartOptions]="topBorrowedItems()!.options"
+                [title]="topBorrowedItems()!.title"
+             />
+           }
+        </div>
+
         <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
           <app-low-stock-panel
             class="xl:col-span-2"
@@ -127,6 +146,22 @@ export class DashboardComponent implements OnInit {
   lowStockItems = signal<LowStockItem[]>([]);
   recentOperations = signal<InventoryOperation[]>([]);
   loansByDay = signal<
+    | {
+        data: { labels: string[]; datasets: any[] };
+        options: any;
+        title: string;
+      }
+    | undefined
+  >(undefined);
+  returnRateSummary = signal<
+    | {
+        data: { labels: string[]; datasets: any[] };
+        options: any;
+        title: string;
+      }
+    | undefined
+  >(undefined);
+  topBorrowedItems = signal<
     | {
         data: { labels: string[]; datasets: any[] };
         options: any;
@@ -221,6 +256,8 @@ export class DashboardComponent implements OnInit {
           this._mapLoansByDay(data);
           this._mapLowStockItems(data);
           this._mapRecentOperations(data);
+          this._mapReturnRateSummary(data);
+          this._mapTopBorrowedItems(data);
         }),
         take(1),
         finalize(() => this.loading.set(false)),
@@ -260,5 +297,38 @@ export class DashboardComponent implements OnInit {
     this.recentOperations.set(
       this.dashboardService.mapRecentOperations(data.recentOperations),
     );
+  }
+
+  private _mapReturnRateSummary(data: any) {
+    const returnRate = this.dashboardService.mapReturnRateSummary(data.returnRateSummary);
+    if (!returnRate.datasets.length || !returnRate.datasets[0].data.length) return;
+    
+    const { data: chartData, options: chartOptions } =
+      this.chartService.getPieChart(returnRate.labels, returnRate.datasets[0].data, 'doughnut');
+    
+    (chartData.datasets[0] as any).backgroundColor = returnRate.datasets[0].backgroundColor;
+    (chartData.datasets[0] as any).hoverBackgroundColor = returnRate.datasets[0].hoverBackgroundColor;
+
+    this.returnRateSummary.set({
+      data: chartData,
+      options: chartOptions,
+      title: 'Taxa de Devoluções',
+    });
+  }
+
+  private _mapTopBorrowedItems(data: any) {
+    const topItems = this.dashboardService.mapTopBorrowedItems(data.topBorrowedItems);
+    if (!topItems.datasets.length) return;
+
+    const { data: chartData, options: chartOptions } =
+      this.chartService.getBarChart(topItems.labels, topItems.datasets);
+    
+    chartOptions.indexAxis = 'y'; // Torna o gráfico de barras horizontal
+    
+    this.topBorrowedItems.set({
+      data: chartData,
+      options: chartOptions,
+      title: 'Produtos Mais Emprestados',
+    });
   }
 }

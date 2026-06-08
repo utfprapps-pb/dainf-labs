@@ -5,6 +5,7 @@ import br.edu.utfpr.dainf.model.User;
 import br.edu.utfpr.dainf.repository.InventoryRepository;
 import br.edu.utfpr.dainf.repository.InventoryTransactionRepository;
 import br.edu.utfpr.dainf.repository.LoanRepository;
+import br.edu.utfpr.dainf.repository.ReturnRepository;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.PageRequest;
@@ -19,17 +20,20 @@ public class DashboardService {
     private final UserService userService;
     private final InventoryRepository inventoryRepository;
     private final InventoryTransactionRepository inventoryTransactionRepository;
+    private final ReturnRepository returnRepository;
 
     public DashboardService(
             LoanRepository loanRepository,
             UserService userService,
             InventoryRepository inventoryRepository,
-            InventoryTransactionRepository inventoryTransactionRepository
+            InventoryTransactionRepository inventoryTransactionRepository,
+            ReturnRepository returnRepository
     ) {
         this.loanRepository = loanRepository;
         this.userService = userService;
         this.inventoryRepository = inventoryRepository;
         this.inventoryTransactionRepository = inventoryTransactionRepository;
+        this.returnRepository = returnRepository;
     }
 
     public DashboardDTO getDashboardData(LocalDate startDate, LocalDate endDate) {
@@ -52,6 +56,12 @@ public class DashboardService {
                         : List.of(),
                 hasAdvancedPrivileges
                         ? inventoryTransactionRepository.findRecentOperations(PageRequest.of(0, 8))
+                        : List.of(),
+                hasAdvancedPrivileges
+                        ? returnRepository.getReturnRateSummary(startDate, endDate)
+                        : null,
+                hasAdvancedPrivileges
+                        ? loanRepository.findTopBorrowedItems(startDate, endDate)
                         : List.of()
             );
     }

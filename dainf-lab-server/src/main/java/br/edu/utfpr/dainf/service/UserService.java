@@ -217,6 +217,12 @@ public class UserService extends CrudService<Long, User, UserRepository> impleme
         }
     }
 
+    public boolean isStudentBlocked(User user) {
+        if (user == null || user.getId() == null) return false;
+        var overdueLoans = loanRepository.findByBorrowerAndStatusIn(user, List.of(LoanStatus.OVERDUE));
+        return !overdueLoans.isEmpty();
+    }
+
     public Map<String, Object> validateClearance(String code) {
         User user = repository.findByClearanceCode(code)
                 .orElseThrow(() -> new UsernameNotFoundException("Código inválido"));

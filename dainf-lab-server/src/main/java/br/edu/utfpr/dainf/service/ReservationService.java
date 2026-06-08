@@ -14,6 +14,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import br.edu.utfpr.dainf.exception.WarnException;
+import br.edu.utfpr.dainf.model.Inventory;
+import br.edu.utfpr.dainf.model.ReservationItem;
 
 import java.util.ArrayList;
 import java.util.Objects;
@@ -22,9 +25,15 @@ import java.util.Objects;
 public class ReservationService extends CrudService<Long, Reservation, ReservationRepository> {
 
     private final UserService userService;
+    private final InventoryService inventoryService;
+    private final br.edu.utfpr.dainf.mail.MailService mailService;
+    private final ConfigurationService configurationService;
 
-    public ReservationService(UserService userService) {
+    public ReservationService(UserService userService, InventoryService inventoryService, br.edu.utfpr.dainf.mail.MailService mailService, ConfigurationService configurationService) {
         this.userService = userService;
+        this.inventoryService = inventoryService;
+        this.mailService = mailService;
+        this.configurationService = configurationService;
     }
 
     @Override
@@ -49,11 +58,40 @@ public class ReservationService extends CrudService<Long, Reservation, Reservati
             if (entity.getUser() == null || !userService.hasPrivilegedAcess()) {
                 entity.setUser(userService.getCurrentUser());
             }
+            if (userService.isStudentBlocked(entity.getUser())) {
+                throw new WarnException("Usuário bloqueado: possui empréstimos em atraso.");
+            }
         }
+        
         if (entity.getItems() != null) {
-            entity.getItems().forEach(item -> item.setReservation(entity));
+            for (ReservationItem item : entity.getItems()) {
+                item.setReservation(entity);
+                if (item.getItem() != null) {
+                    Inventory inv = inventoryService.findByItem(item.getItem());
+                    if (inv == null || inv.getQuantity().compareTo(item.getQuantity()) < 0) {
+                        throw new WarnException("Estoque insuficiente para o item: " + item.getItem().getName());
+                    }
+                }
+            }
         }
-        return super.save(entity);
+        boolean isNew = entity.getId() == null;
+        Reservation saved = super.save(entity);
+        
+        if (isNew) {
+            String to = configurationService.get().getClearanceEmailRecipient();
+            if (to != null && !to.isBlank()) {
+                try {
+                    mailService.send(br.edu.utfpr.dainf.mail.Mail.builder()
+                            .to(java.util.List.of(to))
+                            .subject("Nova Reserva Solicitada")
+                            .content("Uma nova reserva foi solicitada por " + saved.getUser().getNome() + ". Acesse o sistema para revisar.")
+                            .build());
+                } catch (Exception e) {
+                    // Ignore mail error to not block reservation
+                }
+            }
+        }
+        return saved;
     }
 
     @Override

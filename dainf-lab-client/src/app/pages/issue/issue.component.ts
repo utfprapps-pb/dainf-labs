@@ -25,10 +25,12 @@ import { TableModule } from 'primeng/table';
 import { MessageService } from 'primeng/api';
 import { BarcodeScannerComponent } from '@/shared/components/barcode-scanner/barcode-scanner.component';
 
+import { ItemService } from '../item/item.service';
+
 @Component({
   standalone: true,
   imports: [CommonModule, FormsModule, TableModule, BarcodeScannerComponent],
-  providers: [LoanService, ReturnService, DialogService, UserService, MessageService],
+  providers: [LoanService, ReturnService, DialogService, UserService, MessageService, ItemService],
   selector: 'app-issue',
   templateUrl: './issue.component.html',
 })
