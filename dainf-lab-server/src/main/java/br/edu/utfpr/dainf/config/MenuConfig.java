@@ -35,6 +35,11 @@ public class MenuConfig {
                     .allowedRoles(Set.of(UserRole.ROLE_ADMIN, UserRole.ROLE_LAB_TECHNICIAN))
                     .build()),
 
+            Map.entry("inventory-history", MenuItemDTO.builder()
+                    .label("Histórico de Estoque").icon("pi pi-history").routerLink("inventory-history")
+                    .allowedRoles(Set.of(UserRole.ROLE_ADMIN, UserRole.ROLE_LAB_TECHNICIAN))
+                    .build()),
+
             Map.entry("reservation", MenuItemDTO.builder()
                     .label("Reserva").icon("pi pi-calendar").routerLink("reservation")
                     .allowedRoles(Set.of(
@@ -108,7 +113,8 @@ public class MenuConfig {
                         .items(List.of(
                                 baseItems.get("loan"),
                                 baseItems.get("issue"),
-                                baseItems.get("reservation")
+                                baseItems.get("reservation"),
+                                baseItems.get("inventory-history")
                         ))
                         .build(),
                 MenuItemDTO.builder()

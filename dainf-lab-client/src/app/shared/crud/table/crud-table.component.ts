@@ -72,6 +72,14 @@ export class CrudTableComponent<T extends Identifiable> implements OnChanges {
     });
   }
 
+  showActionsColumn(): boolean {
+    if (this.actionsTemplate()) {
+      return true;
+    }
+    const config = this.config();
+    return config?.allowEditing !== false || config?.allowDeletion !== false;
+  }
+
   edit(row: T) {
     this.editClick.emit(row);
   }

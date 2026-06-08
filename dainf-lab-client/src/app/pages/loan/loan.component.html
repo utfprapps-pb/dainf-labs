@@ -11,7 +11,16 @@
   (cancelClick)="onCancel()"
   [actionsTemplate]="actions"
   [allowCreation]="hasAdvancedPrivileges()"
+  [templateMap]="templateMap"
 ></app-crud>
+
+<ng-template #statusTemplate let-row>
+  <p-tag
+    [value]="labelValue.transform(row.status, status)"
+    [severity]="statusSeverity(row.status)"
+    [icon]="statusIcon(row.status)"
+  ></p-tag>
+</ng-template>
 
 <ng-template #crudForm>
   <div class="p-fluid p-4">
