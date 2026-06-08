@@ -42,6 +42,7 @@ import { Loan, LoanItem } from './loan';
 import { LoanService } from './loan.service';
 import { LoanReturnDialog } from './return-dialog/return-dialog';
 import { LoanDetailDialog } from './loan-detail/loan-detail.component';
+import { BarcodeScannerComponent } from '@/shared/components/barcode-scanner/barcode-scanner.component';
 
 @Component({
   standalone: true,
@@ -61,7 +62,8 @@ import { LoanDetailDialog } from './loan-detail/loan-detail.component';
     InputGroupModule,
     InputGroupAddonModule,
     ButtonModule,
-    StaticSelectComponent
+    StaticSelectComponent,
+    BarcodeScannerComponent
 ],
   providers: [
     LoanService,
@@ -227,6 +229,23 @@ export class LoanComponent implements OnInit {
 
       this.disabled.set(true);
     }, 100);
+  }
+
+  onUserScanned(user: any) {
+    if (this.hasAdvancedPrivileges()) {
+      this.form.get('borrower')?.setValue(user);
+    }
+  }
+
+  onItemScanned(item: any) {
+    const currentItems = this.form.get('items')?.value || [];
+    const existingIndex = currentItems.findIndex((i: any) => i.item.id === item.id);
+    if (existingIndex > -1) {
+      currentItems[existingIndex].quantity += 1;
+    } else {
+      currentItems.push({ item: item, quantity: 1, shouldReturn: false });
+    }
+    this.form.get('items')?.setValue([...currentItems]);
   }
 
   onCancel() {

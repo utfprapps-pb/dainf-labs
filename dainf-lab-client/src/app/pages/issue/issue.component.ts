@@ -22,11 +22,13 @@ interface LoanWithTemp extends Loan {
 }
 
 import { TableModule } from 'primeng/table';
+import { MessageService } from 'primeng/api';
+import { BarcodeScannerComponent } from '@/shared/components/barcode-scanner/barcode-scanner.component';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, FormsModule, TableModule],
-  providers: [LoanService, ReturnService, DialogService, UserService],
+  imports: [CommonModule, FormsModule, TableModule, BarcodeScannerComponent],
+  providers: [LoanService, ReturnService, DialogService, UserService, MessageService],
   selector: 'app-issue',
   templateUrl: './issue.component.html',
 })
@@ -35,6 +37,7 @@ export class IssueComponent {
   returnService = inject(ReturnService);
   dialogService = inject(DialogService);
   userService = inject(UserService);
+  messageService = inject(MessageService);
 
   loans = signal<LoanWithTemp[]>([]);
   loading = signal(false);
@@ -258,5 +261,24 @@ export class IssueComponent {
     this.filterType = '';
     this.filterLoanDate = '';
     this.filterDeadlineDate = '';
+  }
+
+  onUserScanned(user: any) {
+    this.filterDocument = user.documento;
+    const filtered = this.filteredLoansList;
+    if (filtered.length === 1) {
+       this.openReturnDialog(filtered[0]);
+    }
+  }
+
+  onItemScanned(item: any) {
+    const loansWithItem = this.filteredLoansList.filter(l => l.items.some((i: any) => i.item.id === item.id));
+    if (loansWithItem.length === 1) {
+       this.openReturnDialog(loansWithItem[0]);
+    } else if (loansWithItem.length > 1) {
+       this.messageService.add({severity: 'warn', summary: 'Atenção', detail: 'Este item aparece em mais de um empréstimo na lista atual.'});
+    } else {
+       this.messageService.add({severity: 'error', summary: 'Não Encontrado', detail: 'Não há empréstimos pendentes contendo este item.'});
+    }
   }
 }

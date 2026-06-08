@@ -13,6 +13,7 @@ import { CrudComponent } from '@/shared/crud/crud.component';
 import { DatePickerModule } from 'primeng/datepicker';
 import { FieldsetModule } from 'primeng/fieldset';
 import { InputNumberModule } from 'primeng/inputnumber';
+import { BarcodeScannerComponent } from '@/shared/components/barcode-scanner/barcode-scanner.component';
 import { ButtonModule } from 'primeng/button';
 
 import { ContextStore } from '@/shared/store/context-store.service';
@@ -35,7 +36,8 @@ import { CartService } from '@/shared/services/cart.service';
     DatePickerModule,
     FieldsetModule,
     InputNumberModule,
-    ButtonModule
+    ButtonModule,
+    BarcodeScannerComponent
   ],
   providers: [ReservationService, UserService, ItemService, DatePipe, LoanService],
   selector: 'app-reservation',
@@ -193,6 +195,23 @@ export class ReservationComponent implements OnInit {
       withdrawalDate: reservation.withdrawalDate ? new Date(reservation.withdrawalDate) : null,
       returnDate: reservation.returnDate ? new Date(reservation.returnDate) : null,
     });
+  }
+
+  onUserScanned(user: any) {
+    if (this.hasAdvancedPrivileges()) {
+      this.form.get('user')?.setValue(user);
+    }
+  }
+
+  onItemScanned(item: any) {
+    const currentItems = this.form.get('items')?.value || [];
+    const existingIndex = currentItems.findIndex((i: any) => i.item.id === item.id);
+    if (existingIndex > -1) {
+      currentItems[existingIndex].quantity += 1;
+    } else {
+      currentItems.push({ item: item, quantity: 1 });
+    }
+    this.form.get('items')?.setValue([...currentItems]);
   }
 
   loadReservations(): void {
