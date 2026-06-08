@@ -1,5 +1,6 @@
 package br.edu.utfpr.dainf.model;
 
+import br.edu.utfpr.dainf.audit.AuditRedacted;
 import br.edu.utfpr.dainf.shared.Identifiable;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -26,6 +27,7 @@ public class UserRecovery implements Identifiable<Long> {
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 
+    @AuditRedacted
     private String resetToken;
     private LocalDateTime tokenExpirationDate;
 }

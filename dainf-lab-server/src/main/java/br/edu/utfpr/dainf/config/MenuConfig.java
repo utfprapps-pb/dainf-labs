@@ -93,6 +93,11 @@ public class MenuConfig {
                     .allowedRoles(Set.of(UserRole.ROLE_ADMIN))
                     .build()),
 
+            Map.entry("audit", MenuItemDTO.builder()
+                    .label("Auditoria").icon("pi pi-history").routerLink("audit")
+                    .allowedRoles(Set.of(UserRole.ROLE_ADMIN))
+                    .build()),
+
             Map.entry("about", MenuItemDTO.builder()
                     .label("Sobre").icon("pi pi-info-circle").routerLink("about")
                     .allowedRoles(Set.of(
@@ -137,6 +142,7 @@ public class MenuConfig {
                         .label("Sistema")
                         .items(List.of(
                                 baseItems.get("config"),
+                                baseItems.get("audit"),
                                 baseItems.get("about")
                         ))
                         .build()

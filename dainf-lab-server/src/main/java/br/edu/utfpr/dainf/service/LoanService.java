@@ -21,11 +21,15 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
 
 @Service
 public class LoanService extends CrudService<Long, Loan, LoanRepository> {
+
+    private static final ZoneId LOAN_ZONE = ZoneId.of("America/Sao_Paulo");
 
     private final InventoryService inventoryService;
     private final UserService userService;
@@ -192,8 +196,12 @@ public class LoanService extends CrudService<Long, Loan, LoanRepository> {
         }
 
         Instant deadline = loan.getDeadline();
-        if (deadline != null && Instant.now().isAfter(deadline)) {
-            return LoanStatus.OVERDUE;
+        if (deadline != null) {
+            LocalDate deadlineDate = deadline.atZone(LOAN_ZONE).toLocalDate();
+            LocalDate today = LocalDate.now(LOAN_ZONE);
+            if (today.isAfter(deadlineDate)) {
+                return LoanStatus.OVERDUE;
+            }
         }
         return LoanStatus.ONGOING;
     }

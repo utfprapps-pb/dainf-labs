@@ -18,9 +18,12 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -111,6 +114,135 @@ class LoanServiceTest {
         loanService.save(entity);
 
         verifyNoInteractions(inventoryService);
+    }
+
+    // --- refreshStatus / deadline status resolution ---
+
+    private static final ZoneId LOAN_ZONE = ZoneId.of("America/Sao_Paulo");
+
+    @Test
+    void refreshStatus_deadlineToday_keepsLoanOngoing() {
+        Instant deadlineToday = LocalDate.now(LOAN_ZONE).atStartOfDay(LOAN_ZONE).toInstant();
+        Loan persisted = loanWithDeadline(1L, deadlineToday, LoanStatus.ONGOING);
+        stubPendingReturn(persisted);
+
+        Loan result = loanService.refreshStatus(persisted);
+
+        assertEquals(LoanStatus.ONGOING, result.getStatus());
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void refreshStatus_deadlineTomorrow_keepsLoanOngoing() {
+        Instant deadlineTomorrow = LocalDate.now(LOAN_ZONE).plusDays(1).atStartOfDay(LOAN_ZONE).toInstant();
+        Loan persisted = loanWithDeadline(1L, deadlineTomorrow, LoanStatus.ONGOING);
+        stubPendingReturn(persisted);
+
+        Loan result = loanService.refreshStatus(persisted);
+
+        assertEquals(LoanStatus.ONGOING, result.getStatus());
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void refreshStatus_deadlineYesterday_marksLoanOverdue() {
+        Instant deadlineYesterday = LocalDate.now(LOAN_ZONE).minusDays(1).atStartOfDay(LOAN_ZONE).toInstant();
+        Loan persisted = loanWithDeadline(1L, deadlineYesterday, LoanStatus.ONGOING);
+        stubPendingReturn(persisted);
+        when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        Loan result = loanService.refreshStatus(persisted);
+
+        assertEquals(LoanStatus.OVERDUE, result.getStatus());
+        verify(loanMailService).sendLoanOverdue(1L);
+    }
+
+    @Test
+    void refreshStatus_noItemsToReturn_marksLoanCompleted() {
+        Loan persisted = loanWithDeadline(1L, null, LoanStatus.ONGOING);
+        when(repository.findById(1L)).thenReturn(Optional.of(persisted));
+        when(repository.sumReturnableQuantity(1L)).thenReturn(BigDecimal.ZERO);
+        when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        Loan result = loanService.refreshStatus(persisted);
+
+        assertEquals(LoanStatus.COMPLETED, result.getStatus());
+        verify(loanMailService).sendLoanCompleted(1L);
+    }
+
+    @Test
+    void refreshStatus_returnedAndIssuedBelowExpected_keepsLoanOngoing() {
+        Loan persisted = loanWithDeadline(1L, null, LoanStatus.ONGOING);
+        when(repository.findById(1L)).thenReturn(Optional.of(persisted));
+        when(repository.sumReturnableQuantity(1L)).thenReturn(new BigDecimal("10"));
+        when(returnRepository.sumQuantityReturnedByLoan(1L)).thenReturn(new BigDecimal("4"));
+        when(returnRepository.sumQuantityIssuedByLoan(1L)).thenReturn(new BigDecimal("3"));
+
+        Loan result = loanService.refreshStatus(persisted);
+
+        assertEquals(LoanStatus.ONGOING, result.getStatus());
+        verify(repository, never()).save(any());
+        verify(loanMailService, never()).sendLoanCompleted(any());
+    }
+
+    @Test
+    void refreshStatus_returnedAndIssuedMatchExpected_marksLoanCompleted() {
+        Loan persisted = loanWithDeadline(1L, null, LoanStatus.ONGOING);
+        when(repository.findById(1L)).thenReturn(Optional.of(persisted));
+        when(repository.sumReturnableQuantity(1L)).thenReturn(new BigDecimal("10"));
+        when(returnRepository.sumQuantityReturnedByLoan(1L)).thenReturn(new BigDecimal("6"));
+        when(returnRepository.sumQuantityIssuedByLoan(1L)).thenReturn(new BigDecimal("4"));
+        when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        Loan result = loanService.refreshStatus(persisted);
+
+        assertEquals(LoanStatus.COMPLETED, result.getStatus());
+        verify(loanMailService).sendLoanCompleted(1L);
+    }
+
+    @Test
+    void refreshStatus_fullyReturnedWithNoneIssued_marksLoanCompleted() {
+        Loan persisted = loanWithDeadline(1L, null, LoanStatus.ONGOING);
+        when(repository.findById(1L)).thenReturn(Optional.of(persisted));
+        when(repository.sumReturnableQuantity(1L)).thenReturn(new BigDecimal("10"));
+        when(returnRepository.sumQuantityReturnedByLoan(1L)).thenReturn(new BigDecimal("10"));
+        when(returnRepository.sumQuantityIssuedByLoan(1L)).thenReturn(BigDecimal.ZERO);
+        when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        Loan result = loanService.refreshStatus(persisted);
+
+        assertEquals(LoanStatus.COMPLETED, result.getStatus());
+    }
+
+    @Test
+    void refreshStatus_fullyIssuedWithNoneReturned_marksLoanCompleted() {
+        Loan persisted = loanWithDeadline(1L, null, LoanStatus.ONGOING);
+        when(repository.findById(1L)).thenReturn(Optional.of(persisted));
+        when(repository.sumReturnableQuantity(1L)).thenReturn(new BigDecimal("10"));
+        when(returnRepository.sumQuantityReturnedByLoan(1L)).thenReturn(BigDecimal.ZERO);
+        when(returnRepository.sumQuantityIssuedByLoan(1L)).thenReturn(new BigDecimal("10"));
+        when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        Loan result = loanService.refreshStatus(persisted);
+
+        assertEquals(LoanStatus.COMPLETED, result.getStatus());
+    }
+
+    private Loan loanWithDeadline(Long id, Instant deadline, LoanStatus status) {
+        Loan loan = new Loan();
+        loan.setId(id);
+        loan.setLoanDate(Instant.now());
+        loan.setDeadline(deadline);
+        loan.setStatus(status);
+        loan.setBorrower(user);
+        return loan;
+    }
+
+    private void stubPendingReturn(Loan persisted) {
+        when(repository.findById(persisted.getId())).thenReturn(Optional.of(persisted));
+        when(repository.sumReturnableQuantity(persisted.getId())).thenReturn(new BigDecimal("1"));
+        when(returnRepository.sumQuantityReturnedByLoan(persisted.getId())).thenReturn(BigDecimal.ZERO);
+        when(returnRepository.sumQuantityIssuedByLoan(persisted.getId())).thenReturn(BigDecimal.ZERO);
     }
 
     // --- helpers ---
