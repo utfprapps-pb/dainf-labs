@@ -3,6 +3,8 @@ import { Column, CrudConfig } from '@/shared/crud/crud';
 import { CrudComponent } from '@/shared/crud/crud.component';
 import { SearchRequest } from '@/shared/models/search';
 import { TelefonePipe } from '@/shared/pipes/telefone.pipe';
+import { utfprEmailValidator } from '@/shared/validator/utfpr-email.validator';
+import { passwordStrengthValidator } from '@/shared/validator/password.validator';
 import { Component, computed, inject, model } from '@angular/core';
 import {
   FormBuilder,
@@ -47,12 +49,12 @@ export class UserComponent {
 
   form: FormGroup = this.formBuilder.group({
     id: [{ value: null, disabled: true }],
-    email: [null, Validators.compose([Validators.required, Validators.email])],
+    email: [null, Validators.compose([Validators.required, Validators.email, utfprEmailValidator()])],
     nome: [null, Validators.required],
     telefone: [null],
     documento: [null],
     role: [null, Validators.required],
-    password: [null],
+    password: [null, Validators.compose([Validators.minLength(6), passwordStrengthValidator()])],
     enabled: [true],
   });
 

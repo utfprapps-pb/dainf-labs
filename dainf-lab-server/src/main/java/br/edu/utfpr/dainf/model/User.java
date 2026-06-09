@@ -1,5 +1,6 @@
 package br.edu.utfpr.dainf.model;
 
+import br.edu.utfpr.dainf.audit.AuditRedacted;
 import br.edu.utfpr.dainf.enums.UserRole;
 import br.edu.utfpr.dainf.shared.Identifiable;
 import jakarta.persistence.*;
@@ -38,6 +39,7 @@ public class User implements UserDetails, Identifiable<Long> {
     @NotNull(message = "A senha é obrigatória.")
     @Size(min = 6)
     @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).*$")
+    @AuditRedacted
     private String password;
 
     @Column(nullable = false)
@@ -56,6 +58,7 @@ public class User implements UserDetails, Identifiable<Long> {
     private boolean emailVerificado;
 
     @Column(name = "email_verification_token")
+    @AuditRedacted
     private String emailVerificationToken;
 
     @Column(name = "email_verification_expires_at")
@@ -66,6 +69,7 @@ public class User implements UserDetails, Identifiable<Long> {
 
     private boolean enabled;
 
+    @AuditRedacted
     private String clearanceCode;
     private Instant clearanceDate;
 

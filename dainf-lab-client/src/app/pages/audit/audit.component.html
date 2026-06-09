@@ -1,0 +1,105 @@
+<div class="grid grid-cols-12 gap-4 mb-4">
+  <app-input-container label="Entidade" class="col-span-12 md:col-span-3">
+    <p-select
+      [options]="entityOptions()"
+      optionLabel="label"
+      optionValue="key"
+      [(ngModel)]="entityFilter"
+      [ngModelOptions]="{ standalone: true }"
+      appendTo="body"
+      placeholder="Selecione uma entidade"
+    ></p-select>
+  </app-input-container>
+
+  <app-input-container label="Usuário" class="col-span-12 md:col-span-3">
+    <app-search-select
+      [(ngModel)]="userFilter"
+      [ngModelOptions]="{ standalone: true }"
+      optionLabel="nome"
+      [service]="userService"
+      placeholder="Selecione um usuário"
+    />
+  </app-input-container>
+
+  <app-input-container label="Tipo de alteração" class="col-span-12 md:col-span-2">
+    <p-select
+      [options]="revisionTypeOptions"
+      optionLabel="label"
+      optionValue="value"
+      [(ngModel)]="revisionTypeFilter"
+      [ngModelOptions]="{ standalone: true }"
+      appendTo="body"
+      [showClear]="true"
+      placeholder="Todos"
+    ></p-select>
+  </app-input-container>
+
+  <app-input-container label="De" class="col-span-12 md:col-span-2">
+    <p-datepicker dateFormat="dd/mm/yy" [(ngModel)]="dateFromFilter" [ngModelOptions]="{ standalone: true }" appendTo="body" />
+  </app-input-container>
+
+  <app-input-container label="Até" class="col-span-12 md:col-span-2">
+    <p-datepicker dateFormat="dd/mm/yy" [(ngModel)]="dateToFilter" [ngModelOptions]="{ standalone: true }" appendTo="body" />
+  </app-input-container>
+</div>
+
+<app-crud-table
+  [columns]="cols"
+  [config]="config"
+  [items]="items()"
+  [loading]="loadingItems()"
+  [templateMap]="templateMap"
+  (pageChange)="onPage($event)"
+></app-crud-table>
+
+<ng-template #descriptionTemplate let-row>
+  @if (entityLink(row.entityKey, row.entityId); as link) {
+    <a [routerLink]="['/', link.route]" [queryParams]="link.queryParams" class="text-primary hover:underline">{{ row.description }}</a>
+  } @else {
+    {{ row.description }}
+  }
+</ng-template>
+
+<ng-template #changesTemplate let-row>
+  <p-button
+    icon="pi pi-eye"
+    severity="secondary"
+    [text]="true"
+    pTooltip="Ver alterações"
+    (onClick)="viewChanges(row)"
+  ></p-button>
+</ng-template>
+
+<p-dialog
+  [(visible)]="changesDialogVisible"
+  header="Alterações do registro"
+  [modal]="true"
+  [style]="{ width: '40rem', 'max-width': '90vw' }"
+>
+  @if (loadingChanges()) {
+    <div class="flex justify-center p-4">
+      <i class="pi pi-spin pi-spinner text-2xl"></i>
+    </div>
+  } @else if (changes().length) {
+    <table class="w-full border-collapse">
+      <thead>
+        <tr class="border-b border-surface-200 dark:border-surface-700">
+          <th class="text-left p-2 font-semibold text-surface-700 dark:text-surface-100">Campo</th>
+          <th class="text-left p-2 font-semibold text-surface-700 dark:text-surface-100">Valor anterior</th>
+          <th class="text-left p-2 font-semibold text-surface-700 dark:text-surface-100">Novo valor</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (change of changes(); track change.field) {
+          <tr class="border-b border-surface-100 dark:border-surface-800">
+            <td class="p-2 font-medium">{{ change.field }}</td>
+            <td class="p-2">{{ change.oldValue ?? '—' }}</td>
+            <td class="p-2">{{ change.newValue ?? '—' }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  } @else {
+    <p class="text-center text-surface-500">Nenhuma alteração de campo encontrada para este registro.</p>
+  }
+</p-dialog>

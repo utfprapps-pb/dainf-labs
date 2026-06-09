@@ -35,6 +35,11 @@ public class MenuConfig {
                     .allowedRoles(Set.of(UserRole.ROLE_ADMIN, UserRole.ROLE_LAB_TECHNICIAN))
                     .build()),
 
+            Map.entry("inventory-history", MenuItemDTO.builder()
+                    .label("Histórico de Estoque").icon("pi pi-history").routerLink("inventory-history")
+                    .allowedRoles(Set.of(UserRole.ROLE_ADMIN, UserRole.ROLE_LAB_TECHNICIAN))
+                    .build()),
+
             Map.entry("reservation", MenuItemDTO.builder()
                     .label("Reserva").icon("pi pi-calendar").routerLink("reservation")
                     .allowedRoles(Set.of(
@@ -88,6 +93,11 @@ public class MenuConfig {
                     .allowedRoles(Set.of(UserRole.ROLE_ADMIN))
                     .build()),
 
+            Map.entry("audit", MenuItemDTO.builder()
+                    .label("Auditoria").icon("pi pi-history").routerLink("audit")
+                    .allowedRoles(Set.of(UserRole.ROLE_ADMIN))
+                    .build()),
+
             Map.entry("about", MenuItemDTO.builder()
                     .label("Sobre").icon("pi pi-info-circle").routerLink("about")
                     .allowedRoles(Set.of(
@@ -108,7 +118,8 @@ public class MenuConfig {
                         .items(List.of(
                                 baseItems.get("loan"),
                                 baseItems.get("issue"),
-                                baseItems.get("reservation")
+                                baseItems.get("reservation"),
+                                baseItems.get("inventory-history")
                         ))
                         .build(),
                 MenuItemDTO.builder()
@@ -131,6 +142,7 @@ public class MenuConfig {
                         .label("Sistema")
                         .items(List.of(
                                 baseItems.get("config"),
+                                baseItems.get("audit"),
                                 baseItems.get("about")
                         ))
                         .build()

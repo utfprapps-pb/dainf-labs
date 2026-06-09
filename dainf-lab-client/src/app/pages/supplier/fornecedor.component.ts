@@ -52,13 +52,13 @@ export class FornecedorComponent implements OnInit {
 
   form: FormGroup = this.formBuilder.group({
     id: [{ value: null, disabled: true }],
-    razaoSocial: [null, Validators.required],
-    nomeFantasia: [null, Validators.required],
+    razaoSocial: [null, [Validators.required, Validators.maxLength(80)]],
+    nomeFantasia: [null, [Validators.required, Validators.maxLength(80)]],
     cnpj: [null, [Validators.required, cnpjValidator()]],
-    ie: [null],
-    telefone: [null, [Validators.required, phoneValidator()]],
+    ie: [null, Validators.maxLength(14)],
+    telefone: [null, [Validators.required, phoneValidator(), Validators.maxLength(15)]],
     email: [null, [Validators.required, Validators.email]],
-    endereco: [null, Validators.required],
+    endereco: [null, [Validators.required, Validators.maxLength(100)]],
     estado: [null, Validators.required],
     cidade: [null, Validators.required],
     cep: [null],

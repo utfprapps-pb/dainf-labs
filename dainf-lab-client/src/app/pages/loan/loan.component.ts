@@ -9,12 +9,14 @@ import { LabelValuePipe } from '@/shared/pipes/label-value.pipe';
 import { ContextStore } from '@/shared/store/context-store.service';
 import { CommonModule, DatePipe } from '@angular/common';
 import {
+  AfterViewInit,
   Component,
   computed,
   inject,
   model,
   OnInit,
   signal,
+  TemplateRef,
   viewChild,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -33,14 +35,27 @@ import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
+import { TagModule } from 'primeng/tag';
 import { TextareaModule } from 'primeng/textarea';
 import { CategoryService } from '../category/category.service';
 import { ItemService } from '../item/item.service';
 import { User } from '../user/user';
 import { UserService } from '../user/user.service';
-import { Loan, LoanItem } from './loan';
+import { Loan, LoanItem, LoanStatus } from './loan';
 import { LoanService } from './loan.service';
 import { LoanReturnDialog } from './return-dialog/return-dialog';
+
+const STATUS_SEVERITY: Record<LoanStatus, 'success' | 'danger' | 'info'> = {
+  ONGOING: 'info',
+  OVERDUE: 'danger',
+  COMPLETED: 'success',
+};
+
+const STATUS_ICON: Record<LoanStatus, string> = {
+  ONGOING: 'pi pi-clock',
+  OVERDUE: 'pi pi-exclamation-triangle',
+  COMPLETED: 'pi pi-check-circle',
+};
 
 @Component({
   standalone: true,
@@ -60,7 +75,8 @@ import { LoanReturnDialog } from './return-dialog/return-dialog';
     InputGroupModule,
     InputGroupAddonModule,
     ButtonModule,
-    StaticSelectComponent
+    StaticSelectComponent,
+    TagModule
 ],
   providers: [
     LoanService,
@@ -74,7 +90,11 @@ import { LoanReturnDialog } from './return-dialog/return-dialog';
   selector: 'app-loan',
   templateUrl: 'loan.component.html',
 })
-export class LoanComponent implements OnInit {
+export class LoanComponent implements OnInit, AfterViewInit {
+  statusTemplate = viewChild('statusTemplate', { read: TemplateRef<any> });
+
+  templateMap: Map<keyof Loan | string, TemplateRef<any>> | undefined;
+
   loanService = inject(LoanService);
   dialogService = inject(DialogService);
   formBuilder = inject(FormBuilder);
@@ -110,7 +130,7 @@ export class LoanComponent implements OnInit {
     loanDate: [new Date(), Validators.required],
     deadline: [null, Validators.required],
     observation: [null],
-    items: [[]],
+    items: [[], [Validators.required, Validators.minLength(1)]],
   });
 
   loanItensForm: FormGroup = this.formBuilder.group({
@@ -187,6 +207,18 @@ export class LoanComponent implements OnInit {
       this.crud()?.openNew();
       this.form.patchValue({ items: data.items, borrower: data.borrower });
     }
+  }
+
+  ngAfterViewInit(): void {
+    this.templateMap = new Map([['status', this.statusTemplate()!]]);
+  }
+
+  statusSeverity(status: LoanStatus): 'success' | 'danger' | 'info' {
+    return STATUS_SEVERITY[status];
+  }
+
+  statusIcon(status: LoanStatus): string {
+    return STATUS_ICON[status];
   }
 
   clearFilters() {

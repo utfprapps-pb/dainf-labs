@@ -1,3 +1,4 @@
+import { extractErrorMessage } from '@/shared/utils/error.utils';
 import { CommonModule } from '@angular/common';
 import {
   Component,
@@ -11,6 +12,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { FormGroup } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -32,7 +34,6 @@ import { Column, CrudConfig, Identifiable } from './crud';
 import { CrudService } from './crud.service';
 import { CrudDialogComponent } from './dialog/crud-dialog.component';
 import { CrudTableComponent } from './table/crud-table.component';
-import { extractErrorMessage } from '@/shared/utils/error.utils';
 
 @Component({
   standalone: true,
@@ -50,6 +51,11 @@ import { extractErrorMessage } from '@/shared/utils/error.utils';
   templateUrl: 'crud.component.html',
 })
 export class CrudComponent<T extends Identifiable> implements OnInit {
+  static readonly OPEN_ID_QUERY_PARAM = 'openId';
+
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+
   service = input.required<CrudService<T>>();
   columns = input<Column<T>[]>([]);
   config = input<CrudConfig<T>>();
@@ -93,6 +99,24 @@ export class CrudComponent<T extends Identifiable> implements OnInit {
 
   ngOnInit(): void {
     this.loadItems();
+    this._openFromQueryParam();
+  }
+
+  private _openFromQueryParam(): void {
+    const rawId = this.route.snapshot.queryParamMap.get(CrudComponent.OPEN_ID_QUERY_PARAM);
+    if (!rawId) {
+      return;
+    }
+    const id = Number(rawId);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { [CrudComponent.OPEN_ID_QUERY_PARAM]: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+    if (!Number.isNaN(id)) {
+      this.openById(id);
+    }
   }
 
   loadItems(page?: number, rows?: number) {
@@ -185,9 +209,13 @@ export class CrudComponent<T extends Identifiable> implements OnInit {
   }
 
   edit(item: T) {
+    this.openById(item.id);
+  }
+
+  openById(id: T['id']) {
     this.loadingEntity.set(true);
     this.service()
-      .get(item.id)
+      .get(id)
       .pipe(
         tap((item: T) => {
           this.form()?.patchValue(item as { [key: string]: any });

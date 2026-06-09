@@ -220,6 +220,9 @@ public class UserService extends CrudService<Long, User, UserRepository> impleme
         User dbUser = findById(user.getId())
                 .orElseThrow(() -> new WarnException("Usuário não encontrado."));
         if (!dbUser.isEnabled()) {
+            if (!dbUser.isEmailVerificado()) {
+                throw new WarnException("O usuário ainda não realizou a confirmação do cadastro via e-mail.");
+            }
             throw new WarnException("Não é possível realizar operações para um usuário inativo.");
         }
     }

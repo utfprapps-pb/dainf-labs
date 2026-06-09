@@ -94,7 +94,7 @@ export class ItemComponent {
     id: [{ value: null, disabled: true }],
     name: [
       null,
-      Validators.compose([Validators.required, Validators.maxLength(255)]),
+      Validators.compose([Validators.required, Validators.maxLength(50)]),
     ],
     description: [null],
     price: [null],
