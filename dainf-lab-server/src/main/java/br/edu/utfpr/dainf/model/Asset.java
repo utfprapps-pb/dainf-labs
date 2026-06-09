@@ -3,6 +3,7 @@ package br.edu.utfpr.dainf.model;
 import br.edu.utfpr.dainf.shared.Identifiable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,7 +28,9 @@ public class Asset implements Identifiable<Long> {
     @JoinColumn(name = "item_id", referencedColumnName = "id")
     private Item item;
 
+    @NotBlank(message = "O campo 'Localização' é obrigatório")
     private String location;
 
+    @NotBlank(message = "O campo 'Patrimônio' é obrigatório")
     private String serialNumber;
 }

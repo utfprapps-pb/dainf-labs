@@ -58,7 +58,7 @@ public class Fornecedor implements Identifiable<Long> {
     private String telefone;
 
     @NotNull(message = "O campo 'Cidade' deve ser selecionado.")
-    @Column(name = "cidade", length = 15)
+    @Column(name = "cidade", length = 60)
     private String cidade;
 
     @Enumerated(EnumType.STRING)

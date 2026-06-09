@@ -38,7 +38,7 @@ spring:
 
 jwt:
   secret: ${TOKEN_SECRET:VGt0MGNRU3p3VQ==}
-  expiration: ${TOKEN_EXPIRATION:3600000} # 1 hora em ms
+  expiration: ${TOKEN_EXPIRATION:43200000} # 12 horas em ms
   refresh:
     expiration: ${TOKEN_REFRESH_EXPIRATION:2629746000} # 1 mes em ms
     secret: ${TOKEN_REFRESH_SECRET:Tkt0cQSzwU}

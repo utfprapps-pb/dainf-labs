@@ -1,3 +1,4 @@
+import { extractErrorMessage } from '@/shared/utils/error.utils';
 import { CommonModule } from '@angular/common';
 import {
   Component,
@@ -11,6 +12,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { FormGroup } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -22,6 +24,7 @@ import {
   debounceTime,
   finalize,
   Observable,
+  skip,
   take,
   tap,
   throwError,
@@ -48,6 +51,11 @@ import { CrudTableComponent } from './table/crud-table.component';
   templateUrl: 'crud.component.html',
 })
 export class CrudComponent<T extends Identifiable> implements OnInit {
+  static readonly OPEN_ID_QUERY_PARAM = 'openId';
+
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+
   service = input.required<CrudService<T>>();
   columns = input<Column<T>[]>([]);
   config = input<CrudConfig<T>>();
@@ -71,6 +79,7 @@ export class CrudComponent<T extends Identifiable> implements OnInit {
   dialogVisible = signal<boolean>(false);
   loadingItems = signal<boolean>(false);
   loadingEntity = signal<boolean>(false);
+  loadingSave = signal<boolean>(false);
 
   drawerVisible = model<boolean>(false);
 
@@ -81,6 +90,7 @@ export class CrudComponent<T extends Identifiable> implements OnInit {
 
   searchRequestChange$ = toObservable(this.searchRequest)
     .pipe(
+      skip(1),
       debounceTime(600),
       tap(() => this.loadItems()),
       takeUntilDestroyed(),
@@ -89,6 +99,24 @@ export class CrudComponent<T extends Identifiable> implements OnInit {
 
   ngOnInit(): void {
     this.loadItems();
+    this._openFromQueryParam();
+  }
+
+  private _openFromQueryParam(): void {
+    const rawId = this.route.snapshot.queryParamMap.get(CrudComponent.OPEN_ID_QUERY_PARAM);
+    if (!rawId) {
+      return;
+    }
+    const id = Number(rawId);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { [CrudComponent.OPEN_ID_QUERY_PARAM]: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+    if (!Number.isNaN(id)) {
+      this.openById(id);
+    }
   }
 
   loadItems(page?: number, rows?: number) {
@@ -139,7 +167,7 @@ export class CrudComponent<T extends Identifiable> implements OnInit {
         tap((page) => this._exportToCsv(page.content, columns)),
         catchError((error) => {
           this._showWarn(
-            `Falha ao exportar os dados: ${this._extractErrorMessage(error)}`,
+            `Falha ao exportar os dados: ${extractErrorMessage(error)}`,
           );
           return throwError(() => error);
         }),
@@ -161,6 +189,7 @@ export class CrudComponent<T extends Identifiable> implements OnInit {
     }
 
     const item: T = this.form()?.getRawValue();
+    this.loadingSave.set(true);
     this._save(item)
       ?.pipe(
         tap(() => {
@@ -170,23 +199,34 @@ export class CrudComponent<T extends Identifiable> implements OnInit {
           this._showSuccess('Registro salvo com sucesso.');
         }),
         catchError((error) => {
-          this._showWarn(this._extractErrorMessage(error));
+          this._showWarn(extractErrorMessage(error));
           return throwError(() => error);
         }),
+        finalize(() => this.loadingSave.set(false)),
         take(1),
       )
       .subscribe();
   }
 
   edit(item: T) {
+    this.openById(item.id);
+  }
+
+  openById(id: T['id']) {
+    this.loadingEntity.set(true);
     this.service()
-      .get(item.id)
+      .get(id)
       .pipe(
         tap((item: T) => {
           this.form()?.patchValue(item as { [key: string]: any });
           this.entityLoad.emit(item);
           this.dialogVisible.set(true);
         }),
+        catchError((error) => {
+          this._showWarn(`Falha ao carregar o registro: ${extractErrorMessage(error)}`);
+          return throwError(() => error);
+        }),
+        finalize(() => this.loadingEntity.set(false)),
         take(1),
       )
       .subscribe();
@@ -217,23 +257,13 @@ export class CrudComponent<T extends Identifiable> implements OnInit {
           this.loadItems(this.lastPagination?.page, this.lastPagination?.rows),
         ),
         catchError((error) => {
-          this._showWarn(`Falha ao deletar o registro: ${error.error.message}`);
+          this._showWarn(`Falha ao deletar o registro: ${extractErrorMessage(error)}`);
           return throwError(() => error);
         }),
         take(1),
       )
       .subscribe();
     this.cancel();
-  }
-
-  private _extractErrorMessage(error: any): string {
-    if (!!error?.error?.errors) {
-      return Object.entries(error.error.errors)
-        .map(([field, message]) => `${message}`)
-        .join(', ');
-    }
-
-    return error?.error?.message || 'Informações inválidas';
   }
 
   private _showWarn(detail: string) {

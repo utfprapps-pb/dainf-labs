@@ -1,7 +1,8 @@
 package br.edu.utfpr.dainf.dto;
 
-import br.edu.utfpr.dainf.model.User;
 import br.edu.utfpr.dainf.shared.Identifiable;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.Instant;
@@ -17,10 +18,16 @@ public class ReservationDTO implements Identifiable<Long> {
     private String description;
     private String status;
     private String observation;
+
+    @NotNull(message = "Deve ser informado a data de reserva.")
     private Instant reservationDate;
+
+    @NotNull(message = "Deve ser informada a data de retirada.")
     private Instant withdrawalDate;
     private Instant returnDate;
     private SimpleUserDTO user;
-    private List<ReservationItemDTO> items;
 
+    @Valid
+    @NotNull(message = "Deve ser escolhido ao menos 1 produto.")
+    private List<ReservationItemDTO> items;
 }

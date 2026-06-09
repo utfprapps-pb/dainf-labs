@@ -65,7 +65,7 @@ export class PurchaseSolicitationComponent {
     date: [new Date(), Validators.required],
     user: [null],
     observation: [null],
-    items: [[]],
+    items: [[], [Validators.required, Validators.minLength(1)]],
   });
 
   purchaseItemForm: FormGroup = this.formBuilder.group({

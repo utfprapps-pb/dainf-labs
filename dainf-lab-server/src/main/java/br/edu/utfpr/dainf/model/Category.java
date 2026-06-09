@@ -3,7 +3,7 @@ package br.edu.utfpr.dainf.model;
 import br.edu.utfpr.dainf.shared.Identifiable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,7 +25,7 @@ public class Category implements Identifiable<Long> {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull(message = "A descrição da cateogria não pode ser nula.")
+    @NotBlank(message = "A descrição da categoria não pode ser nula ou vazia.")
     private String description;
 
     private String icon;

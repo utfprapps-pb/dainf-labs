@@ -58,4 +58,6 @@ const errorMap: Record<string, (error: any) => string> = {
   name: () => 'Por favor informe nome e sobrenome',
   invalidCnpj: () => 'CNPJ inválido.',
   invalidPhone: () => 'Telefone inválido.',
+  passwordStrength: () => 'A senha deve conter ao menos uma letra maiúscula, uma minúscula e um número.',
+  passwordMismatch: () => 'As senhas não coincidem.',
 };

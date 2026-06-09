@@ -16,7 +16,7 @@ class UserControllerTest extends CrudControllerTest<UserDTO> {
     protected UserDTO createValidObject() {
         Integer random = (int) (Math.random() * 10000);
         return UserDTO.builder()
-                .email(random + "teste@mail.com")
+                .email(random + "@utfpr.edu.br")
                 .password("Teste123456!")
                 .nome("teste")
                 .documento("odfdso")
@@ -52,5 +52,35 @@ class UserControllerTest extends CrudControllerTest<UserDTO> {
         dto.setPassword(null);
 
         performUpdate(createdId, dto).andExpect(status().isOk());
+    }
+
+    @Test
+    void createWithNonUtfprEmail_returns400() throws Exception {
+        UserDTO dto = UserDTO.builder()
+                .email("usuario@gmail.com")
+                .password("Teste123456!")
+                .nome("Teste")
+                .build();
+        performCreate(dto).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createWithWeakPassword_returns400() throws Exception {
+        UserDTO dto = UserDTO.builder()
+                .email("usuario@utfpr.edu.br")
+                .password("semMaiuscula1")
+                .nome("Teste")
+                .build();
+        performCreate(dto).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createWithInvalidEmailFormat_returns400() throws Exception {
+        UserDTO dto = UserDTO.builder()
+                .email("emailsemarroba")
+                .password("Teste123!")
+                .nome("Teste")
+                .build();
+        performCreate(dto).andExpect(status().isBadRequest());
     }
 }

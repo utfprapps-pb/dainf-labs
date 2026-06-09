@@ -200,7 +200,14 @@ public class UserService extends CrudService<Long, User, UserRepository> impleme
         if (authentication == null || !authentication.isAuthenticated()) {
             return null;
         }
-        return (User) authentication.getPrincipal();
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof User user) {
+            return user;
+        }
+        if (principal instanceof UserDetails userDetails) {
+            return repository.findByEmail(userDetails.getUsername()).orElse(null);
+        }
+        return null;
     }
 
     public boolean hasPrivilegedAcess() {
@@ -213,6 +220,9 @@ public class UserService extends CrudService<Long, User, UserRepository> impleme
         User dbUser = findById(user.getId())
                 .orElseThrow(() -> new WarnException("Usuário não encontrado."));
         if (!dbUser.isEnabled()) {
+            if (!dbUser.isEmailVerificado()) {
+                throw new WarnException("O usuário ainda não realizou a confirmação do cadastro via e-mail.");
+            }
             throw new WarnException("Não é possível realizar operações para um usuário inativo.");
         }
     }

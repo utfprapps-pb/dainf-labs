@@ -12,7 +12,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableJpaRepositories(value = {"br.edu.utfpr.dainf.repository", "br.edu.utfpr.dainf.spec"})
-@EntityScan("br.edu.utfpr.dainf.model")
+@EntityScan({"br.edu.utfpr.dainf.model", "br.edu.utfpr.dainf.audit"})
 @EnableScheduling
 @EnableAsync
 public class DainfApplication {
