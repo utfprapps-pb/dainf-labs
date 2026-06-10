@@ -1,7 +1,7 @@
 import { BaseService } from '@/shared/services/base.service';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { AuthRequest, RecoveryRequest, ResetPasswordRequest, SignUpRequest } from '../auth';
+import { AuthRequest, EmailRequest, RecoveryRequest, ResetPasswordRequest, SignUpRequest } from '../auth';
 import { TokenService } from './token.service';
 
 export interface AuthResponse {
@@ -33,6 +33,10 @@ export class AuthService extends BaseService {
 
   requestPasswordRecovery(request: RecoveryRequest) {
     return this._http.post(`${this.apiUrl}/auth/recovery`, request);
+  }
+
+  resendConfirmationEmail(request: EmailRequest) {
+    return this._http.post(`${this.apiUrl}/auth/confirm-email/resend`, request);
   }
 
   resetPassword(request: ResetPasswordRequest) {

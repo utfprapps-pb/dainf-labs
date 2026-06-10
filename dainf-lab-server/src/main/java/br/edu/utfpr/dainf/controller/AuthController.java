@@ -6,6 +6,8 @@ import br.edu.utfpr.dainf.security.JwtService;
 import br.edu.utfpr.dainf.service.AuthService;
 import br.edu.utfpr.dainf.service.UserService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -88,6 +90,12 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("message", "E-mail confirmado com sucesso"));
     }
 
+    @PostMapping("/confirm-email/resend")
+    public ResponseEntity<?> resendConfirmationEmail(@RequestBody @Valid EmailRequest request) {
+        userService.resendEmailConfirmation(request.email());
+        return ResponseEntity.ok(Map.of("message", "Link de confirmação reenviado"));
+    }
+
     @PostMapping("/recovery")
     public ResponseEntity<?> recovery(@RequestBody AuthRequest request) {
         userService.forgotPassword(request.email());
@@ -101,6 +109,9 @@ public class AuthController {
     }
 
     public record ResetPassword(String token, String newPassword) {
+    }
+
+    public record EmailRequest(@NotBlank(message = "O e-mail é obrigatório.") @Email(message = "O e-mail é inválido.") String email) {
     }
 
     public record AuthRequest(String email, String password, boolean rememberMe) {

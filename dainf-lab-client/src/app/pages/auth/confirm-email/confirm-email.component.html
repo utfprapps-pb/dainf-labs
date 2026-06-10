@@ -22,6 +22,24 @@
 
           <p-message *ngIf="status === 'error'" severity="error" [text]="errorMessage || 'Token inválido ou expirado.'" class="w-full md:w-120" />
 
+          <div *ngIf="status === 'error'" class="w-full md:w-120">
+            <label for="email" class="text-sm text-muted-color block mb-2">E-mail para reenvio do link de confirmação</label>
+            <form [formGroup]="resendForm">
+              <input id="email" formControlName="email" type="email"
+                     class="w-full p-3 border border-surface-300 rounded-lg bg-surface-50 text-surface-900"
+                     placeholder="seu@email.com" />
+
+              <div *ngIf="emailControl.invalid && (emailControl.dirty || emailControl.touched)" class="text-danger-600 text-sm mt-2">
+                <p *ngIf="emailControl.errors?.['required']">E-mail é obrigatório.</p>
+                <p *ngIf="emailControl.errors?.['email']">Informe um e-mail válido.</p>
+                <p *ngIf="emailControl.errors?.['utfprEmail']">O e-mail deve ser um UTFPR válido.</p>
+              </div>
+
+              <p-button label="Reenviar link de confirmação" styleClass="w-full md:w-120 mt-3" (onClick)="resendConfirmationEmail()" [loading]="isResendLoading" [disabled]="resendForm.invalid"></p-button>
+            </form>
+            <p-message *ngIf="resendMessage" severity="success" [text]="resendMessage" class="w-full md:w-120 mt-3" />
+          </div>
+
           <p-button label="Ir para o login" styleClass="w-full md:w-120" (onClick)="goToLogin()" [loading]="status === 'loading'"></p-button>
         </div>
       </div>

@@ -1,7 +1,9 @@
 import { AppFloatingConfigurator } from '@/layout/component/app.floatingconfigurator';
 import { LogoComponent } from '@/layout/component/logo.component';
+import { utfprEmailValidator } from '@/shared/validator/utfpr-email.validator';
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnDestroy } from '@angular/core';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
@@ -16,6 +18,7 @@ type ConfirmationStatus = 'loading' | 'success' | 'error';
   standalone: true,
   imports: [
     CommonModule,
+    ReactiveFormsModule,
     RouterModule,
     ButtonModule,
     MessageModule,
@@ -29,6 +32,12 @@ type ConfirmationStatus = 'loading' | 'success' | 'error';
 export class ConfirmEmailComponent implements OnDestroy {
   status: ConfirmationStatus = 'loading';
   errorMessage = '';
+  resendMessage = '';
+  isResendLoading = false;
+
+  resendForm = new FormGroup({
+    email: new FormControl('', [Validators.required, Validators.email, utfprEmailValidator()])
+  });
 
   private readonly _route = inject(ActivatedRoute);
   private readonly _router = inject(Router);
@@ -60,6 +69,7 @@ export class ConfirmEmailComponent implements OnDestroy {
   private _confirm(token: string) {
     this.status = 'loading';
     this.errorMessage = '';
+    this.resendMessage = '';
 
     this._authService.confirmEmail(token).subscribe({
       next: () => {
@@ -70,6 +80,34 @@ export class ConfirmEmailComponent implements OnDestroy {
         this.status = 'error';
         this.errorMessage = err?.error?.message || 'Não foi possível confirmar o e-mail. O token pode estar inválido ou expirado.';
         console.error('Failed to confirm e-mail', err);
+      }
+    });
+  }
+
+  get emailControl() {
+    return this.resendForm.get('email') as FormControl;
+  }
+
+  resendConfirmationEmail() {
+    if (this.resendForm.invalid) {
+      this.errorMessage = 'Informe um e-mail válido para reenviar o link de confirmação.';
+      this.emailControl.markAsTouched();
+      return;
+    }
+
+    this.isResendLoading = true;
+    this.errorMessage = '';
+    this.resendMessage = '';
+
+    this._authService.resendConfirmationEmail({ email: this.emailControl.value }).subscribe({
+      next: () => {
+        this.isResendLoading = false;
+        this.resendMessage = 'O link de confirmação foi reenviado para o seu e-mail.';
+      },
+      error: (err) => {
+        this.isResendLoading = false;
+        this.errorMessage = err?.error?.message || 'Falha ao reenviar o link de confirmação.';
+        console.error('Failed to resend confirmation e-mail', err);
       }
     });
   }
