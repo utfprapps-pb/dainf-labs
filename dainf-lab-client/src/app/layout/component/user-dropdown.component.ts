@@ -2,8 +2,8 @@ import { UserService } from '@/pages/user/user.service';
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, input } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { AvatarModule } from 'primeng/avatar';
 import { MenuItem } from 'primeng/api';
+import { AvatarModule } from 'primeng/avatar';
 import { DividerModule } from 'primeng/divider';
 import { MenuModule } from 'primeng/menu';
 import { catchError, of } from 'rxjs';
@@ -80,7 +80,9 @@ export class UserDropdownComponent {
       case 'ROLE_LAB_TECHNICIAN':
         return 'Técnico de laboratório';
       case 'ROLE_STUDENT':
-        return 'Estudante';
+        return 'Aluno';
+      case 'ROLE_PROFESSOR':
+        return 'Professor';
       default:
         return 'Usuário';
     }
