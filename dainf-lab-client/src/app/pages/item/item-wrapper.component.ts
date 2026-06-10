@@ -13,14 +13,14 @@ import { ItemCatalogComponent } from './item-catalog.component';
   imports: [CommonModule, ItemComponent, ItemCatalogComponent],
   providers: [UserService],
   template: `
-    <!-- 
+    <!--
       Lógica de Troca:
-      1. Se for Aluno E NÃO tiver privilégios avançados -> Mostra Catálogo
+      1. Se for Aluno ou Professor E NÃO tiver privilégios avançados -> Mostra Catálogo
       2. Caso contrário (Admin, Técnico, etc) -> Mostra Tabela de Gestão
     -->
-    @if (isStudent() && !hasAdvancedPrivileges()) {
+    @if ((isStudent() || isProfessor()) && !hasAdvancedPrivileges()) {
       <app-item-catalog></app-item-catalog>
-    } 
+    }
     @else {
       <app-item></app-item>
     }
@@ -32,12 +32,19 @@ export class ItemWrapperComponent {
   isStudent = toSignal(
     this.userService.getRole().pipe(
       map(role => role === 'ROLE_STUDENT')
-    ), 
+    ),
     { initialValue: false }
   );
-  
+
+  isProfessor = toSignal(
+    this.userService.getRole().pipe(
+      map(role => role === 'ROLE_PROFESSOR')
+    ),
+    { initialValue: false }
+  );
+
   hasAdvancedPrivileges = toSignal(
-    this.userService.hasAdvancedPrivileges(), 
+    this.userService.hasAdvancedPrivileges(),
     { initialValue: false }
   );
 }
