@@ -98,7 +98,7 @@ public class UserService extends CrudService<Long, User, UserRepository> impleme
 
         if (user.getEmailVerificationExpiresAt() != null &&
                 user.getEmailVerificationExpiresAt().isBefore(Instant.now())) {
-            throw new WarnException("Token expirado. Solicite um novo cadastro.");
+            throw new WarnException("Token expirado. Solicite um novo link de confirmação de e-mail.");
         }
 
         user.setEmailVerificado(true);
@@ -106,6 +106,30 @@ public class UserService extends CrudService<Long, User, UserRepository> impleme
         user.setEmailVerificationToken(null);
         user.setEmailVerificationExpiresAt(null);
         repository.save(user);
+    }
+
+    public void resendEmailConfirmation(String email) {
+        User user = repository.findByEmail(email)
+                .orElseThrow(() -> new WarnException("Usuário não encontrado."));
+
+        if (user.isEmailVerificado()) {
+            throw new WarnException("E-mail já confirmado.");
+        }
+
+        user.setEmailVerificationToken(UUID.randomUUID().toString());
+        user.setEmailVerificationExpiresAt(Instant.now().plus(24, ChronoUnit.HOURS));
+        repository.save(user);
+
+        String mailContent = mailService.buildTemplate("email-verification", Map.of(
+                "nome", user.getNome(),
+                "linkConfirmacao", builConfirmationLink(user.getEmailVerificationToken())
+        ));
+
+        mailService.send(Mail.builder()
+                .subject("Confirmação de e-mail")
+                .to(List.of(user.getEmail()))
+                .content(mailContent)
+                .build());
     }
 
     @Override

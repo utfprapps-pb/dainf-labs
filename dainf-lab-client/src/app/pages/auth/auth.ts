@@ -8,6 +8,10 @@ export interface RecoveryRequest {
   email: string;
 }
 
+export interface EmailRequest {
+  email: string;
+}
+
 export interface ResetPasswordRequest {
   token: string;
   newPassword: string;
