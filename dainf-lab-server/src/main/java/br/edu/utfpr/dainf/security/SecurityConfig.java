@@ -51,6 +51,7 @@ public class SecurityConfig {
                         .requestMatchers("/auth/login").permitAll()
                         .requestMatchers("/auth/sign-up").permitAll()
                         .requestMatchers("/auth/confirm-email").permitAll()
+                        .requestMatchers("/auth/confirm-email/resend").permitAll()
                         .requestMatchers("/auth/recovery").permitAll()
                         .requestMatchers("/auth/reset-password").permitAll()
                         .requestMatchers("/auth/refresh").permitAll()
