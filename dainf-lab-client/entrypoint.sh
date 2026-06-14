@@ -11,5 +11,5 @@ mkdir -p "$CONFIG_DIR"
 echo "Generating runtime config from template..."
 envsubst < "$TEMPLATE" > "$CONFIG_FILE"
 
-echo "✅ Config generated at $CONFIG_FILE"
+echo "âœ… Config generated at $CONFIG_FILE"
 exec nginx -g 'daemon off;'

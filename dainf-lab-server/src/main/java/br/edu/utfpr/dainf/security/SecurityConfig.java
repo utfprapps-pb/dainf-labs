@@ -83,7 +83,7 @@ public class SecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(baseUrl, "http://localhost:8090", "http://localhost:4200", "https://od46s-test-labs.app.pb.utfpr.edu.br", "https://od46s.tondo.dev.br"));
+        configuration.setAllowedOrigins(List.of(baseUrl, "http://localhost:8090", "http://localhost:4200", "http://127.0.0.1:8090", "http://127.0.0.1:4200", "https://od46s-test-labs.app.pb.utfpr.edu.br", "https://od46s.tondo.dev.br"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "x-xsrf-token",
                 "Access-Control-Allow-Headers", "Origin",
