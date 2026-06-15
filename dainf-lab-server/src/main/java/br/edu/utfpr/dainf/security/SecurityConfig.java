@@ -19,6 +19,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.http.HttpMethod;
 
 import java.util.List;
 
@@ -56,6 +57,9 @@ public class SecurityConfig {
                         .requestMatchers("/auth/refresh").permitAll()
                         .requestMatchers("/auth/logout").permitAll()
                         .requestMatchers("/clearance/validate").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/users/login", "/users", "/users/init-admin").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/notifications/debug-all", "/notifications/debug-res/**").permitAll()
+                        .requestMatchers("/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())

@@ -49,7 +49,7 @@
     </div>
 
     <div [class.hidden]="viewMode === 'list'" class="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-6" id="cards-container">
-        @for (loan of filteredLoansList; track loan.id) {
+        @for (loan of paginatedLoansList; track loan.id) {
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col card-devolucao">
                 <div class="p-4 border-b border-gray-100">
                     <div class="flex justify-between items-start mb-4">
@@ -136,6 +136,21 @@
                 <p class="text-gray-400 font-medium text-sm">Nenhuma devolução pendente encontrada.</p>
             </div>
         }
+    </div>
+    
+    <div [class.hidden]="viewMode === 'list'">
+        <div class="flex items-center justify-center gap-4 mt-6">
+            <p-paginator
+              (onPageChange)="onPage($event)"
+              [first]="first"
+              [rows]="rows"
+              [totalRecords]="filteredLoansList.length"
+              [rowsPerPageOptions]="[10, 20, 30]"
+              [alwaysShow]="true"
+              [showCurrentPageReport]="true"
+              currentPageReportTemplate="Exibindo itens {last} de {totalRecords}"
+            ></p-paginator>
+        </div>
     </div>
 
     <div [class.hidden]="viewMode === 'cards'" class="bg-white rounded-xl shadow-sm border border-gray-100 p-2 overflow-hidden mt-6">

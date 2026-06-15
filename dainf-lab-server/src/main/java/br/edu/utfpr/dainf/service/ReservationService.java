@@ -20,6 +20,9 @@ import br.edu.utfpr.dainf.model.ReservationItem;
 
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.List;
+import br.edu.utfpr.dainf.service.NotificationService;
+import br.edu.utfpr.dainf.repository.UserRepository;
 
 @Service
 public class ReservationService extends CrudService<Long, Reservation, ReservationRepository> {
@@ -28,12 +31,16 @@ public class ReservationService extends CrudService<Long, Reservation, Reservati
     private final InventoryService inventoryService;
     private final br.edu.utfpr.dainf.mail.MailService mailService;
     private final ConfigurationService configurationService;
+    private final NotificationService notificationService;
+    private final UserRepository userRepository;
 
-    public ReservationService(UserService userService, InventoryService inventoryService, br.edu.utfpr.dainf.mail.MailService mailService, ConfigurationService configurationService) {
+    public ReservationService(UserService userService, InventoryService inventoryService, br.edu.utfpr.dainf.mail.MailService mailService, ConfigurationService configurationService, NotificationService notificationService, UserRepository userRepository) {
         this.userService = userService;
         this.inventoryService = inventoryService;
         this.mailService = mailService;
         this.configurationService = configurationService;
+        this.notificationService = notificationService;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -55,11 +62,9 @@ public class ReservationService extends CrudService<Long, Reservation, Reservati
     public Reservation save(Reservation entity) {
         validateAccess(entity);
         if (entity.getId() == null) {
+            entity.setStatus("PENDENTE");
             if (entity.getUser() == null || !userService.hasPrivilegedAcess()) {
                 entity.setUser(userService.getCurrentUser());
-            }
-            if (userService.isStudentBlocked(entity.getUser())) {
-                throw new WarnException("Usuário bloqueado: possui empréstimos em atraso.");
             }
         }
         
@@ -75,9 +80,18 @@ public class ReservationService extends CrudService<Long, Reservation, Reservati
             }
         }
         boolean isNew = entity.getId() == null;
+        String oldStatus = null;
+        if (!isNew) {
+            Reservation dbEntity = repository.findById(entity.getId()).orElse(null);
+            if (dbEntity != null) {
+                oldStatus = dbEntity.getStatus();
+            }
+        }
+
         Reservation saved = super.save(entity);
         
         if (isNew) {
+            // Send email
             String to = configurationService.get().getClearanceEmailRecipient();
             if (to != null && !to.isBlank()) {
                 try {
@@ -90,8 +104,29 @@ public class ReservationService extends CrudService<Long, Reservation, Reservati
                     // Ignore mail error to not block reservation
                 }
             }
+            
+            // Site notification for TAs and Admins
+            List<User> notificationTargets = userRepository.findByRoleIn(List.of(UserRole.ROLE_ADMIN, UserRole.ROLE_LAB_TECHNICIAN, UserRole.ROLE_PROFESSOR));
+            for (User target : notificationTargets) {
+                notificationService.sendNotification(target, "Nova Reserva", "Uma nova reserva foi solicitada por " + saved.getUser().getNome());
+            }
+        } else {
+            // Site notification for Student when status changes
+            if (oldStatus != null && !oldStatus.equals(saved.getStatus())) {
+                notificationService.sendNotification(saved.getUser(), "Reserva Atualizada", "O status da sua reserva mudou para: " + getDisplayStatus(saved.getStatus()));
+            }
         }
         return saved;
+    }
+    
+    private String getDisplayStatus(String status) {
+        if (status == null) return "Desconhecido";
+        switch (status) {
+            case "PENDENTE": return "Pendente";
+            case "EM_SEPARACAO": return "Em separação";
+            case "PRONTO_RETIRADA": return "Pronto para Retirada";
+            default: return status;
+        }
     }
 
     @Override

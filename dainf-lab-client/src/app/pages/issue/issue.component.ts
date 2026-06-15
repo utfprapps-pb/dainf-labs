@@ -22,6 +22,7 @@ interface LoanWithTemp extends Loan {
 }
 
 import { TableModule } from 'primeng/table';
+import { PaginatorModule } from 'primeng/paginator';
 import { MessageService } from 'primeng/api';
 import { BarcodeScannerComponent } from '@/shared/components/barcode-scanner/barcode-scanner.component';
 
@@ -29,7 +30,7 @@ import { ItemService } from '../item/item.service';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, FormsModule, TableModule, BarcodeScannerComponent],
+  imports: [CommonModule, FormsModule, TableModule, PaginatorModule, BarcodeScannerComponent],
   providers: [LoanService, ReturnService, DialogService, UserService, MessageService, ItemService],
   selector: 'app-issue',
   templateUrl: './issue.component.html',
@@ -44,6 +45,14 @@ export class IssueComponent {
   loans = signal<LoanWithTemp[]>([]);
   loading = signal(false);
   viewMode: 'cards' | 'list' = 'cards';
+
+  first = 0;
+  rows = 10;
+
+  onPage(event: any) {
+    this.first = event.first;
+    this.rows = event.rows;
+  }
 
   toggleViewMode() {
     this.viewMode = this.viewMode === 'cards' ? 'list' : 'cards';
@@ -151,6 +160,10 @@ export class IssueComponent {
       });
     }
     return list;
+  }
+
+  get paginatedLoansList() {
+    return this.filteredLoansList.slice(this.first, this.first + this.rows);
   }
 
   hasItemsToReturn(loan: any): boolean {
@@ -263,6 +276,7 @@ export class IssueComponent {
     this.filterType = '';
     this.filterLoanDate = '';
     this.filterDeadlineDate = '';
+    this.first = 0;
   }
 
   onUserScanned(user: any) {

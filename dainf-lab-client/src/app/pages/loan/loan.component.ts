@@ -37,6 +37,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
 import { TagModule } from 'primeng/tag';
 import { TextareaModule } from 'primeng/textarea';
+import { PaginatorModule } from 'primeng/paginator';
 import { CategoryService } from '../category/category.service';
 import { ItemService } from '../item/item.service';
 import { User } from '../user/user';
@@ -78,7 +79,9 @@ const STATUS_ICON: Record<LoanStatus, string> = {
     InputGroupAddonModule,
     ButtonModule,
     StaticSelectComponent,
-    BarcodeScannerComponent
+    BarcodeScannerComponent,
+    TagModule,
+    PaginatorModule
 ],
   providers: [
     LoanService,

@@ -77,7 +77,20 @@
           </div>
       </div>
       
-      <!-- VISÃƒO 2: TABELA DE LISTA -->
+      <!-- Paginator para o modo cards -->
+      <div *ngIf="viewMode === 'cards' && crud.items()?.page?.totalElements" class="mt-4">
+          <p-paginator 
+              [rows]="crud.lastPagination?.rows || 10" 
+              [totalRecords]="crud.items()?.page?.totalElements" 
+              (onPage)="onPageChange($event)" 
+              [rowsPerPageOptions]="[10, 20, 30]"
+              [alwaysShow]="true"
+              [showCurrentPageReport]="true"
+              currentPageReportTemplate="Exibindo itens {last} de {totalRecords}">
+          </p-paginator>
+      </div>
+      
+      <!-- VISÃO 2: TABELA DE LISTA -->
       <div [class.hide-crud-list]="viewMode === 'cards'" class="hide-crud-toolbar">
         <app-crud
           #crud
@@ -244,6 +257,9 @@
       <app-input-container label="Data de Devolução" class="col-span-12 md:col-span-4">
         <p-datepicker dateFormat="dd/mm/yy" formControlName="returnDate" />
       </app-input-container>
+      <div class="col-span-12" *ngIf="form.hasError('invalidDates') && (form.touched || form.dirty)">
+        <p class="text-red-500 text-xs font-semibold">A devolução não pode ser anterior à retirada.</p>
+      </div>
 
       <p-fieldset legend="Itens" class="col-span-12">
         <app-subitem-form formControlName="items" [form]="reservationItensForm" [columns]="reservationItemCols">

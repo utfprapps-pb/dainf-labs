@@ -38,6 +38,7 @@ class LoanServiceInventoryTest {
     @Mock TransactionAuditor auditor;
     @Mock UserService userService;
     @Mock LoanMailService loanMailService;
+    @Mock NotificationService notificationService;
 
     InventoryService inventoryService;
     LoanService loanService;
@@ -54,7 +55,7 @@ class LoanServiceInventoryTest {
         inventoryService = new InventoryService(auditor, configurationService);
         ReflectionTestUtils.setField(inventoryService, "repository", inventoryRepository);
 
-        loanService = new LoanService(inventoryService, returnRepository, userService, loanMailService);
+        loanService = new LoanService(inventoryService, returnRepository, userService, loanMailService, notificationService);
         ReflectionTestUtils.setField(loanService, "repository", loanRepository);
 
         lenient().when(inventoryRepository.findByItem(any())).thenAnswer(inv -> {

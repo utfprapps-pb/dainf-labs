@@ -15,6 +15,7 @@ import { FieldsetModule } from 'primeng/fieldset';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { BarcodeScannerComponent } from '@/shared/components/barcode-scanner/barcode-scanner.component';
 import { ButtonModule } from 'primeng/button';
+import { PaginatorModule } from 'primeng/paginator';
 
 import { ContextStore } from '@/shared/store/context-store.service';
 import { ItemService } from '../item/item.service';
@@ -37,7 +38,8 @@ import { CartService } from '@/shared/services/cart.service';
     FieldsetModule,
     InputNumberModule,
     ButtonModule,
-    BarcodeScannerComponent
+    BarcodeScannerComponent,
+    PaginatorModule
   ],
   providers: [ReservationService, UserService, ItemService, DatePipe, LoanService],
   selector: 'app-reservation',
@@ -71,7 +73,18 @@ export class ReservationComponent implements OnInit {
     withdrawalDate: [null, Validators.required],
     returnDate: [null],
     items: [[]],
-  });
+  }, { validators: this.dateComparisonValidator });
+
+  dateComparisonValidator(g: FormGroup) {
+    const withdrawal = g.get('withdrawalDate')?.value;
+    const returnD = g.get('returnDate')?.value;
+    if (withdrawal && returnD) {
+      if (new Date(returnD) < new Date(withdrawal)) {
+        return { invalidDates: true };
+      }
+    }
+    return null;
+  }
 
   reservationItensForm: FormGroup = this.formBuilder.group({
     id: [null],
@@ -114,6 +127,10 @@ export class ReservationComponent implements OnInit {
 
   toggleViewMode() {
     this.viewMode = this.viewMode === 'cards' ? 'list' : 'cards';
+  }
+
+  onPageChange(event: any) {
+    this.crud()?.onPage({ page: event.page, size: event.rows });
   }
 
   applyFilters() {
@@ -165,21 +182,14 @@ export class ReservationComponent implements OnInit {
         const cartData = this.context.consume('cart');
         if (cartData && Array.isArray(cartData)) {
           const newRes = {
+            id: null,
             user: user,
             status: 'PENDENTE',
-            reservationDate: new Date(),
+            reservationDate: new Date().toISOString(),
             items: cartData
           };
-          this.reservationService.create(newRes as any).subscribe({
-            next: () => {
-              this.cartService.clearCart();
-              this.crud()?.loadItems();
-            },
-            error: (err) => {
-              console.error('Erro ao gerar reserva do carrinho', err);
-              this.crud()?.loadItems();
-            }
-          });
+          this.cartService.clearCart();
+          this.openModal(newRes as any);
         }
       },
       error: (err) => {
@@ -244,31 +254,50 @@ export class ReservationComponent implements OnInit {
 
     const formItems = this.form.get('items')?.value || [];
 
-    const updatedReservation: Reservation = {
+    const updatedReservation: any = {
       ...this.selectedReservation,
       status: this.modalStatus,
       description: this.modalDescription,
       observation: this.modalObservations,
-      withdrawalDate: this.modalDatePickup ? new Date(this.modalDatePickup.replace(/-/g, '\/')) : undefined,
-      returnDate: this.modalDateReturn ? new Date(this.modalDateReturn.replace(/-/g, '\/')) : undefined,
+      withdrawalDate: this.modalDatePickup ? new Date(this.modalDatePickup.replace(/-/g, '\/')).toISOString() : undefined,
+      returnDate: this.modalDateReturn ? new Date(this.modalDateReturn.replace(/-/g, '\/')).toISOString() : undefined,
       items: formItems
     };
 
-    this.reservationService.update(updatedReservation.id, updatedReservation).subscribe({
-      next: () => {
-        this.crud()?.loadItems();
-        this.closeModal();
-      },
-      error: (err) => {
-        console.error('Erro ao atualizar reserva', err);
-        this.crud()?.loadItems();
-        this.closeModal();
-      }
-    });
+    if (updatedReservation.id) {
+      this.reservationService.update(updatedReservation.id, updatedReservation).subscribe({
+        next: () => {
+          this.messageService.add({severity:'success', summary:'Sucesso', detail:'Reserva atualizada com sucesso.'});
+          this.crud()?.loadItems();
+          this.closeModal();
+        },
+        error: (err) => {
+          console.error('Erro ao atualizar reserva', err);
+          const errorMsg = err.error?.message || err.error?.detail || err.error?.errors?.[0]?.defaultMessage || 'Erro ao atualizar reserva. Verifique os campos.';
+          this.messageService.add({severity:'error', summary:'Erro', detail: errorMsg});
+          this.crud()?.loadItems();
+        }
+      });
+    } else {
+      this.reservationService.create(updatedReservation).subscribe({
+        next: () => {
+          this.messageService.add({severity:'success', summary:'Sucesso', detail:'Reserva solicitada com sucesso.'});
+          this.crud()?.loadItems();
+          this.closeModal();
+        },
+        error: (err) => {
+          console.error('Erro ao criar reserva', err);
+          const errorMsg = err.error?.message || err.error?.detail || err.error?.errors?.[0]?.defaultMessage || 'Erro ao criar reserva. Verifique os campos.';
+          this.messageService.add({severity:'error', summary:'Erro', detail: errorMsg});
+          this.crud()?.loadItems();
+        }
+      });
+    }
   }
 
   isDateValid(): boolean {
-    if (!this.modalDatePickup || !this.modalDateReturn) return true;
+    if (!this.modalDatePickup) return false;
+    if (!this.modalDateReturn) return true;
     const pickupD = new Date(this.modalDatePickup.replace(/-/g, '\/'));
     const returnD = new Date(this.modalDateReturn.replace(/-/g, '\/'));
     return returnD >= pickupD;

@@ -35,12 +35,14 @@ public class LoanService extends CrudService<Long, Loan, LoanRepository> {
     private final UserService userService;
     private final ReturnRepository returnRepository;
     private final LoanMailService loanMailService;
+    private final NotificationService notificationService;
 
-    public LoanService(InventoryService inventoryService, ReturnRepository returnRepository, UserService userService, LoanMailService loanMailService) {
+    public LoanService(InventoryService inventoryService, ReturnRepository returnRepository, UserService userService, LoanMailService loanMailService, NotificationService notificationService) {
         this.inventoryService = inventoryService;
         this.returnRepository = returnRepository;
         this.userService = userService;
         this.loanMailService = loanMailService;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -152,6 +154,7 @@ public class LoanService extends CrudService<Long, Loan, LoanRepository> {
             Loan updated = repository.save(persistedLoan);
             if (newStatus == LoanStatus.COMPLETED) {
                 loanMailService.sendLoanCompleted(updated.getId());
+                notificationService.sendNotification(updated.getBorrower(), "Devolução Confirmada", "A devolução do seu empréstimo foi confirmada com sucesso.");
             } else if (newStatus == LoanStatus.OVERDUE) {
                 loanMailService.sendLoanOverdue(updated.getId());
             }
