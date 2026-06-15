@@ -28,6 +28,7 @@ import { Observable, take, tap } from 'rxjs';
   ],
   template: `
     <p-autocomplete
+      #autocomplete
       class="w-full"
       [(ngModel)]="value"
       [virtualScroll]="true"
@@ -44,12 +45,20 @@ import { Observable, take, tap } from 'rxjs';
       appendTo="body"
       [disabled]="disabled"
       styleClass="w-full"
+      (click)="handleInputClick($event, autocomplete)"
     />
   `,
 })
 export class SearchSelectComponent<T extends Identifiable>
   implements ControlValueAccessor
 {
+  handleInputClick(event: MouseEvent, autocomplete: any) {
+    const target = event.target as HTMLElement;
+    if (target && target.tagName === 'INPUT' && !autocomplete.overlayVisible) {
+      autocomplete.handleDropdownClick();
+    }
+  }
+
   placeholder = input<string>();
 
   optionLabel = input.required<string>();

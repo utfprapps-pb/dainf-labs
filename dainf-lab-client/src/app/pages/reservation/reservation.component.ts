@@ -72,7 +72,7 @@ export class ReservationComponent implements OnInit {
     reservationDate: [new Date(), Validators.required],
     withdrawalDate: [null, Validators.required],
     returnDate: [null],
-    items: [[]],
+    items: [[], [Validators.required, Validators.minLength(1)]],
   }, { validators: this.dateComparisonValidator });
 
   dateComparisonValidator(g: FormGroup) {
@@ -165,6 +165,10 @@ export class ReservationComponent implements OnInit {
         patch.reservationDate = new Date();
         needsPatch = true;
       }
+      if (!val.items) {
+        patch.items = [];
+        needsPatch = true;
+      }
 
       if (needsPatch) {
         this.form.patchValue(patch, { emitEvent: false });
@@ -247,10 +251,11 @@ export class ReservationComponent implements OnInit {
   closeModal(): void {
     this.isModalOpen = false;
     this.selectedReservation = null;
+    this.form.reset();
   }
 
   handleConfirm(): void {
-    if (!this.selectedReservation || !this.isDateValid()) return;
+    if (!this.selectedReservation || !this.isDateValid() || this.form.get('items')?.invalid) return;
 
     const formItems = this.form.get('items')?.value || [];
 
