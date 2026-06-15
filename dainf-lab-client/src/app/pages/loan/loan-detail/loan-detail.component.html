@@ -36,11 +36,11 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div class="flex flex-col">
           <label class="font-bold text-sm text-gray-700 mb-1">Data do Empréstimo</label>
-          <input type="date" [(ngModel)]="editLoanDate" class="border border-[#FACC15] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-yellow-400 bg-white">
+          <input type="date" [(ngModel)]="editLoanDate" [disabled]="isReadOnly()" class="border border-[#FACC15] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-yellow-400 bg-white disabled:opacity-75 disabled:cursor-not-allowed">
         </div>
         <div class="flex flex-col">
           <label class="font-bold text-sm text-gray-700 mb-1">Prazo de Devolução</label>
-          <input type="date" [(ngModel)]="editDeadline" class="border border-[#FACC15] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-yellow-400 bg-white">
+          <input type="date" [(ngModel)]="editDeadline" [disabled]="isReadOnly()" class="border border-[#FACC15] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-yellow-400 bg-white disabled:opacity-75 disabled:cursor-not-allowed">
         </div>
         @if (!isDateValid()) {
           <div class="col-span-1 md:col-span-2 text-red-500 text-xs font-semibold">
@@ -50,7 +50,7 @@
       </div>
       <div class="flex flex-col">
         <label class="font-bold text-sm text-gray-700 mb-1">Observações</label>
-        <textarea [(ngModel)]="editObservation" rows="3" class="border border-[#FACC15] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-yellow-400 resize-none bg-white"></textarea>
+        <textarea [(ngModel)]="editObservation" rows="3" [disabled]="isReadOnly()" class="border border-[#FACC15] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-yellow-400 resize-none bg-white disabled:opacity-75 disabled:cursor-not-allowed"></textarea>
       </div>
     </div>
 
@@ -104,21 +104,25 @@
   </div>
 
   <div class="px-8 py-5 flex justify-between items-center rounded-b-xl shrink-0">
-    <div class="flex gap-3">
-      <button
-        (click)="openAddModal()"
-        class="bg-[#9395D3] hover:bg-indigo-400 text-[#1E293B] font-semibold px-4 py-2 rounded shadow-sm flex items-center gap-2 transition-colors"
-      >
-        Adicionar Novo Item <i class="pi pi-barcode"></i>
-      </button>
-      <button
-        (click)="saveChanges()"
-        [disabled]="!isDateValid()"
-        class="bg-[#22C55E] hover:bg-green-600 text-white font-bold px-6 py-2 rounded shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        Salvar Alterações
-      </button>
-    </div>
+    @if (!isReadOnly()) {
+      <div class="flex gap-3">
+        <button
+          (click)="openAddModal()"
+          class="bg-[#9395D3] hover:bg-indigo-400 text-[#1E293B] font-semibold px-4 py-2 rounded shadow-sm flex items-center gap-2 transition-colors"
+        >
+          Adicionar Novo Item <i class="pi pi-barcode"></i>
+        </button>
+        <button
+          (click)="saveChanges()"
+          [disabled]="!isDateValid()"
+          class="bg-[#22C55E] hover:bg-green-600 text-white font-bold px-6 py-2 rounded shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Salvar Alterações
+        </button>
+      </div>
+    } @else {
+      <div></div>
+    }
     <button
       (click)="close()"
       class="bg-[#FACC15] hover:bg-[#EAB308] text-white font-bold px-6 py-2 rounded shadow-sm transition-colors"

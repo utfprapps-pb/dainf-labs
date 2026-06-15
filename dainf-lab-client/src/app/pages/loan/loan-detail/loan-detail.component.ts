@@ -11,6 +11,7 @@ import { SearchSelectComponent } from '@/shared/components/search-select/search-
 import { InputNumberModule } from 'primeng/inputnumber';
 import { MessageService } from 'primeng/api';
 import { ReturnService } from '../../return/return.service';
+import { UserService } from '../../user/user.service';
 
 @Component({
   standalone: true,
@@ -23,7 +24,7 @@ import { ReturnService } from '../../return/return.service';
     SearchSelectComponent,
     InputNumberModule
   ],
-  providers: [ReturnService],
+  providers: [ReturnService, UserService],
   selector: 'app-loan-detail-dialog',
   templateUrl: './loan-detail.component.html',
 })
@@ -34,9 +35,11 @@ export class LoanDetailDialog implements OnInit {
   itemService = inject(ItemService);
   messageService = inject(MessageService);
   returnService = inject(ReturnService);
+  userService = inject(UserService);
 
   loan!: Loan;
   showAddModal = signal(false);
+  isReadOnly = signal(true);
   
   // Para adicionar novos itens
   newItems = signal<{ item: any; quantity: number }[]>([]);
@@ -52,6 +55,15 @@ export class LoanDetailDialog implements OnInit {
     this.editLoanDate = this.loan.loanDate ? new Date(this.loan.loanDate).toISOString().split('T')[0] : '';
     this.editDeadline = this.loan.deadline ? new Date(this.loan.deadline).toISOString().split('T')[0] : '';
     this.editObservation = this.loan.observation || '';
+
+    this.userService.hasAdvancedPrivileges().subscribe({
+      next: (hasPrivileges) => {
+        this.isReadOnly.set(!hasPrivileges);
+      },
+      error: () => {
+        this.isReadOnly.set(true);
+      }
+    });
 
     this.returnService.findByLoan(this.loan).subscribe({
       next: (ret) => {
