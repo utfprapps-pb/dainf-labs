@@ -21,7 +21,7 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # Copy config template and entrypoint script
 COPY config.template.json /config.template.json
 COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh
 
 ENV TZ=America/Sao_Paulo
 
