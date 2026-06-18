@@ -11,8 +11,10 @@ export interface ReservationItem extends Identifiable {
 export interface Reservation extends Identifiable {
   description?: string;
   observation?: string;
-  reservationDate: Date;
-  withdrawalDate?: Date;
+  reservationDate?: Date | string;
+  withdrawalDate?: Date | string;
+  returnDate?: Date | string;
   user: User;
   items: ReservationItem[];
+  status?: string;
 }

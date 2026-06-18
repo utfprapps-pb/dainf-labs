@@ -2,11 +2,11 @@ import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LoanService } from '../loan/loan.service';
+import { ReturnService } from './return.service';
 import { Loan, LoanItem } from '../loan/loan';
-import { ReturnService } from '../return/return.service';
-import { DialogService } from 'primeng/dynamicdialog';
-import { Return, ReturnItem } from '../return/return';
+import { Return, ReturnItem } from './return';
 import { SearchRequest } from '@/shared/models/search';
+import { DialogService } from 'primeng/dynamicdialog';
 import { LoanReturnDialog } from '../loan/return-dialog/return-dialog';
 import { UserService } from '../user/user.service';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -22,37 +22,23 @@ interface LoanWithTemp extends Loan {
 }
 
 import { TableModule } from 'primeng/table';
-import { PaginatorModule } from 'primeng/paginator';
-import { MessageService } from 'primeng/api';
-import { BarcodeScannerComponent } from '@/shared/components/barcode-scanner/barcode-scanner.component';
-
-import { ItemService } from '../item/item.service';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, FormsModule, TableModule, PaginatorModule, BarcodeScannerComponent],
-  providers: [LoanService, ReturnService, DialogService, UserService, MessageService, ItemService],
-  selector: 'app-issue',
-  templateUrl: './issue.component.html',
+  imports: [CommonModule, FormsModule, TableModule],
+  providers: [LoanService, ReturnService, DialogService],
+  selector: 'app-return',
+  templateUrl: './return.component.html',
 })
-export class IssueComponent {
+export class ReturnComponent {
   loanService = inject(LoanService);
   returnService = inject(ReturnService);
   dialogService = inject(DialogService);
   userService = inject(UserService);
-  messageService = inject(MessageService);
 
   loans = signal<LoanWithTemp[]>([]);
   loading = signal(false);
   viewMode: 'cards' | 'list' = 'cards';
-
-  first = 0;
-  rows = 10;
-
-  onPage(event: any) {
-    this.first = event.first;
-    this.rows = event.rows;
-  }
 
   toggleViewMode() {
     this.viewMode = this.viewMode === 'cards' ? 'list' : 'cards';
@@ -119,6 +105,10 @@ export class IssueComponent {
     });
   }
 
+  hasItemsToReturn(loan: any): boolean {
+    return loan.items.some((item: any) => (item.tempReturnQty || 0) > 0);
+  }
+
   get filteredLoansList() {
     let list = this.loans() || [];
     const name = this.filterName?.toLowerCase() || '';
@@ -162,14 +152,6 @@ export class IssueComponent {
     return list;
   }
 
-  get paginatedLoansList() {
-    return this.filteredLoansList.slice(this.first, this.first + this.rows);
-  }
-
-  hasItemsToReturn(loan: any): boolean {
-    return loan.items.some((item: any) => (item.tempReturnQty || 0) > 0);
-  }
-
   incrementQty(item: any) {
     const max = item.quantity - (item.returnedQuantity || 0);
     if ((item.tempReturnQty || 0) < max) {
@@ -202,7 +184,7 @@ export class IssueComponent {
     const itemsToReturn = loan.items.filter((item: any) => item.tempReturnQty > 0);
     if (itemsToReturn.length === 0) return;
 
-    // Buscar se jÃ¡ existe um return para esse loan
+    // Buscar se já existe um return para esse loan
     this.returnService.findByLoan(loan).pipe(
       catchError(() => of(null))
     ).subscribe({
@@ -276,25 +258,5 @@ export class IssueComponent {
     this.filterType = '';
     this.filterLoanDate = '';
     this.filterDeadlineDate = '';
-    this.first = 0;
-  }
-
-  onUserScanned(user: any) {
-    this.filterDocument = user.documento;
-    const filtered = this.filteredLoansList;
-    if (filtered.length === 1) {
-       this.openReturnDialog(filtered[0]);
-    }
-  }
-
-  onItemScanned(item: any) {
-    const loansWithItem = this.filteredLoansList.filter(l => l.items.some((i: any) => i.item.id === item.id));
-    if (loansWithItem.length === 1) {
-       this.openReturnDialog(loansWithItem[0]);
-    } else if (loansWithItem.length > 1) {
-       this.messageService.add({severity: 'warn', summary: 'Atenção', detail: 'Este item aparece em mais de um empréstimo na lista atual.'});
-    } else {
-       this.messageService.add({severity: 'error', summary: 'Não Encontrado', detail: 'Não há empréstimos pendentes contendo este item.'});
-    }
   }
 }

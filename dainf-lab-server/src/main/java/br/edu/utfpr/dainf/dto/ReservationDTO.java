@@ -16,6 +16,7 @@ import java.util.List;
 public class ReservationDTO implements Identifiable<Long> {
     private Long id;
     private String description;
+    private String status;
     private String observation;
 
     @NotNull(message = "Deve ser informado a data de reserva.")
@@ -23,6 +24,7 @@ public class ReservationDTO implements Identifiable<Long> {
 
     @NotNull(message = "Deve ser informada a data de retirada.")
     private Instant withdrawalDate;
+    private Instant returnDate;
     private SimpleUserDTO user;
 
     @Valid

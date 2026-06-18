@@ -6,5 +6,7 @@ public record DashboardDTO(
         LoanStatusSummary loanSummary,
         List<LoanCountByDay> loanCountByDays,
         List<LowStockItemDTO> lowStockItems,
-        List<InventoryOperationDTO> recentOperations
+        List<InventoryOperationDTO> recentOperations,
+        ReturnRateSummary returnRateSummary,
+        List<TopItemDTO> topBorrowedItems
 ) { }

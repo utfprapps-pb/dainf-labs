@@ -35,12 +35,14 @@ public class LoanService extends CrudService<Long, Loan, LoanRepository> {
     private final UserService userService;
     private final ReturnRepository returnRepository;
     private final LoanMailService loanMailService;
+    private final NotificationService notificationService;
 
-    public LoanService(InventoryService inventoryService, ReturnRepository returnRepository, UserService userService, LoanMailService loanMailService) {
+    public LoanService(InventoryService inventoryService, ReturnRepository returnRepository, UserService userService, LoanMailService loanMailService, NotificationService notificationService) {
         this.inventoryService = inventoryService;
         this.returnRepository = returnRepository;
         this.userService = userService;
         this.loanMailService = loanMailService;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -83,30 +85,11 @@ public class LoanService extends CrudService<Long, Loan, LoanRepository> {
             entity.setStatus(LoanStatus.ONGOING);
         }
 
-        Loan existing = entity.getId() != null ? repository.findById(entity.getId()).orElse(null) : null;
-        List<LoanItem> newItems = entity.getItems() != null ? entity.getItems() : List.of();
-        for (LoanItem item : newItems) {
-            item.setLoan(entity);
-            LoanItem oldItem = findOldItem(existing, item);
-            inventoryService.updateTransaction(
-                    item.getItem(),
-                    oldItem != null ? oldItem.getQuantity() : BigDecimal.ZERO,
-                    InventoryTransactionType.LOAN,
-                    item.getQuantity()
-            );
-        }
-        // Undo inventory for items removed from the loan entirely (not just set to 0)
-        if (existing != null && existing.getItems() != null) {
-            for (LoanItem oldItem : existing.getItems()) {
-                boolean stillPresent = newItems.stream()
-                        .anyMatch(i -> Objects.equals(i.getItem().getId(), oldItem.getItem().getId()));
-                if (!stillPresent) {
-                    inventoryService.updateTransaction(
-                            oldItem.getItem(),
-                            oldItem.getQuantity(),
-                            InventoryTransactionType.LOAN,
-                            BigDecimal.ZERO
-                    );
+        if (entity.getItems() != null) {
+            for (LoanItem item : entity.getItems()) {
+                item.setLoan(entity);
+                if (item.getId() == null) {
+                    inventoryService.handleTransaction(item.getItem(), item.getQuantity(), InventoryTransactionType.LOAN);
                 }
             }
         }
@@ -171,6 +154,7 @@ public class LoanService extends CrudService<Long, Loan, LoanRepository> {
             Loan updated = repository.save(persistedLoan);
             if (newStatus == LoanStatus.COMPLETED) {
                 loanMailService.sendLoanCompleted(updated.getId());
+                notificationService.sendNotification(updated.getBorrower(), "Devolução Confirmada", "A devolução do seu empréstimo foi confirmada com sucesso.");
             } else if (newStatus == LoanStatus.OVERDUE) {
                 loanMailService.sendLoanOverdue(updated.getId());
             }

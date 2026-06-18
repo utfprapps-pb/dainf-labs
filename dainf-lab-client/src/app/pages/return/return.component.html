@@ -1,6 +1,6 @@
 <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
     <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Saída</h1>
+        <h1 class="text-2xl font-bold text-gray-800">Devolução</h1>
         <div class="bg-white rounded-md p-2 shadow-sm flex items-center gap-2 border border-gray-100">
             <button (click)="toggleViewMode()" class="flex items-center gap-2 text-[13px] font-medium text-gray-500 hover:text-gray-800 bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded transition-colors">
                 <i class="fa-solid text-gray-400" [ngClass]="viewMode === 'cards' ? 'fa-list' : 'fa-table-cells-large'"></i>
@@ -8,9 +8,6 @@
             </button>
         </div>
     </div>
-
-    <!-- Leitor de Código de Barras -->
-    <app-barcode-scanner (userScanned)="onUserScanned($event)" (itemScanned)="onItemScanned($event)"></app-barcode-scanner>
 
     <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm mb-6 flex flex-wrap gap-4 items-end">
         <div class="flex-1 min-w-[200px]">
@@ -49,7 +46,7 @@
     </div>
 
     <div [class.hidden]="viewMode === 'list'" class="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-6" id="cards-container">
-        @for (loan of paginatedLoansList; track loan.id) {
+        @for (loan of filteredLoansList; track loan.id) {
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col card-devolucao">
                 <div class="p-4 border-b border-gray-100">
                     <div class="flex justify-between items-start mb-4">
@@ -89,6 +86,7 @@
                                 <div class="flex items-center justify-between text-sm item-linha gap-2">
                                     <div class="flex items-center gap-2 text-gray-700 flex-1 min-w-0">
                                         <input type="checkbox" 
+                                               *ngIf="hasAdvancedPrivileges()"
                                                class="item-checkbox rounded text-blue-600 h-4 w-4 border-gray-300 cursor-pointer shrink-0"
                                                [checked]="item.tempReturnQty === (item.quantity - (item.returnedQuantity || 0)) && (item.quantity - (item.returnedQuantity || 0)) > 0"
                                                [disabled]="(item.quantity - (item.returnedQuantity || 0)) === 0"
@@ -98,7 +96,7 @@
                                     <div class="flex items-center gap-1.5 shrink-0 justify-end box-controles">
                                         @if ((item.quantity - (item.returnedQuantity || 0)) > 0) {
                                             <span class="text-[10px] uppercase font-bold text-gray-500 bg-gray-100 px-1.5 py-1 rounded span-pendente">Falta {{ item.quantity - (item.returnedQuantity || 0) }}</span>
-                                            <div class="flex items-center border border-gray-200 rounded-md bg-white counter-container h-7">
+                                            <div *ngIf="hasAdvancedPrivileges()" class="flex items-center border border-gray-200 rounded-md bg-white counter-container h-7">
                                                 <button type="button" class="btn-minus px-2 text-gray-500 hover:bg-gray-100 font-bold disabled:opacity-50"
                                                         [disabled]="(item.tempReturnQty || 0) <= 0"
                                                         (click)="decrementQty(item)">-</button>
@@ -117,7 +115,7 @@
                     }
                 </div>
 
-                <div class="p-4 border-t border-gray-100 flex flex-wrap items-center justify-between bg-[#F8FAFC] rounded-b-xl gap-3">
+                <div *ngIf="hasAdvancedPrivileges()" class="p-4 border-t border-gray-100 flex flex-wrap items-center justify-between bg-[#F8FAFC] rounded-b-xl gap-3">
                     <label class="flex items-center gap-2 text-sm font-medium text-gray-600 cursor-pointer hover:text-blue-600 transition-colors whitespace-nowrap"
                            (click)="toggleAllItems(loan)">
                         <i class="fa-solid fa-check text-blue-500"></i> Marcar todos
@@ -138,23 +136,14 @@
         }
     </div>
     
-    <div [class.hidden]="viewMode === 'list'">
-        <div class="flex items-center justify-center gap-4 mt-6">
-            <p-paginator
-              (onPageChange)="onPage($event)"
-              [first]="first"
-              [rows]="rows"
-              [totalRecords]="filteredLoansList.length"
-              [rowsPerPageOptions]="[10, 20, 30]"
-              [alwaysShow]="true"
-              [showCurrentPageReport]="true"
-              currentPageReportTemplate="Exibindo itens {last} de {totalRecords}"
-            ></p-paginator>
+    <div *ngIf="viewMode === 'cards' && filteredLoansList.length > 0" class="flex items-center justify-center gap-4 mt-6">
+        <div class="p-paginator p-component bg-transparent border-none">
+            <span class="p-paginator-current text-gray-600 text-sm">Exibindo itens {{ filteredLoansList.length }} de {{ filteredLoansList.length }}</span>
         </div>
     </div>
 
-    <div [class.hidden]="viewMode === 'cards'" class="bg-white rounded-xl shadow-sm border border-gray-100 p-2 overflow-hidden mt-6">
-        <p-table [value]="filteredLoansList" [paginator]="true" [rows]="10" styleClass="p-datatable-sm" responsiveLayout="scroll">
+    <div [class.hidden]="viewMode === 'cards'" class="bg-white rounded-xl shadow-sm border border-gray-100 p-2 overflow-hidden">
+        <p-table [value]="filteredLoansList" [paginator]="true" [rows]="10" [showCurrentPageReport]="true" currentPageReportTemplate="Exibindo itens {last} de {totalRecords}" styleClass="p-datatable-sm" responsiveLayout="scroll">
             <ng-template pTemplate="header">
                 <tr>
                     <th class="bg-gray-50 text-gray-700 font-semibold text-sm p-3 border-b border-gray-200">Mutuário</th>
@@ -186,7 +175,7 @@
             </ng-template>
             <ng-template pTemplate="emptymessage">
                 <tr>
-                    <td colspan="6" class="text-center py-10 text-gray-500 text-sm">Nenhum registro pendente encontrado.</td>
+                    <td colspan="6" class="text-center py-10 text-gray-500 text-sm">Nenhuma devolução pendente encontrada.</td>
                 </tr>
             </ng-template>
         </p-table>

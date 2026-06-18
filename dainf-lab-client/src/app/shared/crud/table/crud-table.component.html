@@ -77,7 +77,7 @@
     [totalRecords]="items()!.page.totalElements"
     [rowsPerPageOptions]="[10, 20, 30]"
     [showCurrentPageReport]="true"
-    currentPageReportTemplate="Exibindo {last} de {totalRecords} itens"
+    currentPageReportTemplate="Exibindo itens {last} de {totalRecords}"
     (onPageChange)="onPage($event)"
   >
   </p-paginator>

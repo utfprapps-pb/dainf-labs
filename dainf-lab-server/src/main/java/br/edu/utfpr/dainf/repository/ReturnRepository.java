@@ -16,4 +16,17 @@ public interface ReturnRepository extends CrudRepository<Long, Return>, ReturnSp
 
     @Query("SELECT COALESCE(SUM(ri.quantityIssued), 0) FROM ReturnItem ri WHERE ri.aReturn.loan.id = :loanId")
     BigDecimal sumQuantityIssuedByLoan(@Param("loanId") Long loanId);
+
+    @Query(value = """
+        SELECT
+          COUNT(*) FILTER (WHERE r.return_date <= l.deadline) AS onTimeCount,
+          COUNT(*) FILTER (WHERE r.return_date > l.deadline) AS overdueCount
+        FROM return r
+        JOIN loan l ON r.loan_id = l.id
+        WHERE r.return_date BETWEEN :startDate AND :endDate
+        """, nativeQuery = true)
+    br.edu.utfpr.dainf.dto.ReturnRateSummary getReturnRateSummary(
+            @Param("startDate") java.time.LocalDate startDate,
+            @Param("endDate") java.time.LocalDate endDate
+    );
 }

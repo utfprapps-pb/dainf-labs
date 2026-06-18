@@ -14,17 +14,33 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import br.edu.utfpr.dainf.exception.WarnException;
+import br.edu.utfpr.dainf.model.Inventory;
+import br.edu.utfpr.dainf.model.ReservationItem;
 
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.List;
+import br.edu.utfpr.dainf.service.NotificationService;
+import br.edu.utfpr.dainf.repository.UserRepository;
 
 @Service
 public class ReservationService extends CrudService<Long, Reservation, ReservationRepository> {
 
     private final UserService userService;
+    private final InventoryService inventoryService;
+    private final br.edu.utfpr.dainf.mail.MailService mailService;
+    private final ConfigurationService configurationService;
+    private final NotificationService notificationService;
+    private final UserRepository userRepository;
 
-    public ReservationService(UserService userService) {
+    public ReservationService(UserService userService, InventoryService inventoryService, br.edu.utfpr.dainf.mail.MailService mailService, ConfigurationService configurationService, NotificationService notificationService, UserRepository userRepository) {
         this.userService = userService;
+        this.inventoryService = inventoryService;
+        this.mailService = mailService;
+        this.configurationService = configurationService;
+        this.notificationService = notificationService;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -46,12 +62,71 @@ public class ReservationService extends CrudService<Long, Reservation, Reservati
     public Reservation save(Reservation entity) {
         validateAccess(entity);
         if (entity.getId() == null) {
-            entity.setUser(userService.getCurrentUser());
+            entity.setStatus("PENDENTE");
+            if (entity.getUser() == null || !userService.hasPrivilegedAcess()) {
+                entity.setUser(userService.getCurrentUser());
+            }
         }
+        
         if (entity.getItems() != null) {
-            entity.getItems().forEach(item -> item.setReservation(entity));
+            for (ReservationItem item : entity.getItems()) {
+                item.setReservation(entity);
+                if (item.getItem() != null) {
+                    Inventory inv = inventoryService.findByItem(item.getItem());
+                    if (inv == null || inv.getQuantity().compareTo(item.getQuantity()) < 0) {
+                        throw new WarnException("Estoque insuficiente para o item: " + item.getItem().getName());
+                    }
+                }
+            }
         }
-        return super.save(entity);
+        boolean isNew = entity.getId() == null;
+        String oldStatus = null;
+        if (!isNew) {
+            Reservation dbEntity = repository.findById(entity.getId()).orElse(null);
+            if (dbEntity != null) {
+                oldStatus = dbEntity.getStatus();
+            }
+        }
+
+        Reservation saved = super.save(entity);
+        
+        if (isNew) {
+            // Send email
+            String to = configurationService.get().getClearanceEmailRecipient();
+            if (to != null && !to.isBlank()) {
+                try {
+                    mailService.send(br.edu.utfpr.dainf.mail.Mail.builder()
+                            .to(java.util.List.of(to))
+                            .subject("Nova Reserva Solicitada")
+                            .content("Uma nova reserva foi solicitada por " + saved.getUser().getNome() + ". Acesse o sistema para revisar.")
+                            .build());
+                } catch (Exception e) {
+                    // Ignore mail error to not block reservation
+                }
+            }
+            
+            // Site notification for TAs and Admins
+            List<User> notificationTargets = userRepository.findByRoleIn(List.of(UserRole.ROLE_ADMIN, UserRole.ROLE_LAB_TECHNICIAN, UserRole.ROLE_PROFESSOR));
+            for (User target : notificationTargets) {
+                notificationService.sendNotification(target, "Nova Reserva", "Uma nova reserva foi solicitada por " + saved.getUser().getNome());
+            }
+        } else {
+            // Site notification for Student when status changes
+            if (oldStatus != null && !oldStatus.equals(saved.getStatus())) {
+                notificationService.sendNotification(saved.getUser(), "Reserva Atualizada", "O status da sua reserva mudou para: " + getDisplayStatus(saved.getStatus()));
+            }
+        }
+        return saved;
+    }
+    
+    private String getDisplayStatus(String status) {
+        if (status == null) return "Desconhecido";
+        switch (status) {
+            case "PENDENTE": return "Pendente";
+            case "EM_SEPARACAO": return "Em separação";
+            case "PRONTO_RETIRADA": return "Pronto para Retirada";
+            default: return status;
+        }
     }
 
     @Override

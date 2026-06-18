@@ -26,6 +26,17 @@ export interface InventoryOperation {
   iconClass: string;
 }
 
+export interface ReturnRateSummary {
+  onTimeCount: number;
+  overdueCount: number;
+}
+
+export interface TopItem {
+  itemName: string;
+  totalQuantity: number;
+}
+
+
 @Injectable({ providedIn: 'root' })
 export class DashboardService extends BaseService {
   private datePipe = new DatePipe('en-US');
@@ -97,6 +108,33 @@ export class DashboardService extends BaseService {
         percentage,
       };
     });
+  }
+
+  mapReturnRateSummary(rate: any) {
+    if (!rate) return { labels: [], datasets: [] };
+    return {
+      labels: ['No Prazo', 'Atrasadas'],
+      datasets: [
+        {
+          data: [rate.onTimeCount || 0, rate.overdueCount || 0],
+          backgroundColor: ['#10b981', '#ef4444'],
+          hoverBackgroundColor: ['#059669', '#dc2626']
+        }
+      ]
+    };
+  }
+
+  mapTopBorrowedItems(items: any[]) {
+    if (!items || items.length === 0) return { labels: [], datasets: [] };
+    return {
+      labels: items.map(item => item.itemName),
+      datasets: [
+        {
+          label: 'Quantidade Emprestada',
+          data: items.map(item => item.totalQuantity)
+        }
+      ]
+    };
   }
 
   mapRecentOperations(ops: any[]): InventoryOperation[] {

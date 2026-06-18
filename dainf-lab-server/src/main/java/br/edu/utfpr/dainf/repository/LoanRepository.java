@@ -87,4 +87,19 @@ public interface LoanRepository extends CrudRepository<Long, Loan>, LoanSpecExec
 
     @Query("SELECT l FROM Loan l WHERE l.status <> br.edu.utfpr.dainf.enums.LoanStatus.COMPLETED AND l.deadline IS NOT NULL AND l.deadline < :now")
     List<Loan> findNonCompletedPastDeadline(@Param("now") Instant now);
+
+    @Query(value = """
+        SELECT i.name AS itemName, SUM(li.quantity) AS totalQuantity
+        FROM loan_item li
+        JOIN loan l ON li.loan_id = l.id
+        JOIN item i ON li.item_id = i.id
+        WHERE l.loan_date BETWEEN :startDate AND :endDate
+        GROUP BY i.id, i.name
+        ORDER BY totalQuantity DESC
+        LIMIT 10
+        """, nativeQuery = true)
+    List<br.edu.utfpr.dainf.dto.TopItemDTO> findTopBorrowedItems(
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
 }

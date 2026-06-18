@@ -1,11 +1,11 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/postgres
-    username: postgres
-    password: "5432"
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5434/dainf_lab}
+    username: ${DATABASE_USERNAME:postgres}
+    password: ${DATABASE_PASSWORD:5432}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
     show-sql: false
     database-platform: org.hibernate.dialect.PostgreSQLDialect

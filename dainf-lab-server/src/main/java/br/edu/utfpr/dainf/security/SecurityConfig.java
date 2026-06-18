@@ -19,6 +19,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.http.HttpMethod;
 
 import java.util.List;
 
@@ -57,6 +58,9 @@ public class SecurityConfig {
                         .requestMatchers("/auth/refresh").permitAll()
                         .requestMatchers("/auth/logout").permitAll()
                         .requestMatchers("/clearance/validate").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/users/login", "/users", "/users/init-admin").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/notifications/debug-all", "/notifications/debug-res/**").permitAll()
+                        .requestMatchers("/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
@@ -85,7 +89,7 @@ public class SecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(baseUrl, "http://localhost:8090", "http://localhost:4200", "https://od46s-test-labs.app.pb.utfpr.edu.br", "https://od46s.tondo.dev.br"));
+        configuration.setAllowedOrigins(List.of(baseUrl, "http://localhost:8090", "http://localhost:4200", "http://127.0.0.1:8090", "http://127.0.0.1:4200", "https://od46s-test-labs.app.pb.utfpr.edu.br", "https://od46s.tondo.dev.br"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "x-xsrf-token",
                 "Access-Control-Allow-Headers", "Origin",

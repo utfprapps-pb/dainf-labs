@@ -1,127 +1,131 @@
-<div class="p-fluid p-4">
-  <div class="mb-4">
-    <h3 class="m-0">Registrar Devolução</h3>
-    <p class="text-muted-color">
-      Registre a devolução do empréstimo selecionado.
-    </p>
-  </div>
-
-  <form [formGroup]="form" class="grid grid-cols-12 gap-4">
-    <app-input-container
-      label="Código"
-      class="col-span-12 md:col-span-6 lg:col-span-2"
-    >
-      <input type="text" pInputText id="loanId" formControlName="loanId" />
-    </app-input-container>
-
-    <app-input-container label="Mutuário" class="col-span-12 md:col-span-4">
-      <app-search-select
-        formControlName="borrower"
-        optionLabel="nome"
-        [service]="userService"
-        placeholder="Selecione um usuário"
-      />
-    </app-input-container>
-
-    <app-input-container
-      label="Data do empréstimo"
-      class="col-span-12 md:col-span-4 lg:col-span-2"
-    >
-      <p-datepicker dateFormat="dd/mm/yy" formControlName="loanDate" />
-    </app-input-container>
-
-    <app-input-container
-      label="Prazo de devolução"
-      class="col-span-12 md:col-span-4 lg:col-span-2"
-    >
-      <p-datepicker dateFormat="dd/mm/yy" formControlName="deadline" />
-    </app-input-container>
-
-    <app-input-container
-      class="col-span-12 md:col-span-4 lg:col-span-2"
-      label="Data da devolução"
-    >
-      <p-datepicker
-        formControlName="returnDate"
-        dateFormat="dd/mm/yy"
-        appendTo="body"
-      ></p-datepicker>
-    </app-input-container>
-
-    <app-input-container label="Observação" class="col-span-12">
-      <textarea
-        rows="5"
-        cols="30"
-        pTextarea
-        formControlName="observation"
-      ></textarea>
-    </app-input-container>
-
-    <p-table [value]="savedReturn?.items! || loan.items" class="col-span-12" [rowHover]="true">
-      <ng-template pTemplate="header">
-        <tr>
-          <th>Item</th>
-          <th>Emprestado</th>
-          <th>Pendente</th>
-          <th>Devolvido</th>
-          <th>Saída</th>
-        </tr>
-      </ng-template>
-
-      <ng-template pTemplate="body" let-item>
-        <tr>
-          <td>{{ item.item.name }}</td>
-          <td>{{ item.quantity }}</td>
-          <td>
-            {{ item.quantity - (item.quantityReturned || 0) - (item.quantityIssued || 0) }}
-          </td>
-          <td [pEditableColumn]="item.quantityReturned" pEditableColumnField="quantityReturned">
-            <p-cellEditor>
-              <ng-template #input>
-                <p-input-number
-                  locale="pt-BR"
-                  [(ngModel)]="item.quantityReturned"
-                  [ngModelOptions]="{standalone: true}"
-                  [showButtons]="true"
-                  buttonLayout="horizontal"
-                  inputId="horizontal"
-                  spinnerMode="horizontal"
-                  [min]="0"
-                  [max]="item.quantity - (item.quantityIssued || 0)"
-                ></p-input-number>
-              </ng-template>
-              <ng-template #output><p-chip label="{{ item.quantityReturned || 0 }}" icon="pi pi-pencil" /></ng-template>
-            </p-cellEditor>
-          </td>
-          <td [pEditableColumn]="item.quantityIssued" pEditableColumnField="quantityIssued">
-            <p-cellEditor>
-              <ng-template #input>
-                <p-input-number
-                  locale="pt-BR"
-                  [(ngModel)]="item.quantityIssued"
-                  [ngModelOptions]="{standalone: true}"
-                  [showButtons]="true"
-                  buttonLayout="horizontal"
-                  inputId="horizontal"
-                  spinnerMode="horizontal"
-                  [min]="0"
-                  [max]="item.quantity - (item.quantityReturned || 0)"
-                ></p-input-number>
-              </ng-template>
-              <ng-template #output><p-chip label="{{ item.quantityIssued || 0 }}" icon="pi pi-pencil" /></ng-template>
-            </p-cellEditor>
-          </td>
-        </tr>
-      </ng-template>
-    </p-table>
-
-    <div class="col-span-12 flex justify-end gap-3 pt-4">
-      <p-button
-        label="Cancelar"
-        severity="secondary"
-        (onClick)="cancel()"
-      ></p-button>
-      <p-button label="Salvar" severity="success" (onClick)="save()"></p-button>
+<div class="bg-white rounded-2xl shadow-xl flex flex-col max-h-[90vh] overflow-hidden">
+    <!-- Header -->
+    <div class="px-6 py-5 flex justify-between items-center border-b border-gray-100 bg-white">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center text-xl shadow-sm border border-blue-100">
+                <i class="fa-solid fa-file-invoice"></i>
+            </div>
+            <div>
+                <h2 class="text-xl font-bold text-gray-800">Ficha de Empréstimo</h2>
+                <p class="text-sm text-gray-500 font-medium">Detalhes e registro de devolução</p>
+            </div>
+        </div>
     </div>
-  </form>
+
+    <div class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-[#F8FAFC]">
+        <!-- Dados Básicos -->
+        <div class="bg-white rounded-xl p-5 mb-6 border border-gray-200 shadow-sm">
+            <h3 class="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-user-tag text-gray-400"></i> Dados do Mutuário
+            </h3>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                <div class="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                    <p class="text-[11px] text-gray-500 font-bold uppercase tracking-wide mb-1">Nome</p>
+                    <p class="text-sm font-semibold text-gray-800 truncate" [title]="loan.borrower.nome">{{ loan.borrower.nome }}</p>
+                </div>
+                <div class="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                    <p class="text-[11px] text-gray-500 font-bold uppercase tracking-wide mb-1">Matrícula</p>
+                    <p class="text-sm font-semibold text-gray-800">{{ loan.borrower.documento }}</p>
+                </div>
+                <div class="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                    <p class="text-[11px] text-gray-500 font-bold uppercase tracking-wide mb-1">Curso</p>
+                    <p class="text-sm font-semibold text-gray-800 truncate" title="Engenharia de Computação">Engenharia de Comp.</p>
+                </div>
+                <div class="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                    <p class="text-[11px] text-gray-500 font-bold uppercase tracking-wide mb-1">Data Empréstimo</p>
+                    <p class="text-sm font-semibold text-gray-800">{{ loan.loanDate | date: 'dd/MM/yyyy' }}</p>
+                </div>
+                <div class="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                    <p class="text-[11px] text-gray-500 font-bold uppercase tracking-wide mb-1">Prazo</p>
+                    <div class="flex items-center gap-2">
+                        <p class="text-sm font-semibold" [ngClass]="loan.status === 'OVERDUE' ? 'text-red-600' : 'text-gray-800'">{{ loan.deadline | date: 'dd/MM/yyyy' }}</p>
+                        <span class="text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider" [ngClass]="loan.status === 'OVERDUE' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-700'">{{ loan.status === 'OVERDUE' ? 'Atrasado' : 'Em dia' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulário de Devolução -->
+        <div class="bg-white rounded-xl p-5 mb-6 border border-gray-200 shadow-sm">
+            <h3 class="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-pen-to-square text-gray-400"></i> Registro de Devolução
+            </h3>
+            <form [formGroup]="form" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="flex flex-col md:col-span-1">
+                    <label class="text-xs font-bold text-gray-700 mb-1.5">Data Real da Devolução</label>
+                    <input type="date" formControlName="returnDate" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 hover:bg-white transition-colors">
+                </div>
+                <div class="flex flex-col md:col-span-2">
+                    <label class="text-xs font-bold text-gray-700 mb-1.5">Observações (Opcional)</label>
+                    <textarea formControlName="observation" rows="2" placeholder="Adicione detalhes sobre o estado dos itens..." class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none bg-gray-50 hover:bg-white transition-colors"></textarea>
+                </div>
+            </form>
+        </div>
+
+        <!-- Itens -->
+        @for (group of getGroupedItems(); track group.name; let i = $index) {
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm mb-6 overflow-hidden">
+            <div class="bg-gray-50 px-5 py-3 border-b border-gray-200">
+                <h3 class="text-sm font-bold text-gray-800 flex items-center gap-2">
+                    <i class="fa-solid fa-box-open text-gray-400"></i> {{ group.name }}
+                </h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-gray-600">
+                    <thead class="text-xs text-gray-500 bg-white border-b border-gray-100">
+                        <tr>
+                            <th class="px-5 py-3 font-semibold">Item</th>
+                            <th class="px-5 py-3 font-semibold text-center w-28">Emprestado</th>
+                            <th class="px-5 py-3 font-semibold text-center w-28">Devolvido</th>
+                            <th class="px-5 py-3 font-semibold text-center w-40">Devolver Agora</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @for (item of group.items; track item.item.id) {
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-5 py-3 font-medium text-gray-800">{{ item.item.name }}</td>
+                            <td class="px-5 py-3 text-center font-semibold text-gray-700">{{ item.quantity }}</td>
+                            <td class="px-5 py-3 text-center font-bold text-blue-600">{{ item.returnedQuantity || 0 }}</td>
+                            <td class="px-5 py-3 text-center">
+                                @if ((item.quantity - (item.returnedQuantity || 0)) > 0) {
+                                    <div class="flex items-center justify-between border border-gray-300 rounded-lg bg-white w-28 mx-auto h-8 shadow-sm overflow-hidden">
+                                        <button type="button" class="w-8 h-full text-gray-500 hover:bg-gray-100 hover:text-gray-700 font-bold disabled:opacity-50 transition-colors flex items-center justify-center"
+                                                [disabled]="(item.tempReturnQty || 0) <= 0"
+                                                (click)="decrementReturn(item)"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                                        <span class="flex-1 text-xs text-center font-bold text-gray-800 border-x border-gray-200 h-full flex items-center justify-center bg-gray-50">{{ item.tempReturnQty || 0 }}</span>
+                                        <button type="button" class="w-8 h-full text-gray-500 hover:bg-gray-100 hover:text-gray-700 font-bold disabled:opacity-50 transition-colors flex items-center justify-center"
+                                                [disabled]="(item.tempReturnQty || 0) >= (item.quantity - (item.returnedQuantity || 0))"
+                                                (click)="incrementReturn(item)"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                                    </div>
+                                } @else {
+                                    <div class="flex justify-center">
+                                        <span class="bg-green-50 text-green-600 text-[10px] uppercase font-bold px-2 py-1 rounded-md border border-green-200 flex items-center gap-1">
+                                            <i class="fa-solid fa-check"></i> OK
+                                        </span>
+                                    </div>
+                                }
+                            </td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        }
+    </div>
+
+    <!-- Footer -->
+    <div class="border-t border-gray-200 px-6 py-4 bg-white flex items-center justify-between">
+        <button (click)="cancel()" class="px-5 py-2.5 bg-white border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 shadow-sm transition-colors focus:ring-2 focus:ring-gray-200">
+            Cancelar
+        </button>
+        <div class="flex items-center gap-3">
+            <button (click)="markAllReturned()" class="px-5 py-2.5 border border-blue-200 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg text-sm font-semibold shadow-sm transition-colors flex items-center gap-2 focus:ring-2 focus:ring-blue-200">
+                <i class="fa-solid fa-check-double"></i> Preencher Todos
+            </button>
+            <button (click)="save()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-colors flex items-center gap-2 focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
+                <i class="fa-solid fa-floppy-disk"></i> Confirmar Devolução
+            </button>
+        </div>
+    </div>
 </div>

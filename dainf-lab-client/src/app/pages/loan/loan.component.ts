@@ -37,6 +37,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
 import { TagModule } from 'primeng/tag';
 import { TextareaModule } from 'primeng/textarea';
+import { PaginatorModule } from 'primeng/paginator';
 import { CategoryService } from '../category/category.service';
 import { ItemService } from '../item/item.service';
 import { User } from '../user/user';
@@ -44,6 +45,8 @@ import { UserService } from '../user/user.service';
 import { Loan, LoanItem, LoanStatus } from './loan';
 import { LoanService } from './loan.service';
 import { LoanReturnDialog } from './return-dialog/return-dialog';
+import { LoanDetailDialog } from './loan-detail/loan-detail.component';
+import { BarcodeScannerComponent } from '@/shared/components/barcode-scanner/barcode-scanner.component';
 
 const STATUS_SEVERITY: Record<LoanStatus, 'success' | 'danger' | 'info'> = {
   ONGOING: 'info',
@@ -76,7 +79,9 @@ const STATUS_ICON: Record<LoanStatus, string> = {
     InputGroupAddonModule,
     ButtonModule,
     StaticSelectComponent,
-    TagModule
+    BarcodeScannerComponent,
+    TagModule,
+    PaginatorModule
 ],
   providers: [
     LoanService,
@@ -89,6 +94,10 @@ const STATUS_ICON: Record<LoanStatus, string> = {
   ],
   selector: 'app-loan',
   templateUrl: 'loan.component.html',
+  styles: [`
+    :host ::ng-deep .hide-crud-list app-crud-table { display: none !important; }
+    :host ::ng-deep p-toolbar { display: none !important; }
+  `]
 })
 export class LoanComponent implements OnInit, AfterViewInit {
   statusTemplate = viewChild('statusTemplate', { read: TemplateRef<any> });
@@ -118,6 +127,7 @@ export class LoanComponent implements OnInit, AfterViewInit {
   ]
 
   disabled = signal(false);
+  viewMode = signal<'list' | 'cards'>('cards');
 
   config: CrudConfig<Loan> = {
     title: 'Empréstimos',
@@ -197,6 +207,12 @@ export class LoanComponent implements OnInit, AfterViewInit {
         value: this.statusFilter(),
         type: 'EQUALS',
       });
+    } else {
+      filters.push({
+        field: 'status',
+        value: ['ONGOING', 'OVERDUE'],
+        type: 'IN',
+      });
     }
     return <SearchRequest>{ filters };
   });
@@ -204,8 +220,10 @@ export class LoanComponent implements OnInit, AfterViewInit {
   ngOnInit(): void {
     const data = this.context.consume('reservation');
     if (data) {
-      this.crud()?.openNew();
-      this.form.patchValue({ items: data.items, borrower: data.borrower });
+      setTimeout(() => {
+        this.crud()?.openNew();
+        this.form.patchValue({ items: data.items, borrower: data.borrower });
+      });
     }
   }
 
@@ -247,6 +265,23 @@ export class LoanComponent implements OnInit, AfterViewInit {
     }, 100);
   }
 
+  onUserScanned(user: any) {
+    if (this.hasAdvancedPrivileges()) {
+      this.form.get('borrower')?.setValue(user);
+    }
+  }
+
+  onItemScanned(item: any) {
+    const currentItems = this.form.get('items')?.value || [];
+    const existingIndex = currentItems.findIndex((i: any) => i.item.id === item.id);
+    if (existingIndex > -1) {
+      currentItems[existingIndex].quantity += 1;
+    } else {
+      currentItems.push({ item: item, quantity: 1, shouldReturn: false });
+    }
+    this.form.get('items')?.setValue([...currentItems]);
+  }
+
   onCancel() {
     this.loanItensForm.enable();
     this.form.get('borrower')?.enable();
@@ -272,7 +307,22 @@ export class LoanComponent implements OnInit, AfterViewInit {
     });
   }
 
-  openEdit(row: Loan) {
-    this.crud()?.edit(row);
+  openEdit(loan: Loan) {
+    const ref = this.dialogService.open(LoanDetailDialog, {
+      header: 'Ficha de Empréstimo',
+      width: '80vw',
+      modal: true,
+      data: { loan },
+    });
+
+    ref.onClose.subscribe((updatedLoan: Loan) => {
+      if (updatedLoan) {
+        this.crud()?.loadItems();
+      }
+    });
+  }
+
+  toggleView() {
+    this.viewMode.update(v => v === 'list' ? 'cards' : 'list');
   }
 }
