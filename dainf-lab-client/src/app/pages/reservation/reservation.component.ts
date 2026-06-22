@@ -1,5 +1,6 @@
 import { CommonModule, DatePipe } from '@angular/common';
-import { Component, inject, OnInit, viewChild } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, viewChild } from '@angular/core';
+import { Subscription, interval } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -49,7 +50,7 @@ import { CartService } from '@/shared/services/cart.service';
     :host ::ng-deep .hide-crud-list app-crud-table { display: none !important; }
   `]
 })
-export class ReservationComponent implements OnInit {
+export class ReservationComponent implements OnInit, OnDestroy {
   reservationService = inject(ReservationService);
   userService = inject(UserService);
   itemService = inject(ItemService);
@@ -59,6 +60,8 @@ export class ReservationComponent implements OnInit {
   formBuilder = inject(FormBuilder);
   cartService = inject(CartService);
   crud = viewChild(CrudComponent);
+
+  private refreshSubscription?: Subscription;
 
   config: CrudConfig<Reservation> = {
     title: 'Reservas',
@@ -76,15 +79,21 @@ export class ReservationComponent implements OnInit {
   }, { validators: this.dateComparisonValidator });
 
   dateComparisonValidator(g: FormGroup) {
-    const withdrawal = g.get('withdrawalDate')?.value;
-    const returnD = g.get('returnDate')?.value;
-    if (withdrawal && returnD) {
-      if (new Date(returnD) < new Date(withdrawal)) {
+    const withdrawal = g.get('withdrawalDate');
+    const returnD = g.get('returnDate');
+    if (withdrawal?.value && returnD?.value) {
+      if (new Date(returnD.value) < new Date(withdrawal.value)) {
+        returnD.setErrors({ ...returnD.errors, invalidDates: true });
         return { invalidDates: true };
       }
     }
+    if (returnD?.errors?.['invalidDates']) {
+      const { invalidDates, ...rest } = returnD.errors as Record<string, unknown>;
+      returnD.setErrors(Object.keys(rest).length ? rest : null);
+    }
     return null;
   }
+
 
   reservationItensForm: FormGroup = this.formBuilder.group({
     id: [null],
@@ -200,7 +209,36 @@ export class ReservationComponent implements OnInit {
         console.error('Erro ao obter usuário atual', err);
       }
     });
+
+    this.refreshSubscription = interval(5000).subscribe(() => {
+      this.pollReservations();
+    });
   }
+
+  ngOnDestroy(): void {
+    if (this.refreshSubscription) {
+      this.refreshSubscription.unsubscribe();
+    }
+  }
+
+  pollReservations() {
+    const crudInst = this.crud();
+    if (!crudInst || this.isModalOpen) return;
+
+    const page = crudInst.lastPagination?.page ?? 0;
+    const rows = crudInst.lastPagination?.rows ?? 10;
+    const request = { ...this.searchReq, page, rows };
+
+    this.reservationService.search(request).subscribe({
+      next: (result) => {
+        crudInst.items.set(result);
+      },
+      error: (err) => {
+        console.error('Erro ao recarregar reservas silenciosamente', err);
+      }
+    });
+  }
+
 
   onEntityLoad(reservation: Reservation) {
     this.form.patchValue({

@@ -60,4 +60,5 @@ const errorMap: Record<string, (error: any) => string> = {
   invalidPhone: () => 'Telefone inválido.',
   passwordStrength: () => 'A senha deve conter ao menos uma letra maiúscula, uma minúscula e um número.',
   passwordMismatch: () => 'As senhas não coincidem.',
+  invalidDates: () => 'A devolução não pode ser anterior à retirada.',
 };

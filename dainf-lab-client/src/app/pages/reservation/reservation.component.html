@@ -262,7 +262,7 @@
       <app-input-container label="Data de Devolução" class="col-span-12 md:col-span-4">
         <p-datepicker dateFormat="dd/mm/yy" formControlName="returnDate" />
       </app-input-container>
-      <div class="col-span-12" *ngIf="form.hasError('invalidDates') && (form.touched || form.dirty)">
+      <div class="col-span-12" *ngIf="form.hasError('invalidDates')">
         <p class="text-red-500 text-xs font-semibold">A devolução não pode ser anterior à retirada.</p>
       </div>
 
