@@ -165,6 +165,9 @@
 </ng-template>
 
 <ng-template #filters>
+  <app-input-container label="Código" class="col-span-12">
+    <input type="text" pInputText [(ngModel)]="idFilter" fluid />
+  </app-input-container>
   <app-input-container label="Nome" class="col-span-12">
     <input type="text" pInputText id="name" [(ngModel)]="nameFilter" fluid />
   </app-input-container>

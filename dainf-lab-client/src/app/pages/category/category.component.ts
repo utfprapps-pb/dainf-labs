@@ -57,8 +57,11 @@ export class CategoryComponent implements AfterViewInit {
   formBuilder = inject(FormBuilder);
 
   filtroDescription = model<string | undefined>();
+  idFilter = model<string | undefined>();
   searchRequest = computed<SearchRequest>(() => {
     const filters: SearchFilter[] = [{ field: 'parent', type: 'IS_NULL' }];
+    if (this.idFilter())
+      filters.push({ field: 'id', value: this.idFilter(), type: 'EQUALS' });
     if (this.filtroDescription())
       filters.push({
         field: 'description',

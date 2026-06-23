@@ -5,6 +5,8 @@
   [config]="config"
   [form]="form"
   [formTemplate]="crudForm"
+  [filtersTemplate]="filters"
+  [searchRequest]="searchRequest()"
   (entityLoad)="onEntityLoad($event)"
   (cancelClick)="onCancel()"
 ></app-crud>
@@ -111,6 +113,35 @@
         formControlName="quantity"
         styleClass="w-full"
       ></p-inputNumber>
+    </app-input-container>
+  </div>
+</ng-template>
+
+<ng-template #filters>
+  <div class="grid grid-cols-12 gap-4">
+    <app-input-container label="Código" class="col-span-12">
+      <input type="text" pInputText [(ngModel)]="idFilter" />
+    </app-input-container>
+
+    <app-input-container label="Data da Saída" class="col-span-12">
+      <p-datepicker dateFormat="dd/mm/yy" [(ngModel)]="issueDateFilter" />
+    </app-input-container>
+
+    <app-input-container
+      *ngIf="hasAdvancedPrivileges()"
+      label="Responsável"
+      class="col-span-12"
+    >
+      <app-search-select
+        [(ngModel)]="responsibleFilter"
+        optionLabel="nome"
+        [service]="userService"
+        placeholder="Selecione um usuário"
+      />
+    </app-input-container>
+
+    <app-input-container label="RA/SIAPE" class="col-span-12">
+      <input type="text" pInputText [(ngModel)]="raSiapeFilter" />
     </app-input-container>
   </div>
 </ng-template>

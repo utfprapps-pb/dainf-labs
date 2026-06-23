@@ -161,8 +161,13 @@ export class LoanComponent implements OnInit, AfterViewInit {
   borrowerFilter = model<User | undefined>();
   raSiapeFilter = model<string | undefined>();
   statusFilter = model<string | undefined>();
+  idFilter = model<string | undefined>();
   searchRequest = computed<SearchRequest>(() => {
     const filters: SearchFilter[] = [];
+
+    if (this.idFilter()) {
+      filters.push({ field: 'id', value: this.idFilter(), type: 'EQUALS' });
+    }
 
     if (this.loanDateFilter()) {
       const dateValue = this.loanDateFilter();
@@ -222,6 +227,7 @@ export class LoanComponent implements OnInit, AfterViewInit {
   }
 
   clearFilters() {
+    this.idFilter.set(undefined);
     this.loanDateFilter.set(undefined);
     this.borrowerFilter.set(undefined);
     this.raSiapeFilter.set(undefined);

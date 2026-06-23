@@ -153,9 +153,12 @@ export class ItemComponent {
   categoryFilter = model<Category | undefined>();
   siorgFilter = model<string | undefined>();
   locationFilter = model<string | undefined>();
+  idFilter = model<string | undefined>();
 
   searchRequest = computed<SearchRequest>(() => {
     const filters: SearchFilter[] = [];
+    if (this.idFilter())
+      filters.push({ field: 'id', value: this.idFilter(), type: 'EQUALS' });
     if (this.nameFilter())
       filters.push({ field: 'name', value: this.nameFilter(), type: 'ILIKE' });
     if (this.typeFilter())

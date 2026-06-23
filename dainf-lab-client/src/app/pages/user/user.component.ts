@@ -82,9 +82,12 @@ export class UserComponent {
 
   filtroNome = model<string | undefined>();
   filtroDocumento = model<string | undefined>();
+  idFilter = model<string | undefined>();
 
   searchRequest = computed<SearchRequest>(() => {
     const filters = [];
+    if (this.idFilter())
+      filters.push({ field: 'id', value: this.idFilter(), type: 'EQUALS' });
     if (this.filtroNome())
       filters.push({ field: 'nome', value: this.filtroNome(), type: 'ILIKE' });
     if (this.filtroDocumento())

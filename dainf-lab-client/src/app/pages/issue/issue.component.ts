@@ -1,5 +1,5 @@
 import { CommonModule, DatePipe } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, model, signal, viewChild } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -10,18 +10,22 @@ import {
 import { ItemService } from '../item/item.service';
 
 import { InputContainerComponent } from '@/shared/components/input-container/input-container.component';
+import { SearchSelectComponent } from '@/shared/components/search-select/search-select.component';
+import { StaticSelectComponent } from '@/shared/components/static-select/static-select.component';
 import { SubItemFormComponent } from '@/shared/components/subitem-form/subitem-form.component';
 
 import { Column, CrudConfig } from '@/shared/crud/crud';
 import { CrudComponent } from '@/shared/crud/crud.component';
+import { SearchFilter, SearchRequest } from '@/shared/models/search';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 import { Issue, IssueItem } from './issue';
 import { IssueService } from './issue.service';
 
 import { LoanService } from '../loan/loan.service';
+import { User } from '../user/user';
 import { UserService } from '../user/user.service';
 
-import { SearchSelectComponent } from '@/shared/components/search-select/search-select.component';
 import { DatePickerModule } from 'primeng/datepicker';
 import { FieldsetModule } from 'primeng/fieldset';
 import { InputNumberModule } from 'primeng/inputnumber';
@@ -43,6 +47,7 @@ import { Loan } from '../loan/loan';
     SubItemFormComponent,
     DatePickerModule,
     SearchSelectComponent,
+    StaticSelectComponent,
     TextareaModule,
   ],
   providers: [IssueService, LoanService, UserService, DatePipe, ItemService],
@@ -57,7 +62,13 @@ export class IssueComponent {
   formBuilder = inject(FormBuilder);
   datePipe = inject(DatePipe);
 
+  crud = viewChild(CrudComponent);
+
   disabled = signal(false);
+
+  hasAdvancedPrivileges = toSignal(this.userService.hasAdvancedPrivileges(), {
+    initialValue: false,
+  });
 
   config: CrudConfig<Issue> = {
     title: 'Saídas de Estoque',
@@ -95,6 +106,55 @@ export class IssueComponent {
     { field: 'quantity', header: 'Quantidade' },
   ];
 
+  issueDateFilter = model<string | Date | undefined>();
+  responsibleFilter = model<User | undefined>();
+  raSiapeFilter = model<string | undefined>();
+  idFilter = model<string | undefined>();
+
+  searchRequest = computed<SearchRequest>(() => {
+    const filters: SearchFilter[] = [];
+
+    if (this.idFilter()) {
+      filters.push({
+        field: 'id',
+        value: this.idFilter(),
+        type: 'EQUALS',
+      });
+    }
+
+    if (this.issueDateFilter()) {
+      const dateValue = this.issueDateFilter();
+      const date = dateValue instanceof Date ? dateValue : new Date(dateValue as string);
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
+      filters.push({
+        field: 'date',
+        value: [startOfDay.toISOString(), endOfDay.toISOString()],
+        type: 'BETWEEN',
+      });
+    }
+
+    if (this.hasAdvancedPrivileges() && this.responsibleFilter()) {
+      filters.push({
+        field: 'user.id',
+        value: this.responsibleFilter()?.id,
+        type: 'EQUALS',
+      });
+    }
+
+    if (this.raSiapeFilter()) {
+      filters.push({
+        field: 'user.documento',
+        value: this.raSiapeFilter(),
+        type: 'ILIKE',
+      });
+    }
+
+    return <SearchRequest>{ filters };
+  });
+
   onEntityLoad(issue: Issue) {
     this.form.patchValue({
       date: new Date(issue.date),
@@ -112,18 +172,27 @@ export class IssueComponent {
   }
 
   onCancel() {
-      this.issueItemForm.enable();
-      this.form.get('borrower')?.enable();
+    this.issueItemForm.enable();
+    this.form.get('borrower')?.enable();
 
-      this.issueItemForm.updateValueAndValidity();
-      this.form.get('borrower')?.updateValueAndValidity();
+    this.issueItemForm.updateValueAndValidity();
+    this.form.get('borrower')?.updateValueAndValidity();
 
-      this.disabled.set(false);
+    this.disabled.set(false);
   }
+
+  clearFilters() {
+    this.idFilter.set(undefined);
+    this.issueDateFilter.set(undefined);
+    this.responsibleFilter.set(undefined);
+    this.raSiapeFilter.set(undefined);
+    this.crud()?.loadItems();
+    this.crud()?.drawerVisible.set(false);
+  }
+
   formatLoan(loan: Loan): string {
     const nome = loan.borrower ? loan.borrower.nome : 'N/A';
     const data = loan.loanDate ? new Date(loan.loanDate).toLocaleDateString('pt-BR') : '';
-    
     return `${loan.id} - ${nome} - ${data}`;
   }
 }

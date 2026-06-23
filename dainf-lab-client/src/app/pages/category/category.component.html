@@ -90,6 +90,9 @@
 </ng-template>
 
 <ng-template #filters>
+  <app-input-container label="Código" class="col-span-12">
+    <input type="text" pInputText [(ngModel)]="idFilter" [ngModelOptions]="{ standalone: true }" />
+  </app-input-container>
   <app-input-container label="Descrição" class="col-span-12">
     <input
       type="text"

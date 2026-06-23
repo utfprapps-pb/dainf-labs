@@ -71,6 +71,9 @@
 
 <ng-template #filters>
   <div class="grid grid-cols-12 gap-4">
+    <app-input-container label="Código" class="col-span-12">
+      <input type="text" pInputText [(ngModel)]="idFilter" [ngModelOptions]="{ standalone: true }" />
+    </app-input-container>
     <app-input-container label="Nome" class="col-span-12">
       <input
         type="text"
