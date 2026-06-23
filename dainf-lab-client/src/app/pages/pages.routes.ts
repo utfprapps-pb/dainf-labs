@@ -23,6 +23,7 @@ export default [
     path: '',
     children: [
       { path: 'dashboard', component: DashboardComponent, canActivate: [RoleGuard] },
+      { path: 'inventory-history', component: InventoryHistoryComponent, canActivate: [RoleGuard] },
       { path: 'category', component: CategoryComponent, canActivate: [RoleGuard] },
       { path: 'supplier', component: FornecedorComponent, canActivate: [RoleGuard] },
       { path: 'user', component: UserComponent, canActivate: [RoleGuard] },
