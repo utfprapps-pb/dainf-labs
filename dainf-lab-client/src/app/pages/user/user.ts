@@ -9,4 +9,5 @@ export interface User extends Identifiable {
   documento?: string;
   role?: string;
   enabled?: boolean;
+  emailVerificado?: boolean;
 }
