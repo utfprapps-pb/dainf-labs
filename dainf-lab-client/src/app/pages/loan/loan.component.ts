@@ -27,6 +27,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { DatePickerModule } from 'primeng/datepicker';
 import { DialogService } from 'primeng/dynamicdialog';
@@ -39,6 +40,7 @@ import { TagModule } from 'primeng/tag';
 import { TextareaModule } from 'primeng/textarea';
 import { CategoryService } from '../category/category.service';
 import { ItemService } from '../item/item.service';
+import { ReturnService } from '../return/return.service';
 import { User } from '../user/user';
 import { UserService } from '../user/user.service';
 import { Loan, LoanItem, LoanStatus } from './loan';
@@ -85,7 +87,8 @@ const STATUS_ICON: Record<LoanStatus, string> = {
     ItemService,
     UserService,
     DialogService,
-    DatePipe
+    DatePipe,
+    ReturnService,
   ],
   selector: 'app-loan',
   templateUrl: 'loan.component.html',
@@ -95,7 +98,9 @@ export class LoanComponent implements OnInit, AfterViewInit {
 
   templateMap: Map<keyof Loan | string, TemplateRef<any>> | undefined;
 
+  private route = inject(ActivatedRoute);
   loanService = inject(LoanService);
+  returnService = inject(ReturnService);
   dialogService = inject(DialogService);
   formBuilder = inject(FormBuilder);
   labelValue = inject(LabelValuePipe);
@@ -211,6 +216,15 @@ export class LoanComponent implements OnInit, AfterViewInit {
     if (data) {
       this.crud()?.openNew();
       this.form.patchValue({ items: data.items, borrower: data.borrower });
+    }
+
+    const openReturnId = this.route.snapshot.queryParamMap.get('openReturnId');
+    if (openReturnId) {
+      this.returnService.get(Number(openReturnId)).subscribe((ret) => {
+        if (ret?.loan) {
+          this.openReturnDialog(ret.loan);
+        }
+      });
     }
   }
 

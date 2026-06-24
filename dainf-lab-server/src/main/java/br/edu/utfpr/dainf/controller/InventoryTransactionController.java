@@ -6,7 +6,6 @@ import br.edu.utfpr.dainf.model.InventoryTransaction;
 import br.edu.utfpr.dainf.model.Item;
 import br.edu.utfpr.dainf.search.SearchHandler;
 import br.edu.utfpr.dainf.search.request.SearchRequest;
-import br.edu.utfpr.dainf.service.InventoryService;
 import br.edu.utfpr.dainf.service.InventoryTransactionService;
 import br.edu.utfpr.dainf.shared.BaseController;
 import jakarta.annotation.security.RolesAllowed;
@@ -33,11 +32,8 @@ public class InventoryTransactionController extends BaseController<Long, Invento
     @Autowired
     private InventoryTransactionService service;
 
-    private final InventoryService inventoryService;
-
-    public InventoryTransactionController(InventoryService inventoryService) {
+    public InventoryTransactionController() {
         super(InventoryTransaction.class, InventoryTransactionDTO.class);
-        this.inventoryService = inventoryService;
     }
 
     @GetMapping("/{id}")
@@ -64,7 +60,8 @@ public class InventoryTransactionController extends BaseController<Long, Invento
                 .quantity(entity.getQuantity())
                 .userName(entity.getUser() != null ? entity.getUser().getNome() : "Sistema")
                 .date(entity.getDate())
-                .currentQuantity(inventoryService.getItemQuantity(item))
+                .quantityAfterTransaction(entity.getQuantityAfterTransaction())
+                .referenceId(entity.getReferenceId())
                 .build();
     }
 }

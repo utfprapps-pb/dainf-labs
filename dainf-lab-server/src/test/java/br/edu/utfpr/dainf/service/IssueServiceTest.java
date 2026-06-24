@@ -19,14 +19,14 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class IssueServiceTest {
 
     @Mock IssueRepository repository;
-    @Mock InventoryService inventoryService;
+    @Mock InventoryDiffService inventoryDiffService;
     @Mock UserService userService;
     @InjectMocks IssueService issueService;
 
@@ -36,7 +36,7 @@ class IssueServiceTest {
     }
 
     @Test
-    void save_newIssue_callsUpdateTransactionWithZeroOldQty() {
+    void save_newIssue_callsApplyDiffWithNullEntityId() {
         Item item = item(1L);
         BigDecimal qty = new BigDecimal("3");
         Issue entity = issue(null, item, qty);
@@ -46,38 +46,35 @@ class IssueServiceTest {
 
         issueService.save(entity);
 
-        verify(inventoryService).updateTransaction(item, BigDecimal.ZERO, InventoryTransactionType.ISSUE, qty);
+        verify(inventoryDiffService).applyDiff(isNull(), any(), any(), eq(InventoryTransactionType.ISSUE));
     }
 
     @Test
-    void save_updateIssue_callsUpdateTransactionWithOldQty() {
+    void save_updateIssue_callsApplyDiffWithEntityId() {
         Item item = item(1L);
-        BigDecimal oldQty = new BigDecimal("3");
-        BigDecimal newQty = new BigDecimal("7");
-        Issue existing = issue(1L, item, oldQty);
-        Issue entity = issue(1L, item, newQty);
+        Issue existing = issue(1L, item, new BigDecimal("3"));
+        Issue entity = issue(1L, item, new BigDecimal("7"));
 
         when(repository.findById(1L)).thenReturn(Optional.of(existing));
         when(repository.save(any())).thenReturn(entity);
 
         issueService.save(entity);
 
-        verify(inventoryService).updateTransaction(item, oldQty, InventoryTransactionType.ISSUE, newQty);
+        verify(inventoryDiffService).applyDiff(eq(1L), any(), any(), eq(InventoryTransactionType.ISSUE));
     }
 
     @Test
-    void save_updateIssue_itemNotInExisting_callsUpdateTransactionWithZeroOldQty() {
+    void save_updateIssue_itemNotInExisting_callsApplyDiffWithEntityId() {
         Item newItem = item(2L);
-        BigDecimal qty = new BigDecimal("5");
         Issue existing = issue(1L, item(1L), new BigDecimal("3"));
-        Issue entity = issue(1L, newItem, qty);
+        Issue entity = issue(1L, newItem, new BigDecimal("5"));
 
         when(repository.findById(1L)).thenReturn(Optional.of(existing));
         when(repository.save(any())).thenReturn(entity);
 
         issueService.save(entity);
 
-        verify(inventoryService).updateTransaction(newItem, BigDecimal.ZERO, InventoryTransactionType.ISSUE, qty);
+        verify(inventoryDiffService).applyDiff(eq(1L), any(), any(), eq(InventoryTransactionType.ISSUE));
     }
 
     @Test
@@ -89,11 +86,11 @@ class IssueServiceTest {
 
         issueService.save(entity, false);
 
-        verifyNoInteractions(inventoryService);
+        verifyNoInteractions(inventoryDiffService);
     }
 
     @Test
-    void save_noItems_noInventoryInteraction() {
+    void save_noItems_applyDiffCalledWithEmptyNewList() {
         Issue entity = new Issue();
         entity.setDate(Instant.now());
         entity.setItems(List.of());
@@ -103,7 +100,7 @@ class IssueServiceTest {
 
         issueService.save(entity);
 
-        verifyNoInteractions(inventoryService);
+        verify(inventoryDiffService).applyDiff(any(), any(), eq(List.of()), eq(InventoryTransactionType.ISSUE));
     }
 
     // --- helpers ---

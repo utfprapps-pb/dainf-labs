@@ -39,10 +39,15 @@ public class InventoryService extends CrudService<Long, Inventory, InventoryRepo
      */
     @Transactional
     public void handleTransaction(Item item, BigDecimal quantity, InventoryTransactionType type) {
+        handleTransaction(item, quantity, type, null);
+    }
+
+    @Transactional
+    public void handleTransaction(Item item, BigDecimal quantity, InventoryTransactionType type, Long referenceId) {
         Inventory inventory = findByItem(item);
 
         TransactionProcessor processor = createProcessor(type);
-        processor.process(inventory, quantity, type);
+        processor.process(inventory, quantity, type, referenceId);
 
         save(inventory);
     }
@@ -65,6 +70,17 @@ public class InventoryService extends CrudService<Long, Inventory, InventoryRepo
             InventoryTransactionType type,
             BigDecimal newQty
     ) {
+        updateTransaction(item, oldQty, type, newQty, null);
+    }
+
+    @Transactional
+    public void updateTransaction(
+            Item item,
+            BigDecimal oldQty,
+            InventoryTransactionType type,
+            BigDecimal newQty,
+            Long referenceId
+    ) {
         oldQty = defaultZero(oldQty);
         newQty = defaultZero(newQty);
 
@@ -79,14 +95,14 @@ public class InventoryService extends CrudService<Long, Inventory, InventoryRepo
 
         // Case 2: Was 0, now >0 → apply new
         if (!oldHas && newHas) {
-            handleTransaction(item, newQty, type);
+            handleTransaction(item, newQty, type, referenceId);
             return;
         }
 
         // Case 3: Was >0, now >0 and changed → update
         if (oldHas && oldQty.compareTo(newQty) != 0) {
             undoTransaction(item, oldQty, type);
-            handleTransaction(item, newQty, type);
+            handleTransaction(item, newQty, type, referenceId);
         }
 
         // Case 4: both 0 → do nothing

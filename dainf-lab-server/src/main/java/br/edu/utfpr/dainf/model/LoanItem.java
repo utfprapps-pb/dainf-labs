@@ -1,5 +1,6 @@
 package br.edu.utfpr.dainf.model;
 
+import br.edu.utfpr.dainf.inventory.InventoryLineItem;
 import br.edu.utfpr.dainf.shared.Identifiable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -18,7 +19,7 @@ import java.math.BigDecimal;
 @Audited
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoanItem implements Identifiable<Long> {
+public class LoanItem implements Identifiable<Long>, InventoryLineItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -38,4 +39,9 @@ public class LoanItem implements Identifiable<Long> {
 
     @Column(name = "quantity", nullable = false)
     private BigDecimal quantity;
+
+    @Override
+    public BigDecimal inventoryQuantity() {
+        return quantity;
+    }
 }

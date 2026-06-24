@@ -24,12 +24,19 @@ public class DefaultTransactionAuditor implements TransactionAuditor {
 
     @Override
     public void audit(Inventory inventory, BigDecimal quantity, Transaction transaction, InventoryTransactionType type) {
+        audit(inventory, quantity, transaction, type, null);
+    }
+
+    @Override
+    public void audit(Inventory inventory, BigDecimal quantity, Transaction transaction, InventoryTransactionType type, Long referenceId) {
         InventoryTransaction model = new InventoryTransaction();
         model.setDate(Instant.now());
         model.setInventory(inventory);
         model.setQuantity(quantity);
         model.setUser(userService.getCurrentUser());
         model.setType(type);
+        model.setReferenceId(referenceId);
+        model.setQuantityAfterTransaction(inventory.getQuantity());
         service.save(model);
     }
 }

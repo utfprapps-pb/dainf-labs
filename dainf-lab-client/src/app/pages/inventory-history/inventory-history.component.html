@@ -8,6 +8,16 @@
   [templateMap]="templateMap"
 ></app-crud>
 
+<ng-template #referenceTemplate let-row>
+  @if (referenceHref(row); as href) {
+    <a [href]="href" target="_blank" rel="noopener" class="text-primary hover:underline">
+      {{ referenceLabel(row) }}
+    </a>
+  } @else {
+    {{ referenceLabel(row) ?? '-' }}
+  }
+</ng-template>
+
 <ng-template #typeTemplate let-row>
   <p-tag
     [value]="labelValue.transform(row.type, types)"

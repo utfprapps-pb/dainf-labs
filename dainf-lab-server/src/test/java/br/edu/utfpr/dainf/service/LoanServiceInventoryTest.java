@@ -1,5 +1,6 @@
 package br.edu.utfpr.dainf.service;
 
+import br.edu.utfpr.dainf.enums.InventoryTransactionType;
 import br.edu.utfpr.dainf.enums.LoanStatus;
 import br.edu.utfpr.dainf.exception.InvalidTransactionException;
 import br.edu.utfpr.dainf.exception.WarnException;
@@ -21,7 +22,7 @@ import java.time.Instant;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
@@ -40,6 +41,7 @@ class LoanServiceInventoryTest {
     @Mock LoanMailService loanMailService;
 
     InventoryService inventoryService;
+    InventoryDiffService inventoryDiffService;
     LoanService loanService;
 
     final Map<Long, Inventory> store = new HashMap<>();
@@ -54,7 +56,9 @@ class LoanServiceInventoryTest {
         inventoryService = new InventoryService(auditor, configurationService);
         ReflectionTestUtils.setField(inventoryService, "repository", inventoryRepository);
 
-        loanService = new LoanService(inventoryService, returnRepository, userService, loanMailService);
+        inventoryDiffService = new InventoryDiffService(inventoryService);
+
+        loanService = new LoanService(inventoryDiffService, returnRepository, userService, loanMailService);
         ReflectionTestUtils.setField(loanService, "repository", loanRepository);
 
         lenient().when(inventoryRepository.findByItem(any())).thenAnswer(inv -> {
@@ -439,6 +443,76 @@ class LoanServiceInventoryTest {
             assertEquals(bd("4"),   stockOf(scope));
             assertEquals(bd("150"), stockOf(slides));
             assertEquals(bd("400"), stockOf(covers));
+        }
+    }
+
+    // =========================================================================
+    // referenceId — transactions link back to the saved loan's ID
+    // =========================================================================
+
+    @Nested
+    class ReferenceIdTracking {
+
+        @BeforeEach
+        void setUpIdAssignment() {
+            // Simulate DB ID assignment: new loans get id=100L, existing keep their id
+            lenient().when(loanRepository.save(any())).thenAnswer(inv -> {
+                Loan loan = inv.getArgument(0);
+                if (loan.getId() == null) {
+                    loan.setId(100L);
+                }
+                return loan;
+            });
+            // refreshStatus calls findById for the assigned id; returning empty skips status update
+            lenient().when(loanRepository.findById(100L)).thenReturn(Optional.empty());
+        }
+
+        @Test
+        void newLoan_transactionsAuditedWithAssignedLoanId() {
+            Item item = item();
+            givenStock(item, "50");
+
+            loanService.save(newLoan(li(item, "10")));
+
+            verify(auditor).audit(any(), eq(bd("10")), any(), eq(InventoryTransactionType.LOAN), eq(100L));
+        }
+
+        @Test
+        void existingLoan_transactionsAuditedWithExistingLoanId() {
+            Item item = item();
+            givenStock(item, "40");
+            Loan existing = existingLoan(1L, li(item, "10"));
+            when(loanRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+            loanService.save(existingLoan(1L, li(item, "15")));
+
+            verify(auditor).audit(any(), eq(bd("15")), any(), eq(InventoryTransactionType.LOAN), eq(1L));
+        }
+
+        @Test
+        void newLoanWithMultipleItems_allTransactionsShareSameReferenceId() {
+            Item a = item(), b = item();
+            givenStock(a, "50");
+            givenStock(b, "50");
+
+            loanService.save(newLoan(li(a, "10"), li(b, "5")));
+
+            verify(auditor, times(2)).audit(
+                    any(), any(BigDecimal.class), any(), eq(InventoryTransactionType.LOAN), eq(100L));
+        }
+
+        @Test
+        void existingLoan_newItemAdded_newTransactionUsesExistingId() {
+            Item a = item(), b = item();
+            givenStock(a, "40");
+            givenStock(b, "30");
+            Loan existing = existingLoan(1L, li(a, "10"));
+            when(loanRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+            loanService.save(existingLoan(1L, li(a, "10"), li(b, "8")));
+
+            // b is new (old qty=0, new qty=8): audit should reference loan id=1L
+            verify(auditor).audit(any(), eq(bd("8")), any(), eq(InventoryTransactionType.LOAN), eq(1L));
         }
     }
 }

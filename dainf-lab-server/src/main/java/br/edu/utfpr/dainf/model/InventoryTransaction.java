@@ -40,4 +40,10 @@ public class InventoryTransaction implements Identifiable<Long> {
     private User user;
 
     private Instant date;
+
+    @Column(name = "reference_id")
+    private Long referenceId;
+
+    @Column(name = "quantity_after_transaction")
+    private BigDecimal quantityAfterTransaction;
 }

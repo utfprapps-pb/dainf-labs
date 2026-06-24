@@ -3,6 +3,7 @@ import { SearchSelectComponent } from '@/shared/components/search-select/search-
 import { StaticSelectComponent } from '@/shared/components/static-select/static-select.component';
 import { Column, CrudConfig } from '@/shared/crud/crud';
 import { CrudComponent } from '@/shared/crud/crud.component';
+import { AuditedEntityLink, auditedEntityLink } from '../audited-entity-routes';
 import { SearchFilter, SearchRequest } from '@/shared/models/search';
 import { LabelValuePipe } from '@/shared/pipes/label-value.pipe';
 import { CommonModule, DatePipe } from '@angular/common';
@@ -17,6 +18,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { DatePickerModule } from 'primeng/datepicker';
 import { TagModule } from 'primeng/tag';
 import { Item } from '../item/item';
@@ -44,7 +46,9 @@ const ADDITION_TYPES: InventoryTransactionType[] = ['PURCHASE', 'RETURN'];
 })
 export class InventoryHistoryComponent implements AfterViewInit {
   typeTemplate = viewChild('typeTemplate', { read: TemplateRef<any> });
+  referenceTemplate = viewChild('referenceTemplate', { read: TemplateRef<any> });
 
+  private router = inject(Router);
   inventoryHistoryService = inject(InventoryHistoryService);
   itemService = inject(ItemService);
   labelValue = inject(LabelValuePipe);
@@ -79,7 +83,8 @@ export class InventoryHistoryComponent implements AfterViewInit {
       header: 'Data',
       transform: (row) => this.datePipe.transform(row.date, 'dd/MM/yyyy HH:mm') || '',
     },
-    { field: 'currentQuantity', header: 'Quantidade atual do item' },
+    { field: 'quantityAfterTransaction', header: 'Saldo após movimentação' },
+    { field: 'referenceId', header: 'Origem' },
   ];
 
   itemFilter = model<Item | undefined>();
@@ -124,7 +129,40 @@ export class InventoryHistoryComponent implements AfterViewInit {
   });
 
   ngAfterViewInit(): void {
-    this.templateMap = new Map([['type', this.typeTemplate()!]]);
+    this.templateMap = new Map([
+      ['type', this.typeTemplate()!],
+      ['referenceId', this.referenceTemplate()!],
+    ]);
+  }
+
+  referenceLink(row: InventoryTransaction): AuditedEntityLink | undefined {
+    if (!row.referenceId) return undefined;
+    switch (row.type) {
+      case 'LOAN':     return auditedEntityLink('LOAN', row.referenceId);
+      case 'ISSUE':    return auditedEntityLink('ISSUE', row.referenceId);
+      case 'PURCHASE': return auditedEntityLink('PURCHASE', row.referenceId);
+      case 'RETURN':   return { route: 'loan', queryParams: { openReturnId: row.referenceId } };
+      default:         return undefined;
+    }
+  }
+
+  referenceHref(row: InventoryTransaction): string | null {
+    const link = this.referenceLink(row);
+    if (!link) return null;
+    const urlTree = this.router.createUrlTree(['/', link.route], { queryParams: link.queryParams });
+    return this.router.serializeUrl(urlTree);
+  }
+
+  referenceLabel(row: InventoryTransaction): string | undefined {
+    if (!row.referenceId) return undefined;
+    const prefixes: Partial<Record<InventoryTransactionType, string>> = {
+      LOAN: 'Empréstimo',
+      ISSUE: 'Saída',
+      PURCHASE: 'Compra',
+      RETURN: 'Devolução',
+    };
+    const prefix = prefixes[row.type];
+    return prefix ? `${prefix} #${row.referenceId}` : undefined;
   }
 
   isAdditionType(type: InventoryTransactionType): boolean {

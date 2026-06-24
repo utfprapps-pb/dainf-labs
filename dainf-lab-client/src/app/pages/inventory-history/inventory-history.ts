@@ -9,5 +9,6 @@ export interface InventoryTransaction extends Identifiable {
   quantity: number;
   userName: string;
   date: string;
-  currentQuantity: number;
+  quantityAfterTransaction: number;
+  referenceId?: number;
 }
