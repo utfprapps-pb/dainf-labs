@@ -146,6 +146,7 @@ export class LoanReturnDialog implements OnInit {
   private _createItemsFromReturn(obj: Return): ReturnItem[] {
     return obj.items!.map((item) => {
       return {
+        id: item.id,
         item: item.item,
         quantityIssued: item.quantityIssued || 0,
         quantityReturned: item.quantityReturned || 0,
