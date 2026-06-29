@@ -79,19 +79,59 @@ export class ReservationComponent implements OnInit, OnDestroy {
   }, { validators: this.dateComparisonValidator });
 
   dateComparisonValidator(g: FormGroup) {
-    const withdrawal = g.get('withdrawalDate');
-    const returnD = g.get('returnDate');
-    if (withdrawal?.value && returnD?.value) {
-      if (new Date(returnD.value) < new Date(withdrawal.value)) {
-        returnD.setErrors({ ...returnD.errors, invalidDates: true });
-        return { invalidDates: true };
+    const reservationDate = g.get('reservationDate');
+    const withdrawalDate = g.get('withdrawalDate');
+    const returnDate = g.get('returnDate');
+
+    if (reservationDate?.errors?.['pastDate']) {
+      const { pastDate, ...rest } = reservationDate.errors as Record<string, unknown>;
+      reservationDate.setErrors(Object.keys(rest).length ? rest : null);
+    }
+    if (withdrawalDate?.errors?.['invalidWithdrawal']) {
+      const { invalidWithdrawal, ...rest } = withdrawalDate.errors as Record<string, unknown>;
+      withdrawalDate.setErrors(Object.keys(rest).length ? rest : null);
+    }
+    if (returnDate?.errors?.['invalidDates']) {
+      const { invalidDates, ...rest } = returnDate.errors as Record<string, unknown>;
+      returnDate.setErrors(Object.keys(rest).length ? rest : null);
+    }
+
+    let hasError = false;
+
+    if (reservationDate?.value) {
+      const resDate = new Date(reservationDate.value);
+      resDate.setHours(0, 0, 0, 0);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (resDate < today) {
+        reservationDate.setErrors({ ...reservationDate.errors, pastDate: true });
+        hasError = true;
       }
     }
-    if (returnD?.errors?.['invalidDates']) {
-      const { invalidDates, ...rest } = returnD.errors as Record<string, unknown>;
-      returnD.setErrors(Object.keys(rest).length ? rest : null);
+
+    if (reservationDate?.value && withdrawalDate?.value) {
+      const resDate = new Date(reservationDate.value);
+      resDate.setHours(0, 0, 0, 0);
+      const withDate = new Date(withdrawalDate.value);
+      withDate.setHours(0, 0, 0, 0);
+      if (withDate < resDate) {
+        withdrawalDate.setErrors({ ...withdrawalDate.errors, invalidWithdrawal: true });
+        hasError = true;
+      }
     }
-    return null;
+
+    if (withdrawalDate?.value && returnDate?.value) {
+      const withDate = new Date(withdrawalDate.value);
+      withDate.setHours(0, 0, 0, 0);
+      const retDate = new Date(returnDate.value);
+      retDate.setHours(0, 0, 0, 0);
+      if (retDate < withDate) {
+        returnDate.setErrors({ ...returnDate.errors, invalidDates: true });
+        hasError = true;
+      }
+    }
+
+    return hasError ? { invalidDates: true } : null;
   }
 
 

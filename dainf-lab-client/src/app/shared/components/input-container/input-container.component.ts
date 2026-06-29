@@ -61,4 +61,6 @@ const errorMap: Record<string, (error: any) => string> = {
   passwordStrength: () => 'A senha deve conter ao menos uma letra maiúscula, uma minúscula e um número.',
   passwordMismatch: () => 'As senhas não coincidem.',
   invalidDates: () => 'A devolução não pode ser anterior à retirada.',
+  pastDate: () => 'A data não pode ser no passado.',
+  invalidWithdrawal: () => 'A retirada não pode ser anterior à reserva.',
 };
