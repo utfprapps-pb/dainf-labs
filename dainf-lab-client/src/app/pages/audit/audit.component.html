@@ -74,6 +74,7 @@
   [(visible)]="changesDialogVisible"
   header="Alterações do registro"
   [modal]="true"
+  [dismissableMask]="true"
   [style]="{ width: '40rem', 'max-width': '90vw' }"
 >
   @if (loadingChanges()) {

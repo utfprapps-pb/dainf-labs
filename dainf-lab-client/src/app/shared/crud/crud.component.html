@@ -44,7 +44,7 @@
   (pageChange)="onPage($event)"
 ></app-crud-table>
 
-<p-confirmdialog [style]="{ width: '450px' }" />
+<p-confirmdialog [style]="{ width: '450px' }" [dismissableMask]="true" />
 <app-crud-dialog
   [(visible)]="dialogVisible"
   [config]="config()"
