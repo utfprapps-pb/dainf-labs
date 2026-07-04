@@ -45,10 +45,12 @@ export class SubItemFormComponent<T extends Identifiable> implements ControlValu
   allowEditing = input(true);
   allowDeleting = input(true);
   allowAdding = input(true);
+  inlineEdit = input(false);
 
   items = signal<any[]>([]);
   editing = signal(false);
   editingIndex: number | null = null;
+  editingItem: any = {};
 
   onChange: (value: any[]) => void = () => {};
   onTouched: () => void = () => {};
@@ -72,8 +74,31 @@ export class SubItemFormComponent<T extends Identifiable> implements ControlValu
 
   edit(index: number): void {
     this.editingIndex = index;
-    this.form().patchValue(this.items()[index]);
+    if (this.inlineEdit()) {
+      this.editingItem = { ...this.items()[index] };
+    } else {
+      this.form().patchValue(this.items()[index]);
+    }
+
+    if (this.items()[index] && this.items()[index]._needsEdit) {
+      const arr = [...this.items()];
+      delete arr[index]._needsEdit;
+      this.items.set(arr);
+      this.onChange(this.items());
+    }
+
     this.editing.set(true);
+  }
+
+  saveInline(): void {
+    if (this.editingIndex != null) {
+      const arr = [...this.items()];
+      arr[this.editingIndex] = this.editingItem;
+      this.items.set(arr);
+      this.onChange(this.items());
+    }
+    this.editing.set(false);
+    this.editingIndex = null;
   }
 
   save(): void {
@@ -89,7 +114,17 @@ export class SubItemFormComponent<T extends Identifiable> implements ControlValu
       arr[this.editingIndex] = value;
       this.items.set(arr);
     } else {
-      this.items.update((list) => [...list, value]);
+      const currentItems = [...this.items()];
+      const existingIndex = currentItems.findIndex((i: any) => i.item?.id === value.item?.id && value.item?.id != null);
+      if (existingIndex > -1) {
+        currentItems[existingIndex] = {
+          ...currentItems[existingIndex],
+          quantity: Number(currentItems[existingIndex].quantity) + Number(value.quantity)
+        };
+        this.items.set(currentItems);
+      } else {
+        this.items.update((list) => [...list, value]);
+      }
     }
 
     this.form().reset();

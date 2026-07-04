@@ -21,6 +21,15 @@
       <button (click)="toggleViewMode()" class="flex items-center gap-2 text-[13px] font-medium text-gray-500 hover:text-gray-800 bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded transition-colors">
         <i class="fa-solid text-gray-400" [ngClass]="viewMode === 'cards' ? 'fa-list' : 'fa-table-cells-large'"></i> {{ viewMode === 'cards' ? 'Lista' : 'Cards' }}
       </button>
+      <div class="h-5 w-px bg-gray-200 mx-1"></div>
+      <p-treeSelect
+        [options]="filterNodes()"
+        [(ngModel)]="selectedFilterNode"
+        (ngModelChange)="onFilterChange()"
+        placeholder="Filtrar itens..."
+        appendTo="body"
+        styleClass="w-64"
+      ></p-treeSelect>
   </div>
 
   <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 min-h-[calc(100vh-180px)]">
@@ -33,7 +42,7 @@
               <!-- CabeÃ§alho do Card -->
               <div class="p-4 border-b card-border flex justify-between items-start shrink-0">
                   <div>
-                      <h3 class="text-gray-900 font-bold text-base">{{ res.user?.nome || 'Usuário Desconhecido' }}</h3>
+                      <h3 class="text-gray-900 font-bold text-base">{{ res.user.nome || 'Usuário Desconhecido' }}</h3>
                       <p class="text-xs text-gray-500 mt-1">Código: {{ res.id }}</p>
                   </div>
                   <span [ngClass]="getBadgeClasses(res.status)">{{ getDisplayStatus(res.status) }}</span>
@@ -54,7 +63,7 @@
               
               <!-- Lista de Itens -->
               <div class="mx-4 my-2 overflow-y-auto card-list-scrollbar flex-1">
-                  <div *ngFor="let resItem of res.items" class="flex justify-between items-center py-2 border-b border-yellow-100 text-[13px] text-gray-700">
+                  <div *ngFor="let resItem of getFilteredItems(res.items)" class="flex justify-between items-center py-2 border-b border-yellow-100 text-[13px] text-gray-700">
                       <span>{{ resItem.item?.name }}</span>
                       <span>{{ resItem.quantity }}</span>
                   </div>
@@ -146,7 +155,7 @@
           
           <div class="grid grid-cols-3 gap-4 text-xs text-gray-800 mb-4 border-b border-[#FDE08B] pb-3">
               <div>
-                  <span class="font-bold">Usuário:</span> {{ selectedReservation.user?.nome }}
+                  <span class="font-bold">Usuário:</span> {{ selectedReservation.user.nome }}
               </div>
               <div>
                   <span class="font-bold">Código:</span> {{ selectedReservation.id }}

@@ -78,8 +78,12 @@ public class LoanService extends CrudService<Long, Loan, LoanRepository> {
         if (entity.getLoanDate() == null) {
             entity.setLoanDate(Instant.now());
         }
-        if (entity.getId() != null && entity.getStatus() == null) {
-            repository.findById(entity.getId()).ifPresent(dbLoan -> entity.setStatus(dbLoan.getStatus()));
+        Loan existing = null;
+        if (entity.getId() != null) {
+            existing = repository.findById(entity.getId()).orElse(null);
+            if (existing != null && entity.getStatus() == null) {
+                entity.setStatus(existing.getStatus());
+            }
         }
         if (entity.getStatus() == null) {
             entity.setStatus(LoanStatus.ONGOING);
@@ -90,6 +94,26 @@ public class LoanService extends CrudService<Long, Loan, LoanRepository> {
                 item.setLoan(entity);
                 if (item.getId() == null) {
                     inventoryService.handleTransaction(item.getItem(), item.getQuantity(), InventoryTransactionType.LOAN);
+                } else {
+                    LoanItem oldItem = findOldItem(existing, item);
+                    if (oldItem != null && oldItem.getQuantity().compareTo(item.getQuantity()) != 0) {
+                        inventoryService.updateTransaction(
+                                item.getItem(),
+                                oldItem.getQuantity(),
+                                InventoryTransactionType.LOAN,
+                                item.getQuantity()
+                        );
+                    }
+                }
+            }
+            
+            if (existing != null && existing.getItems() != null) {
+                for (LoanItem oldItem : existing.getItems()) {
+                    boolean stillExists = entity.getItems().stream()
+                            .anyMatch(i -> Objects.equals(i.getItem().getId(), oldItem.getItem().getId()));
+                    if (!stillExists) {
+                        inventoryService.undoTransaction(oldItem.getItem(), oldItem.getQuantity(), InventoryTransactionType.LOAN);
+                    }
                 }
             }
         }
@@ -97,6 +121,7 @@ public class LoanService extends CrudService<Long, Loan, LoanRepository> {
         Loan saved = super.save(entity);
         if (isNew) {
             loanMailService.sendLoanCreated(saved.getId());
+            notificationService.sendNotification(saved.getBorrower(), "Novo Empréstimo", "Um novo empréstimo foi registrado para você.", "/loan?id=" + saved.getId());
         }
         return refreshStatus(saved);
     }
@@ -154,7 +179,7 @@ public class LoanService extends CrudService<Long, Loan, LoanRepository> {
             Loan updated = repository.save(persistedLoan);
             if (newStatus == LoanStatus.COMPLETED) {
                 loanMailService.sendLoanCompleted(updated.getId());
-                notificationService.sendNotification(updated.getBorrower(), "Devolução Confirmada", "A devolução do seu empréstimo foi confirmada com sucesso.");
+                notificationService.sendNotification(updated.getBorrower(), "Devolução Confirmada", "A devolução do seu empréstimo foi confirmada com sucesso.", "/loan?id=" + updated.getId());
             } else if (newStatus == LoanStatus.OVERDUE) {
                 loanMailService.sendLoanOverdue(updated.getId());
             }

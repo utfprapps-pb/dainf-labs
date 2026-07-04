@@ -15,7 +15,6 @@ public class MenuConfig {
                     .allowedRoles(Set.of(
                             UserRole.ROLE_ADMIN,
                             UserRole.ROLE_LAB_TECHNICIAN,
-                            UserRole.ROLE_STUDENT,
                             UserRole.ROLE_PROFESSOR
                     ))
                     .build()),

@@ -80,7 +80,7 @@ public class ReturnService extends CrudService<Long, Return, ReturnRepository> {
     }
 
     public Return findByLoanId(Long loanId) {
-        return repository.findByLoanId(loanId);
+        return repository.findFirstByLoanIdOrderByIdDesc(loanId);
     }
 
     private void createIssue(Return entity) {

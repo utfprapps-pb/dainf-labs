@@ -33,6 +33,9 @@ public class Notification implements Identifiable<Long> {
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Column(length = 255)
+    private String actionUrl;
+
     @Override
     public Long getId() {
         return id;
@@ -80,5 +83,13 @@ public class Notification implements Identifiable<Long> {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getActionUrl() {
+        return actionUrl;
+    }
+
+    public void setActionUrl(String actionUrl) {
+        this.actionUrl = actionUrl;
     }
 }

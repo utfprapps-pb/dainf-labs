@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 import java.math.BigDecimal;
 
 public interface ReturnRepository extends CrudRepository<Long, Return>, ReturnSpecExecutor {
-    Return findByLoanId(Long loanId);
+    Return findFirstByLoanIdOrderByIdDesc(Long loanId);
 
     @Query("SELECT COALESCE(SUM(ri.quantityReturned), 0) FROM ReturnItem ri WHERE ri.aReturn.loan.id = :loanId")
     BigDecimal sumQuantityReturnedByLoan(@Param("loanId") Long loanId);

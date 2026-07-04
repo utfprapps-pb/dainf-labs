@@ -26,7 +26,16 @@ public class LoanItemDTO implements Identifiable<Long> {
     @DecimalMin(value = "1", message = "A quantidade deve ser maior ou igual a 1.")
     private BigDecimal quantity;
 
+    private BigDecimal returnedQuantity;
+
     public LoanItemDTO(Long id) {
         this.id = id;
+    }
+
+    public LoanItemDTO(Long id, ItemDTO item, boolean shouldReturn, BigDecimal quantity) {
+        this.id = id;
+        this.item = item;
+        this.shouldReturn = shouldReturn;
+        this.quantity = quantity;
     }
 }

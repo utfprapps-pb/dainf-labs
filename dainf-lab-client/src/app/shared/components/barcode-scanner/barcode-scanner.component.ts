@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, inject, Output } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { MessageService } from 'primeng/api';
 import { InputTextModule } from 'primeng/inputtext';
@@ -11,22 +12,26 @@ import { UserService } from '../../../pages/user/user.service';
   standalone: true,
   imports: [CommonModule, FormsModule, InputTextModule],
   template: `
-    <div class="flex items-center gap-2 mb-4 p-4 border border-blue-200 bg-blue-50 rounded-lg">
-      <i class="pi pi-barcode text-blue-500 text-2xl"></i>
-      <div class="flex-1">
-        <label class="block text-sm font-semibold text-blue-800 mb-1">Leitura Rápida (Código de Barras)</label>
-        <input 
-          pInputText 
-          type="text" 
-          class="w-full" 
-          placeholder="Bipe a matrícula do aluno ou código/patrimônio do item..." 
-          [(ngModel)]="barcode"
-          (keyup.enter)="onScan()"
-          autofocus
-        />
-        <small class="text-blue-600 block mt-1">O sistema identificará automaticamente se o código pertence a um aluno ou item.</small>
+    @if(isAdvancedUser()) {
+      <div class="flex items-center gap-2 mb-4 p-4 border border-blue-200 bg-blue-50 rounded-lg">
+        <i class="pi pi-barcode text-blue-500 text-2xl"></i>
+        <div class="flex-1">
+          <label class="block text-sm font-semibold text-blue-800 mb-1">Leitura Rápida (Código de Barras)</label>
+          <input 
+            pInputText 
+            type="text" 
+            class="w-full" 
+            placeholder="Bipe a matrícula do aluno ou código/patrimônio do item..." 
+            [(ngModel)]="barcode"
+            (keyup.enter)="onScan()"
+            autofocus
+          />
+          <small class="text-blue-600 block mt-1">
+            O sistema identificará automaticamente se o código pertence a um aluno ou item.
+          </small>
+        </div>
       </div>
-    </div>
+    }
   `
 })
 export class BarcodeScannerComponent {
@@ -38,6 +43,8 @@ export class BarcodeScannerComponent {
   private userService = inject(UserService);
   private itemService = inject(ItemService);
   private messageService = inject(MessageService);
+  
+  isAdvancedUser = toSignal(this.userService.hasAdvancedPrivileges(), { initialValue: false });
 
   onScan() {
     const code = this.barcode?.trim();

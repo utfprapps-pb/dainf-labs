@@ -12,23 +12,39 @@
   </ng-template>
 
   <ng-template #footer>
-    <p-button
-      label="Cancelar"
-      severity="secondary"
-      variant="outlined"
-      icon="pi pi-times"
-      [disabled]="loadingSave()"
-      (onClick)="cancel()"
-    />
-    @if (config()?.allowUpdate !== false) {
-      <p-button
-        label="Salvar"
-        severity="success"
-        icon="pi pi-check"
-        [loading]="loadingSave()"
-        [disabled]="loadingSave()"
-        (onClick)="save()"
-      />
-    }
+    <div class="flex justify-between w-full">
+      <div class="flex">
+        @if (showDelete()) {
+          <p-button
+            label="Excluir"
+            severity="danger"
+            variant="outlined"
+            icon="pi pi-trash"
+            [disabled]="loadingSave()"
+            (onClick)="delete()"
+          />
+        }
+      </div>
+      <div class="flex gap-2">
+        <p-button
+          label="Cancelar"
+          severity="secondary"
+          variant="outlined"
+          icon="pi pi-times"
+          [disabled]="loadingSave()"
+          (onClick)="cancel()"
+        />
+        @if (config()?.allowUpdate !== false) {
+          <p-button
+            label="Salvar"
+            severity="success"
+            icon="pi pi-check"
+            [loading]="loadingSave()"
+            [disabled]="loadingSave()"
+            (onClick)="save()"
+          />
+        }
+      </div>
+    </div>
   </ng-template>
 </p-dialog>

@@ -15,7 +15,7 @@ public class DTOUtils<ID extends Serializable, E extends Identifiable<ID>, D> {
 
     public DTOUtils(Class<E> entityClass, Class<D> dtoClass) {
         this.modelMapper = new ModelMapper();
-        this.modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STANDARD);
+        this.modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
         this.entityClass = entityClass;
         this.dtoClass = dtoClass;
     }

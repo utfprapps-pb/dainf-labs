@@ -22,11 +22,11 @@ public class ReturnController extends CrudController<Long, Return, ReturnDTO, Re
     }
 
     @GetMapping("by-loan/{loanId}")
-    public ResponseEntity<Return> findByLoanId(@PathVariable Long loanId) {
+    public ResponseEntity<ReturnDTO> findByLoanId(@PathVariable Long loanId) {
         Return ret = service.findByLoanId(loanId);
         if (ret == null) {
             return ResponseEntity.noContent().build();
         }
-        return ResponseEntity.ok(ret);
+        return ResponseEntity.ok(toDto(ret));
     }
 }

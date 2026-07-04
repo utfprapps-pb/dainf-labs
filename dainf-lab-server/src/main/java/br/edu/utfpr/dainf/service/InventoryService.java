@@ -85,8 +85,13 @@ public class InventoryService extends CrudService<Long, Inventory, InventoryRepo
 
         // Case 3: Was >0, now >0 and changed → update
         if (oldHas && oldQty.compareTo(newQty) != 0) {
-            undoTransaction(item, oldQty, type);
-            handleTransaction(item, newQty, type);
+            if (newQty.compareTo(oldQty) > 0) {
+                // Net increase
+                handleTransaction(item, newQty.subtract(oldQty), type);
+            } else {
+                // Net decrease
+                undoTransaction(item, oldQty.subtract(newQty), type);
+            }
         }
 
         // Case 4: both 0 → do nothing
@@ -97,6 +102,15 @@ public class InventoryService extends CrudService<Long, Inventory, InventoryRepo
      */
     public Inventory findByItem(Item item) {
         return repository.findByItem(item).orElse(new Inventory(item, BigDecimal.ZERO));
+    }
+
+    @Transactional
+    public void setQuantityManually(Item item, BigDecimal newQuantity) {
+        Inventory inventory = findByItem(item);
+        if (newQuantity != null) {
+            inventory.setQuantity(newQuantity);
+            save(inventory);
+        }
     }
 
     /**

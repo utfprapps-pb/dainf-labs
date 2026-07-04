@@ -10,6 +10,7 @@ export interface Item extends Identifiable {
   siorg: string;
   location: string;
   quantity: number;
+  code?: string;
   minimumStock: number;
   type: ItemType;
   images: any

@@ -20,6 +20,14 @@ export class CrudDialogComponent<T extends Identifiable> {
 
   saveClick = output<void>();
   cancelClick = output<void>();
+  deleteClick = output<void>();
+
+  showDelete = input<boolean>(false);
+
+  delete() {
+    this.deleteClick.emit();
+  }
+
 
   save() {
     this.saveClick.emit();

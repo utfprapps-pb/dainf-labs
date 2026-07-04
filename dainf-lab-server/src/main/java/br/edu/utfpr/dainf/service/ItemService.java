@@ -34,13 +34,18 @@ public class ItemService extends CrudService<Long, Item, ItemRepository> {
                 images.forEach(image -> image.setItem(entity))
         );
 
-        super.save(entity);
+        Item savedEntity = super.save(entity);
 
-        if (entity.getImages() != null && moveTempImages(entity)) {
-            super.save(entity);
+        if (savedEntity.getCode() == null || savedEntity.getCode().trim().isEmpty()) {
+            savedEntity.setCode(String.valueOf(savedEntity.getId()));
+            savedEntity = super.save(savedEntity);
         }
 
-        return entity;
+        if (savedEntity.getImages() != null && moveTempImages(savedEntity)) {
+            savedEntity = super.save(savedEntity);
+        }
+
+        return savedEntity;
     }
 
     private boolean moveTempImages(Item entity) {

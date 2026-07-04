@@ -8,6 +8,7 @@ export interface Notification {
   title: string;
   message: string;
   read: boolean;
+  actionUrl?: string;
   createdAt: string;
 }
 

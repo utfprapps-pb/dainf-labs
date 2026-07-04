@@ -43,4 +43,6 @@ public class ItemDTO implements Identifiable<Long> {
 
     @NotNull(message = "O campo 'Tipo' é obrigatório")
     private ItemType type;
+
+    private String code;
 }

@@ -14,7 +14,7 @@
         <p-message *ngIf="status === 'error'" severity="error" [text]="errorMessage"></p-message>
         <p-message *ngIf="status === 'loading'" severity="info" text="Validando código, aguarde..."></p-message>
 
-        <p-card *ngIf="status === 'success' && result" header="Documento validado" subheader="Sala de Apoio - DAINF/UTFPR">
+        <p-card *ngIf="status === 'success' && result" header="Documento validado" subheader="Sala de Apoio - DAELE/UTFPR">
           <div class="text-lg font-semibold text-surface-900 dark:text-surface-0 mb-1" data-testid="student-name">
             {{ result.nomeAluno }}
           </div>
@@ -28,7 +28,7 @@
             Código de validação: {{ result.codigoValidacao }}
           </div>
           <div class="text-sm text-surface-700 dark:text-surface-100">
-            Este documento foi emitido pela Sala de Apoio do Departamento Acadêmico de Informática (DAINF) da UTFPR - Câmpus Pato Branco.
+            Este documento foi emitido pela Sala de Apoio do Departamento Acadêmico de Eletrônica (DAELE) da UTFPR - Câmpus Pato Branco.
           </div>
         </p-card>
 

@@ -11,10 +11,12 @@ import br.edu.utfpr.dainf.service.UserService;
 import br.edu.utfpr.dainf.shared.CrudController;
 import br.edu.utfpr.dainf.storage.StorageService;
 import jakarta.annotation.security.RolesAllowed;
+import jakarta.validation.Valid;
 import org.springframework.data.web.PagedModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
+import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("items")
@@ -30,6 +32,28 @@ public class ItemController extends CrudController<Long, Item, ItemDTO, ItemRepo
         this.storageService = storageService;
         this.inventoryService = inventoryService;
         this.userService = userService;
+    }
+
+    @Override
+    @PostMapping
+    public ResponseEntity<Long> create(@RequestBody @Valid ItemDTO dto) {
+        ResponseEntity<Long> response = super.create(dto);
+        if (response.getBody() != null && dto.getQuantity() != null) {
+            Item item = service.findById(response.getBody()).orElseThrow();
+            inventoryService.setQuantityManually(item, dto.getQuantity());
+        }
+        return response;
+    }
+
+    @Override
+    @PutMapping("/{id}")
+    public ResponseEntity<Long> update(@RequestBody @Valid ItemDTO dto, @PathVariable Long id) {
+        ResponseEntity<Long> response = super.update(dto, id);
+        if (response.getBody() != null && dto.getQuantity() != null) {
+            Item item = service.findById(response.getBody()).orElseThrow();
+            inventoryService.setQuantityManually(item, dto.getQuantity());
+        }
+        return response;
     }
 
     @Override

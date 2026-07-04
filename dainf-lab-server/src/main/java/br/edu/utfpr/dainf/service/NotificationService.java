@@ -14,11 +14,12 @@ public class NotificationService {
     @Autowired
     private NotificationRepository notificationRepository;
 
-    public Notification sendNotification(User user, String title, String message) {
+    public Notification sendNotification(User user, String title, String message, String actionUrl) {
         Notification notification = new Notification();
         notification.setUser(user);
         notification.setTitle(title);
         notification.setMessage(message);
+        notification.setActionUrl(actionUrl);
         return notificationRepository.save(notification);
     }
 

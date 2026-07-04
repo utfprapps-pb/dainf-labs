@@ -88,14 +88,16 @@
                             <td class="px-5 py-3 text-center font-bold text-blue-600">{{ item.returnedQuantity || 0 }}</td>
                             <td class="px-5 py-3 text-center">
                                 @if ((item.quantity - (item.returnedQuantity || 0)) > 0) {
-                                    <div class="flex items-center justify-between border border-gray-300 rounded-lg bg-white w-28 mx-auto h-8 shadow-sm overflow-hidden">
-                                        <button type="button" class="w-8 h-full text-gray-500 hover:bg-gray-100 hover:text-gray-700 font-bold disabled:opacity-50 transition-colors flex items-center justify-center"
-                                                [disabled]="(item.tempReturnQty || 0) <= 0"
-                                                (click)="decrementReturn(item)"><i class="fa-solid fa-minus text-[10px]"></i></button>
-                                        <span class="flex-1 text-xs text-center font-bold text-gray-800 border-x border-gray-200 h-full flex items-center justify-center bg-gray-50">{{ item.tempReturnQty || 0 }}</span>
-                                        <button type="button" class="w-8 h-full text-gray-500 hover:bg-gray-100 hover:text-gray-700 font-bold disabled:opacity-50 transition-colors flex items-center justify-center"
-                                                [disabled]="(item.tempReturnQty || 0) >= (item.quantity - (item.returnedQuantity || 0))"
-                                                (click)="incrementReturn(item)"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                                    <div class="flex items-center justify-center h-8">
+                                        <div class="flex items-center border border-gray-200 rounded-md bg-white counter-container h-7" [class.opacity-50]="loan.status === 'COMPLETED'">
+                                            <button type="button" class="btn-minus px-2 text-gray-500 hover:bg-gray-100 font-bold disabled:opacity-50"
+                                                    [disabled]="(item.tempReturnQty || 0) <= 0 || loan.status === 'COMPLETED'"
+                                                    (click)="decrementQty(item)">-</button>
+                                            <span class="counter-val px-2 text-xs w-6 text-center font-bold border-x border-gray-200">{{ item.tempReturnQty || 0 }}</span>
+                                            <button type="button" class="btn-plus px-2 text-gray-500 hover:bg-gray-100 font-bold disabled:opacity-50"
+                                                    [disabled]="(item.tempReturnQty || 0) >= (item.quantity - (item.returnedQuantity || 0)) || loan.status === 'COMPLETED'"
+                                                    (click)="incrementQty(item)">+</button>
+                                        </div>
                                     </div>
                                 } @else {
                                     <div class="flex justify-center">
@@ -117,13 +119,13 @@
     <!-- Footer -->
     <div class="border-t border-gray-200 px-6 py-4 bg-white flex items-center justify-between">
         <button (click)="cancel()" class="px-5 py-2.5 bg-white border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 shadow-sm transition-colors focus:ring-2 focus:ring-gray-200">
-            Cancelar
+            Fechar
         </button>
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-3" [class.opacity-50]="loan.status === 'COMPLETED'" [class.pointer-events-none]="loan.status === 'COMPLETED'">
             <button (click)="markAllReturned()" class="px-5 py-2.5 border border-blue-200 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg text-sm font-semibold shadow-sm transition-colors flex items-center gap-2 focus:ring-2 focus:ring-blue-200">
-                <i class="fa-solid fa-check-double"></i> Preencher Todos
+                <i class="fa-solid fa-check-double"></i> Selecionar Tudo
             </button>
-            <button (click)="save()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-colors flex items-center gap-2 focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
+            <button (click)="save()" [disabled]="loan.status === 'COMPLETED'" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-colors flex items-center gap-2 focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:bg-blue-600">
                 <i class="fa-solid fa-floppy-disk"></i> Confirmar Devolução
             </button>
         </div>

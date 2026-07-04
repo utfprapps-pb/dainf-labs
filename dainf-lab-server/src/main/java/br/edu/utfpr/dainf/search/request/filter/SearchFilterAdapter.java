@@ -65,17 +65,14 @@ public class SearchFilterAdapter implements Specification {
 
 
     Expression<?> getNestedField(Root<?> root, String fieldPath) {
-        String[] path = fieldPath.split("\\.");
-        Path<?> currentPath = root;
-
-        for (String segment : path) {
-            try {
-                currentPath = currentPath.get(segment);
-            } catch (PathElementException e) {
-                throw new WarnException("Invalid field path", e);
-            }
+        if (!fieldPath.contains(".")) {
+            return root.get(fieldPath);
         }
-
-        return currentPath;
+        String[] path = fieldPath.split("\\.");
+        Join<?, ?> join = root.join(path[0], JoinType.LEFT);
+        for (int i = 1; i < path.length - 1; i++) {
+            join = join.join(path[i], JoinType.LEFT);
+        }
+        return join.get(path[path.length - 1]);
     }
 }

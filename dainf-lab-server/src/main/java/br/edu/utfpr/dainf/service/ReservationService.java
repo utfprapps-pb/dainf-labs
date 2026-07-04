@@ -23,6 +23,8 @@ import java.util.Objects;
 import java.util.List;
 import br.edu.utfpr.dainf.service.NotificationService;
 import br.edu.utfpr.dainf.repository.UserRepository;
+import br.edu.utfpr.dainf.repository.LoanRepository;
+import br.edu.utfpr.dainf.enums.LoanStatus;
 
 @Service
 public class ReservationService extends CrudService<Long, Reservation, ReservationRepository> {
@@ -33,14 +35,16 @@ public class ReservationService extends CrudService<Long, Reservation, Reservati
     private final ConfigurationService configurationService;
     private final NotificationService notificationService;
     private final UserRepository userRepository;
+    private final LoanRepository loanRepository;
 
-    public ReservationService(UserService userService, InventoryService inventoryService, br.edu.utfpr.dainf.mail.MailService mailService, ConfigurationService configurationService, NotificationService notificationService, UserRepository userRepository) {
+    public ReservationService(UserService userService, InventoryService inventoryService, br.edu.utfpr.dainf.mail.MailService mailService, ConfigurationService configurationService, NotificationService notificationService, UserRepository userRepository, LoanRepository loanRepository) {
         this.userService = userService;
         this.inventoryService = inventoryService;
         this.mailService = mailService;
         this.configurationService = configurationService;
         this.notificationService = notificationService;
         this.userRepository = userRepository;
+        this.loanRepository = loanRepository;
     }
 
     @Override
@@ -65,6 +69,26 @@ public class ReservationService extends CrudService<Long, Reservation, Reservati
             entity.setStatus("PENDENTE");
             if (entity.getUser() == null || !userService.hasPrivilegedAcess()) {
                 entity.setUser(userService.getCurrentUser());
+            }
+
+            // Verify if user already has an active loan
+            List<Loan> activeLoans = loanRepository.findByBorrowerAndStatusIn(
+                entity.getUser(), 
+                List.of(LoanStatus.ONGOING, LoanStatus.OVERDUE)
+            );
+            
+            if (activeLoans != null && !activeLoans.isEmpty()) {
+                throw new WarnException("Não é possível realizar a reserva, pois o usuário já possui um empréstimo ativo.");
+            }
+
+            // Verify if user already has an active reservation
+            List<Reservation> activeReservations = repository.findByUserAndStatusIn(
+                entity.getUser(),
+                List.of("PENDENTE", "EM_SEPARACAO", "PRONTO_RETIRADA")
+            );
+
+            if (activeReservations != null && !activeReservations.isEmpty()) {
+                throw new WarnException("Não é possível realizar a reserva, pois o usuário já possui uma reserva ativa.");
             }
         }
         
@@ -106,14 +130,16 @@ public class ReservationService extends CrudService<Long, Reservation, Reservati
             }
             
             // Site notification for TAs and Admins
-            List<User> notificationTargets = userRepository.findByRoleIn(List.of(UserRole.ROLE_ADMIN, UserRole.ROLE_LAB_TECHNICIAN, UserRole.ROLE_PROFESSOR));
-            for (User target : notificationTargets) {
-                notificationService.sendNotification(target, "Nova Reserva", "Uma nova reserva foi solicitada por " + saved.getUser().getNome());
+            if (!userService.hasPrivilegedAcess()) {
+                List<User> notificationTargets = userRepository.findByRoleIn(List.of(UserRole.ROLE_ADMIN, UserRole.ROLE_LAB_TECHNICIAN, UserRole.ROLE_PROFESSOR));
+                for (User target : notificationTargets) {
+                    notificationService.sendNotification(target, "Nova Reserva", "Uma nova reserva foi solicitada por " + saved.getUser().getNome(), "/reservation?id=" + saved.getId());
+                }
             }
         } else {
             // Site notification for Student when status changes
             if (oldStatus != null && !oldStatus.equals(saved.getStatus())) {
-                notificationService.sendNotification(saved.getUser(), "Reserva Atualizada", "O status da sua reserva mudou para: " + getDisplayStatus(saved.getStatus()));
+                notificationService.sendNotification(saved.getUser(), "Reserva Atualizada", "O status da sua reserva mudou para: " + getDisplayStatus(saved.getStatus()), "/reservation?id=" + saved.getId());
             }
         }
         return saved;

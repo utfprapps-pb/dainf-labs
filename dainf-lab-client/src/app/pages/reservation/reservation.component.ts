@@ -1,10 +1,11 @@
 import { CommonModule, DatePipe } from '@angular/common';
-import { Component, inject, OnInit, OnDestroy, viewChild } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, viewChild, signal } from '@angular/core';
 import { Subscription, interval } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
+import { ActivatedRoute, Router } from '@angular/router';
+import { MessageService, TreeNode } from 'primeng/api';
+import { TreeSelectModule } from 'primeng/treeselect';
 
 import { InputContainerComponent } from '@/shared/components/input-container/input-container.component';
 import { SearchSelectComponent } from '@/shared/components/search-select/search-select.component';
@@ -21,10 +22,13 @@ import { PaginatorModule } from 'primeng/paginator';
 import { ContextStore } from '@/shared/store/context-store.service';
 import { ItemService } from '../item/item.service';
 import { UserService } from '../user/user.service';
-import { Reservation, ReservationItem } from './reservation';
 import { ReservationService } from './reservation.service';
+import { Reservation, ReservationItem } from './reservation';
 import { LoanService } from '../loan/loan.service';
+import { CategoryService } from '../category/category.service';
 import { CartService } from '@/shared/services/cart.service';
+import { CategoryTreeNodePipe } from '@/shared/pipes/category-tree-node.pipe';
+
 @Component({
   standalone: true,
   imports: [
@@ -40,9 +44,10 @@ import { CartService } from '@/shared/services/cart.service';
     InputNumberModule,
     ButtonModule,
     BarcodeScannerComponent,
-    PaginatorModule
+    PaginatorModule,
+    TreeSelectModule
   ],
-  providers: [ReservationService, UserService, ItemService, DatePipe, LoanService],
+  providers: [ReservationService, UserService, ItemService, DatePipe, LoanService, CategoryService, CategoryTreeNodePipe],
   selector: 'app-reservation',
   templateUrl: 'reservation.component.html',
   styles: [`
@@ -56,10 +61,23 @@ export class ReservationComponent implements OnInit, OnDestroy {
   itemService = inject(ItemService);
   datePipe = inject(DatePipe);
   router = inject(Router);
+  route = inject(ActivatedRoute);
   context = inject(ContextStore);
   formBuilder = inject(FormBuilder);
   cartService = inject(CartService);
+  categoryService = inject(CategoryService);
+  categoryTreeNodePipe = inject(CategoryTreeNodePipe);
   crud = viewChild(CrudComponent);
+
+  categories = signal<any[]>([]);
+  cardItemFilter = signal<string>('ALL');
+  filterNodes = signal<TreeNode[]>([]);
+  selectedFilterNode = signal<TreeNode | null>(null);
+
+  onFilterChange() {
+    const node = this.selectedFilterNode();
+    this.cardItemFilter.set(node ? (node.data as string) : 'ALL');
+  }
 
   private refreshSubscription?: Subscription;
 
@@ -158,7 +176,7 @@ export class ReservationComponent implements OnInit, OnDestroy {
   });
 
   viewMode: 'cards' | 'list' = 'cards';
-  searchReq: any = { filters: [] };
+  searchReq: any = { filters: [], sort: { field: 'id', type: 'DESC' } };
 
   filterName = '';
   filterRA = '';
@@ -193,10 +211,42 @@ export class ReservationComponent implements OnInit, OnDestroy {
     if (this.filterStatus) {
       filters.push({ field: 'status', value: this.filterStatus, type: 'EQUALS' });
     }
-    this.searchReq = { filters };
+    this.searchReq = { filters, sort: { field: 'id', type: 'DESC' } };
   }
 
   ngOnInit(): void {
+    this.categoryService.search({ page: 0, rows: 1000, filters: [{ field: 'parent', type: 'IS_NULL' }] }).subscribe((page: any) => {
+      this.categories.set(page.content);
+      const categoryNodes = this.categoryTreeNodePipe.transform(page.content);
+      
+      const mapNode = (node: TreeNode<any>): TreeNode => {
+        return {
+           label: node.label,
+           key: 'CAT:' + node.data!.id,
+           data: 'CAT:' + node.data!.id,
+           children: node.children?.map(c => mapNode(c)),
+           leaf: node.leaf,
+           icon: node.icon
+        };
+      };
+      
+      const categoryChildren = categoryNodes.map(n => mapNode(n));
+      const allNode: TreeNode = { label: 'Todos os itens', data: 'ALL', key: 'ALL', icon: 'pi pi-list' };
+      
+      this.filterNodes.set([
+        allNode,
+        { label: 'Consumíveis', data: 'TYPE:CONSUMABLE', key: 'TYPE:CONSUMABLE', icon: 'pi pi-box' },
+        { 
+          label: 'Duráveis', 
+          data: 'TYPE:DURABLE', 
+          key: 'TYPE:DURABLE',
+          icon: 'pi pi-server',
+          children: categoryChildren
+        }
+      ]);
+      this.selectedFilterNode.set(allNode);
+    });
+
     // Monitora o reset do formulário pelo crud.component e restaura os defaults
     this.form.valueChanges.subscribe(val => {
       let needsPatch = false;
@@ -232,17 +282,107 @@ export class ReservationComponent implements OnInit, OnDestroy {
            this.form.get('user')?.setValue(user);
         }
         
+        // Listener para redirecionamento automático
+        this.form.get('user')?.valueChanges.subscribe(selectedUser => {
+          if (selectedUser && !this.selectedReservation && this.crud()?.dialogVisible()) {
+            // Salvar os itens do form atual ANTES de fazer a busca e cancelar o dialog
+            const currentItems = this.form.get('items')?.value ? [...this.form.get('items')?.value] : [];
+            
+            // Caso o usuário tenha preenchido um item mas esqueceu de clicar em adicionar
+            if (this.reservationItensForm.valid && this.reservationItensForm.get('item')?.value) {
+                currentItems.push(this.reservationItensForm.getRawValue());
+                this.reservationItensForm.reset({ quantity: 1 });
+            }
+            
+            this.reservationService.search({
+              filters: [
+                { field: 'user.id', value: selectedUser.id, type: 'EQUALS' },
+                { field: 'status', value: ['PENDENTE', 'EM_SEPARACAO', 'PRONTO_RETIRADA'], type: 'IN' }
+              ],
+              sort: { field: 'id', type: 'DESC' }
+            }).subscribe(res => {
+              if (res.content && res.content.length > 0) {
+                 this.messageService.add({severity:'info', summary:'Aviso', detail:'Usuário já possui reserva ativa. Os itens foram mesclados na ficha existente.'});
+                 
+                 // Busca a reserva completa para garantir que os itens estão preenchidos
+                 this.reservationService.get(res.content[0].id).subscribe(existingRes => {
+                     const existingItems = existingRes.items ? [...existingRes.items] : [];
+                     
+                     // Mesclar itens selecionados no form com os da reserva existente
+                     currentItems.forEach((newItem: any) => {
+                       if (newItem && newItem.item) {
+                         const existingIndex = existingItems.findIndex(i => i.item.id === newItem.item.id);
+                         if (existingIndex > -1) {
+                            existingItems[existingIndex] = {
+                               ...existingItems[existingIndex],
+                               quantity: Number(existingItems[existingIndex].quantity) + Number(newItem.quantity)
+                            };
+                         } else {
+                            const itemToPush = { ...newItem };
+                            delete itemToPush.id;
+                            existingItems.push(itemToPush);
+                         }
+                       }
+                     });
+                     existingRes.items = existingItems;
+    
+                     this.crud()?.cancel();
+                     setTimeout(() => {
+                       this.openModal(existingRes);
+                     }, 300);
+                 });
+              }
+            });
+          }
+        });
+        
         const cartData = this.context.consume('cart');
         if (cartData && Array.isArray(cartData)) {
-          const newRes = {
-            id: null,
-            user: user,
-            status: 'PENDENTE',
-            reservationDate: new Date().toISOString(),
-            items: cartData
-          };
           this.cartService.clearCart();
-          this.openModal(newRes as any);
+          
+          this.reservationService.search({
+            filters: [
+              { field: 'user.id', value: user.id, type: 'EQUALS' },
+              { field: 'status', value: ['PENDENTE', 'EM_SEPARACAO', 'PRONTO_RETIRADA'], type: 'IN' }
+            ],
+            sort: { field: 'id', type: 'DESC' }
+          }).subscribe(res => {
+             if (res.content && res.content.length > 0) {
+                 // Busca a reserva completa para garantir que os itens estão carregados
+                 this.reservationService.get(res.content[0].id).subscribe(existingRes => {
+                     const existingItems = existingRes.items ? [...existingRes.items] : [];
+                     cartData.forEach((newItem: any) => {
+                         const existingIndex = existingItems.findIndex(i => i.item.id === newItem.item.id);
+                         if (existingIndex > -1) {
+                            existingItems[existingIndex] = {
+                               ...existingItems[existingIndex],
+                               quantity: Number(existingItems[existingIndex].quantity) + Number(newItem.quantity)
+                            };
+                         } else {
+                            const itemToPush = { ...newItem };
+                            delete itemToPush.id;
+                            existingItems.push(itemToPush);
+                         }
+                     });
+                     existingRes.items = existingItems;
+                     this.openModal(existingRes);
+                     this.messageService.add({severity:'info', summary:'Aviso', detail:'Você já possui uma reserva ativa. Os itens do carrinho foram adicionados à sua ficha.'});
+                 });
+             } else {
+                 const newRes = {
+                   id: null,
+                   user: user,
+                   status: 'PENDENTE',
+                   reservationDate: new Date().toISOString(),
+                   items: cartData.map(c => {
+                     const copy = { ...c };
+                     delete copy.id;
+                     return copy;
+                   })
+                 };
+                 this.openModal(newRes as any);
+             }
+          });
         }
       },
       error: (err) => {
@@ -252,6 +392,20 @@ export class ReservationComponent implements OnInit, OnDestroy {
 
     this.refreshSubscription = interval(5000).subscribe(() => {
       this.pollReservations();
+    });
+
+    this.route.queryParams.subscribe(params => {
+      if (params['id']) {
+        const id = +params['id'];
+        this.reservationService.get(id).subscribe({
+          next: (res) => {
+            if (res) {
+              this.openModal(res);
+            }
+          },
+          error: (err) => console.error('Erro ao buscar reserva da URL', err)
+        });
+      }
     });
   }
 
@@ -390,7 +544,7 @@ export class ReservationComponent implements OnInit, OnDestroy {
   messageService = inject(MessageService);
 
   createLoanFromReservation(reservation: Reservation) {
-    const loanItems = reservation.items.map((item) => ({
+    const loanItems = reservation.items.map((item: any) => ({
       item: item.item,
       quantity: item.quantity,
       shouldReturn: true,
@@ -462,5 +616,20 @@ export class ReservationComponent implements OnInit, OnDestroy {
   formatDateForInput(date: any): string {
     if (!date) return '';
     return this.datePipe.transform(date, 'yyyy-MM-dd') || '';
+  }
+
+  getFilteredItems(items: any[]) {
+    if (!items) return [];
+    const filter = this.cardItemFilter();
+    if (filter === 'ALL') return items;
+    if (filter.startsWith('TYPE:')) {
+        const type = filter.split(':')[1];
+        return items.filter(i => i.item?.type === type);
+    }
+    if (filter.startsWith('CAT:')) {
+        const catId = Number(filter.split(':')[1]);
+        return items.filter(i => i.item?.category?.id === catId);
+    }
+    return items;
   }
 }

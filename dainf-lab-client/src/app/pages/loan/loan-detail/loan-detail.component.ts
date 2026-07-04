@@ -8,6 +8,7 @@ import { Loan, LoanItem } from '../loan';
 import { LoanService } from '../loan.service';
 import { ItemService } from '../../item/item.service';
 import { SearchSelectComponent } from '@/shared/components/search-select/search-select.component';
+import { BarcodeScannerComponent } from '@/shared/components/barcode-scanner/barcode-scanner.component';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { MessageService } from 'primeng/api';
 import { ReturnService } from '../../return/return.service';
@@ -22,7 +23,8 @@ import { UserService } from '../../user/user.service';
     ButtonModule,
     TableModule,
     SearchSelectComponent,
-    InputNumberModule
+    InputNumberModule,
+    BarcodeScannerComponent
   ],
   providers: [ReturnService, UserService],
   selector: 'app-loan-detail-dialog',
@@ -142,6 +144,17 @@ export class LoanDetailDialog implements OnInit {
     if (!this.selectedItem) return;
     
     const existing = this.newItems().find(i => i.item.id === this.selectedItem.id);
+    const currentRequested = existing ? existing.quantity : 0;
+    
+    if ((currentRequested + this.itemQuantity) > (this.selectedItem.quantity || 0)) {
+      this.messageService.add({ 
+        severity: 'error', 
+        summary: 'Estoque Insuficiente', 
+        detail: `O item possui apenas ${this.selectedItem.quantity || 0} unidades disponíveis em estoque.` 
+      });
+      return;
+    }
+
     if (existing) {
       existing.quantity += this.itemQuantity;
       this.newItems.set([...this.newItems()]);
@@ -151,6 +164,17 @@ export class LoanDetailDialog implements OnInit {
     
     this.selectedItem = null;
     this.itemQuantity = 1;
+  }
+
+  onItemScanned(result: { type: 'user' | 'item'; data: any }) {
+    if (result.type === 'item' && result.data) {
+      this.selectedItem = result.data;
+      this.itemQuantity = 1;
+      this.addItemToList();
+      this.messageService.add({ severity: 'success', summary: 'Item Adicionado', detail: `O item ${result.data.name} foi adicionado à lista.` });
+    } else {
+      this.messageService.add({ severity: 'warn', summary: 'Aviso', detail: 'Por favor, bipe um item, não um aluno.' });
+    }
   }
 
   removeItemFromList(index: number) {

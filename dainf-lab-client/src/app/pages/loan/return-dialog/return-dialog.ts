@@ -36,7 +36,6 @@ import { LoanService } from '../loan.service';
     TextareaModule,
     DatePickerModule,
     TableModule,
-    InputNumber,
     ChipModule,
   ],
   templateUrl: './return-dialog.html',
@@ -65,8 +64,10 @@ export class LoanReturnDialog implements OnInit {
     
     this._searchReturnByLoan(this.loan).subscribe((res) => {
       this.savedReturn = res;
-      if (this.savedReturn) {
-        this.items.forEach((item: any) => {
+      this.items.forEach((item: any) => {
+        if (this.loan.status === 'COMPLETED') {
+          item.returnedQuantity = item.quantity;
+        } else if (this.savedReturn) {
           const savedItem = this.savedReturn?.items?.find(
             (ri: any) => ri.item.id === item.item.id,
           );
@@ -74,8 +75,8 @@ export class LoanReturnDialog implements OnInit {
             item.returnedQuantity = savedItem.quantityReturned; // Fix field name
             item.quantityIssued = savedItem.quantityIssued;
           }
-        });
-      }
+        }
+      });
     });
     this._initForm();
   }
@@ -95,14 +96,14 @@ export class LoanReturnDialog implements OnInit {
     return Object.entries(groups).map(([name, items]) => ({ name, items }));
   }
 
-  incrementReturn(item: any) {
-    const max = item.quantity - (item.quantityReturned || 0);
+  incrementQty(item: any) {
+    const max = item.quantity - (item.returnedQuantity || 0);
     if ((item.tempReturnQty || 0) < max) {
       item.tempReturnQty = (item.tempReturnQty || 0) + 1;
     }
   }
 
-  decrementReturn(item: any) {
+  decrementQty(item: any) {
     if ((item.tempReturnQty || 0) > 0) {
       item.tempReturnQty = (item.tempReturnQty || 0) - 1;
     }

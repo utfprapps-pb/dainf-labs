@@ -61,4 +61,7 @@ public class Item implements Identifiable<Long> {
     @NotNull(message = "O campo 'Tipo' é obrigatório")
     @Enumerated(EnumType.STRING)
     private ItemType type;
+
+    @Column(name = "code", unique = true)
+    private String code;
 }

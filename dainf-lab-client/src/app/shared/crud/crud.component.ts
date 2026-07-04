@@ -243,6 +243,13 @@ export class CrudComponent<T extends Identifiable> implements OnInit {
     });
   }
 
+  onDialogDelete() {
+    const item: T = this.form()?.getRawValue();
+    if (item && item.id) {
+      this.deleteOne(item);
+    }
+  }
+
   cancel() {
     this.dialogVisible.set(false);
     this.form()?.reset();

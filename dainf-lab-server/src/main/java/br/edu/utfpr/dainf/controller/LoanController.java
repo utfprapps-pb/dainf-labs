@@ -18,13 +18,39 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import br.edu.utfpr.dainf.dto.LoanItemDTO;
+import br.edu.utfpr.dainf.model.Return;
+import br.edu.utfpr.dainf.repository.ReturnRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+
 @RestController
 @RequestMapping("loans")
 @RolesAllowed({UserRole.ADMIN, UserRole.LAB_TECHNICIAN})
 public class LoanController extends CrudController<Long, Loan, LoanDTO, LoanRepository, LoanService> {
 
-    public LoanController() {
+    private final ReturnRepository returnRepository;
+
+    @Autowired
+    public LoanController(ReturnRepository returnRepository) {
         super(Loan.class, LoanDTO.class);
+        this.returnRepository = returnRepository;
+    }
+
+    @Override
+    public LoanDTO toDto(Loan entity) {
+        LoanDTO dto = super.toDto(entity);
+        if (dto.getItems() != null && entity.getId() != null) {
+            Return ret = returnRepository.findFirstByLoanIdOrderByIdDesc(entity.getId());
+            if (ret != null && ret.getItems() != null) {
+                for (LoanItemDTO itemDto : dto.getItems()) {
+                    ret.getItems().stream()
+                       .filter(ri -> ri.getItem().getId().equals(itemDto.getItem().getId()))
+                       .findFirst()
+                       .ifPresent(ri -> itemDto.setReturnedQuantity(ri.getQuantityReturned()));
+                }
+            }
+        }
+        return dto;
     }
 
 

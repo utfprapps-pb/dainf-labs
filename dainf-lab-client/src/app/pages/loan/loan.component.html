@@ -24,6 +24,15 @@
       ></i>
       <span>{{ viewMode() === 'cards' ? 'Lista' : 'Cards' }}</span>
     </button>
+    <div class="h-5 w-px bg-gray-200 mx-1"></div>
+    <p-treeSelect
+      [options]="filterNodes()"
+      [(ngModel)]="selectedFilterNode"
+      (ngModelChange)="onFilterChange()"
+      placeholder="Filtrar itens..."
+      appendTo="body"
+      styleClass="w-64"
+    ></p-treeSelect>
   </div>
 
   <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 min-h-[calc(100vh-180px)]">
@@ -50,10 +59,10 @@
               </div>
             </div>
             <div class="bg-white mx-3 mb-2 rounded-sm overflow-y-auto flex-1 border border-transparent">
-              @for (item of loan.items; track item.id) {
+              @for (item of getFilteredItems(loan.items); track item.id) {
                 <div class="flex justify-between items-center px-4 py-2.5 border-b border-[#FDE08B] text-[13px] text-gray-700">
                   <span>{{ item.item.name }}</span>
-                  <span>{{ item.quantity }}</span>
+                  <span>{{ item.quantity - (item.returnedQuantity || 0) }}</span>
                 </div>
               }
             </div>
@@ -61,6 +70,10 @@
               <button
                 *ngIf="hasAdvancedPrivileges()"
                 (click)="openReturnDialog(loan)"
+                [disabled]="loan.status === 'COMPLETED'"
+                [class.opacity-50]="loan.status === 'COMPLETED'"
+                [class.cursor-not-allowed]="loan.status === 'COMPLETED'"
+                [class.pointer-events-none]="loan.status === 'COMPLETED'"
                 class="text-[#0EA5E9] hover:text-blue-600 transition-colors text-lg"
                 title="Registrar Devolução"
               >
@@ -154,7 +167,7 @@
         <app-search-select
           formControlName="borrower"
           optionLabel="nome"
-          [service]="userService"
+          [service]="activeBorrowerService"
           placeholder="Selecione um usuário"
         />
       </app-input-container>
@@ -202,6 +215,7 @@
     severity="info"
     *ngIf="hasAdvancedPrivileges()"
     (click)="openReturnDialog(row)"
+    [disabled]="row.status === 'COMPLETED'"
   ></p-button>
 </ng-template>
 

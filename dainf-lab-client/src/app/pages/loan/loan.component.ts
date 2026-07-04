@@ -4,10 +4,14 @@ import { StaticSelectComponent } from "@/shared/components/static-select/static-
 import { SubItemFormComponent } from '@/shared/components/subitem-form/subitem-form.component';
 import { Column, CrudConfig } from '@/shared/crud/crud';
 import { CrudComponent } from '@/shared/crud/crud.component';
-import { SearchFilter, SearchRequest } from '@/shared/models/search';
 import { LabelValuePipe } from '@/shared/pipes/label-value.pipe';
 import { ContextStore } from '@/shared/store/context-store.service';
+import { Page, SearchFilter, SearchRequest } from '@/shared/models/search';
 import { CommonModule, DatePipe } from '@angular/common';
+import { map } from 'rxjs/operators';
+import { TreeSelectModule } from 'primeng/treeselect';
+import { TreeNode } from 'primeng/api';
+import { CategoryTreeNodePipe } from '@/shared/pipes/category-tree-node.pipe';
 import {
   AfterViewInit,
   Component,
@@ -19,6 +23,7 @@ import {
   TemplateRef,
   viewChild,
 } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
   FormBuilder,
@@ -81,7 +86,8 @@ const STATUS_ICON: Record<LoanStatus, string> = {
     StaticSelectComponent,
     BarcodeScannerComponent,
     TagModule,
-    PaginatorModule
+    PaginatorModule,
+    TreeSelectModule
 ],
   providers: [
     LoanService,
@@ -90,7 +96,8 @@ const STATUS_ICON: Record<LoanStatus, string> = {
     ItemService,
     UserService,
     DialogService,
-    DatePipe
+    DatePipe,
+    CategoryTreeNodePipe
   ],
   selector: 'app-loan',
   templateUrl: 'loan.component.html',
@@ -112,6 +119,8 @@ export class LoanComponent implements OnInit, AfterViewInit {
   userService = inject(UserService);
   context = inject(ContextStore);
   datePipe = inject(DatePipe);
+  route = inject(ActivatedRoute);
+  categoryTreeNodePipe = inject(CategoryTreeNodePipe);
 
   hasAdvancedPrivileges = toSignal(this.userService.hasAdvancedPrivileges(), {
     initialValue: false,
@@ -128,6 +137,35 @@ export class LoanComponent implements OnInit, AfterViewInit {
 
   disabled = signal(false);
   viewMode = signal<'list' | 'cards'>('cards');
+  categories = signal<any[]>([]);
+  cardItemFilter = signal<string>('ALL');
+  filterNodes = signal<TreeNode[]>([]);
+  selectedFilterNode = signal<TreeNode | null>(null);
+
+  onFilterChange() {
+    const node = this.selectedFilterNode();
+    this.cardItemFilter.set(node ? node.data : 'ALL');
+  }
+
+  activeBorrowerService = {
+    search: (req: SearchRequest) => {
+      const newFilters = req.filters ? [...req.filters] : [];
+      newFilters.push({ field: 'status', value: ['ONGOING', 'OVERDUE'], type: 'IN' });
+      const nameFilter = newFilters.find(f => f.field === 'nome');
+      if (nameFilter) nameFilter.field = 'borrower.nome';
+      
+      return this.loanService.search({ ...req, filters: newFilters }).pipe(
+        map(loanPage => {
+          const users = loanPage.content.map(l => l.borrower);
+          const uniqueUsers = Array.from(new Map(users.map(u => [u.id, u])).values());
+          return {
+            content: uniqueUsers,
+            page: loanPage.page
+          } as Page<User>;
+        })
+      );
+    }
+  } as any;
 
   config: CrudConfig<Loan> = {
     title: 'Empréstimos',
@@ -214,10 +252,43 @@ export class LoanComponent implements OnInit, AfterViewInit {
         type: 'IN',
       });
     }
-    return <SearchRequest>{ filters };
+    return <SearchRequest>{ filters, sort: { field: 'id', type: 'DESC' } };
   });
 
+  categoryService = inject(CategoryService);
+
   ngOnInit(): void {
+    this.categoryService.search({ page: 0, rows: 1000, filters: [{ field: 'parent', type: 'IS_NULL' }] }).subscribe((page: any) => {
+      const categoryNodes = this.categoryTreeNodePipe.transform(page.content);
+      
+      const mapNode = (node: TreeNode<any>): TreeNode => {
+        return {
+           label: node.label,
+           key: 'CAT:' + node.data!.id,
+           data: 'CAT:' + node.data!.id,
+           children: node.children?.map(c => mapNode(c)),
+           leaf: node.leaf,
+           icon: node.icon
+        };
+      };
+      
+      const categoryChildren = categoryNodes.map(n => mapNode(n));
+      const allNode: TreeNode = { label: 'Todos os itens', data: 'ALL', key: 'ALL', icon: 'pi pi-list' };
+      
+      this.filterNodes.set([
+        allNode,
+        { label: 'Consumíveis', data: 'TYPE:CONSUMABLE', key: 'TYPE:CONSUMABLE', icon: 'pi pi-box' },
+        { 
+          label: 'Duráveis', 
+          data: 'TYPE:DURABLE', 
+          key: 'TYPE:DURABLE',
+          icon: 'pi pi-server',
+          children: categoryChildren
+        }
+      ]);
+      this.selectedFilterNode.set(allNode);
+    });
+
     const data = this.context.consume('reservation');
     if (data) {
       setTimeout(() => {
@@ -225,6 +296,51 @@ export class LoanComponent implements OnInit, AfterViewInit {
         this.form.patchValue({ items: data.items, borrower: data.borrower });
       });
     }
+
+    this.form.get('borrower')?.valueChanges.subscribe(user => {
+      // Only do this if we are not already editing an existing loan (id is null)
+      if (user && user.id && !this.form.get('id')?.value && !this.disabled()) {
+        const req: SearchRequest = {
+          filters: [
+            { field: 'borrower.id', value: user.id, type: 'EQUALS' },
+            { field: 'status', value: ['ONGOING', 'OVERDUE'], type: 'IN' }
+          ],
+          sort: { field: 'id', type: 'ASC' },
+          page: 0,
+          rows: 1
+        };
+        this.loanService.search(req).subscribe(page => {
+          if (page.content.length > 0) {
+            const activeLoan = page.content[0];
+            this.form.patchValue({
+              id: activeLoan.id,
+              loanDate: new Date(activeLoan.loanDate),
+              deadline: new Date(activeLoan.deadline),
+              observation: activeLoan.observation,
+              items: activeLoan.items
+            });
+            const messageService = this.crud()?.messageService;
+            if (messageService) {
+              messageService.add({severity:'info', summary:'Aviso', detail:'Mutuário com empréstimo ativo! Os dados foram carregados para que novos itens sejam adicionados à mesma ficha.'});
+            }
+          }
+        });
+      }
+    });
+
+    this.route.queryParams.subscribe(params => {
+      if (params['id']) {
+        const id = +params['id'];
+        this.loanService.get(id).subscribe({
+          next: (res) => {
+            if (res) {
+              this.openEdit(res);
+            }
+          },
+          error: (err) => console.error('Erro ao buscar empréstimo da URL', err)
+        });
+      }
+    });
   }
 
   ngAfterViewInit(): void {
@@ -297,7 +413,9 @@ export class LoanComponent implements OnInit, AfterViewInit {
       header: `Devolução de empréstimo`,
       width: '60%',
       modal: true,
+      dismissableMask: true,
       data: { loan },
+      styleClass: 'return-ficha-modal'
     });
 
     ref.onClose.subscribe((result: any) => {
@@ -312,7 +430,9 @@ export class LoanComponent implements OnInit, AfterViewInit {
       header: 'Ficha de Empréstimo',
       width: '80vw',
       modal: true,
+      dismissableMask: true,
       data: { loan },
+      styleClass: 'return-ficha-modal'
     });
 
     ref.onClose.subscribe((updatedLoan: Loan) => {
@@ -324,5 +444,20 @@ export class LoanComponent implements OnInit, AfterViewInit {
 
   toggleView() {
     this.viewMode.update(v => v === 'list' ? 'cards' : 'list');
+  }
+
+  getFilteredItems(items: any[]) {
+    const filter = this.cardItemFilter();
+    if (!items) return [];
+    if (filter === 'ALL') return items;
+    if (filter.startsWith('TYPE:')) {
+      const type = filter.split(':')[1];
+      return items.filter(i => i.item?.type === type);
+    }
+    if (filter.startsWith('CAT:')) {
+      const catId = Number(filter.split(':')[1]);
+      return items.filter(i => i.item?.category?.id === catId);
+    }
+    return items;
   }
 }

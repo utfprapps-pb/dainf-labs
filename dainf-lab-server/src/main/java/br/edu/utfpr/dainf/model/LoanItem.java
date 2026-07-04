@@ -10,6 +10,7 @@ import lombok.Setter;
 import org.hibernate.envers.Audited;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 
 @Entity
 @Table(name = "loan_item")
@@ -38,4 +39,7 @@ public class LoanItem implements Identifiable<Long> {
 
     @Column(name = "quantity", nullable = false)
     private BigDecimal quantity;
+
+    @Column(name = "added_at")
+    private Instant addedAt = Instant.now();
 }

@@ -28,9 +28,9 @@ public class Asset implements Identifiable<Long> {
     @JoinColumn(name = "item_id", referencedColumnName = "id")
     private Item item;
 
-    @NotBlank(message = "O campo 'Localização' é obrigatório")
+    @Column(name = "location")
     private String location;
 
-    @NotBlank(message = "O campo 'Patrimônio' é obrigatório")
+    @Column(name = "serial_number")
     private String serialNumber;
 }

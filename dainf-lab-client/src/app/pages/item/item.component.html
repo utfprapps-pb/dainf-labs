@@ -16,7 +16,7 @@
       label="Código"
       class="col-span-12 md:col-span-6 lg:col-span-1"
     >
-      <input type="text" pInputText id="id" formControlName="id" fluid />
+      <input type="text" pInputText id="code" formControlName="code" fluid />
     </app-input-container>
 
     <app-input-container
@@ -63,17 +63,29 @@
       <p-input-number
         locale="pt-BR"
         formControlName="quantity"
+        styleClass="w-full"
+        class="w-full"
+        (onFocus)="selectInputText($event)"
+        fluid
       ></p-input-number>
     </app-input-container>
 
     <app-input-container
-      label="Quantidade mínima"
+      label="Quantidade total"
       class="col-span-12 md:col-span-6 lg:col-span-2"
     >
       <p-input-number
         locale="pt-BR"
         formControlName="minimumStock"
+        styleClass="w-full"
+        class="w-full"
+        fluid
       ></p-input-number>
+      @if (hasUneditedNewAssets) {
+        <small class="text-blue-500 font-semibold mt-1 block">
+          <i class="pi pi-info-circle mr-1"></i> Foram criados novos espaços abaixo, edite-os.
+        </small>
+      }
     </app-input-container>
 
     <app-input-container
@@ -85,6 +97,9 @@
         mode="currency"
         currency="BRL"
         formControlName="price"
+        styleClass="w-full"
+        class="w-full"
+        fluid
       ></p-input-number>
     </app-input-container>
 
@@ -117,6 +132,7 @@
           formControlName="assets"
           [form]="assetForm"
           [columns]="assetCols"
+          [inlineEdit]="true"
         >
           <ng-template #formTemplate>
             <ng-container *ngTemplateOutlet="assetFormTemplate"></ng-container>
@@ -152,6 +168,7 @@
         pInputText
         id="serialNumber"
         formControlName="serialNumber"
+        fluid
       />
     </app-input-container>
 
@@ -159,7 +176,7 @@
       label="Localização"
       class="col-span-12 md:col-span-6 lg:col-span-4"
     >
-      <input type="text" pInputText id="location" formControlName="location" />
+      <input type="text" pInputText id="location" formControlName="location" fluid />
     </app-input-container>
   </div>
 </ng-template>

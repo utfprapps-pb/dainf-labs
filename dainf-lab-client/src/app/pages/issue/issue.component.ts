@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LoanService } from '../loan/loan.service';
@@ -11,6 +11,10 @@ import { LoanReturnDialog } from '../loan/return-dialog/return-dialog';
 import { UserService } from '../user/user.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { catchError, forkJoin, of } from 'rxjs';
+import { CategoryService } from '../category/category.service';
+import { TreeSelectModule } from 'primeng/treeselect';
+import { TreeNode } from 'primeng/api';
+import { CategoryTreeNodePipe } from '@/shared/pipes/category-tree-node.pipe';
 
 interface LoanItemWithTemp extends LoanItem {
   tempReturnQty?: number;
@@ -30,12 +34,12 @@ import { ItemService } from '../item/item.service';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, FormsModule, TableModule, PaginatorModule, BarcodeScannerComponent],
-  providers: [LoanService, ReturnService, DialogService, UserService, MessageService, ItemService],
+  imports: [CommonModule, FormsModule, TableModule, PaginatorModule, BarcodeScannerComponent, TreeSelectModule],
+  providers: [LoanService, ReturnService, DialogService, UserService, MessageService, ItemService, CategoryService, CategoryTreeNodePipe],
   selector: 'app-issue',
   templateUrl: './issue.component.html',
 })
-export class IssueComponent {
+export class IssueComponent implements OnInit {
   loanService = inject(LoanService);
   returnService = inject(ReturnService);
   dialogService = inject(DialogService);
@@ -45,6 +49,18 @@ export class IssueComponent {
   loans = signal<LoanWithTemp[]>([]);
   loading = signal(false);
   viewMode: 'cards' | 'list' = 'cards';
+
+  categoryService = inject(CategoryService);
+  categoryTreeNodePipe = inject(CategoryTreeNodePipe);
+  categories = signal<any[]>([]);
+  cardItemFilter = signal<string>('ALL');
+  filterNodes = signal<TreeNode[]>([]);
+  selectedFilterNode = signal<TreeNode | null>(null);
+
+  onFilterChange() {
+    const node = this.selectedFilterNode();
+    this.cardItemFilter.set(node ? (node.data as string) : 'ALL');
+  }
 
   first = 0;
   rows = 10;
@@ -61,6 +77,7 @@ export class IssueComponent {
   // Filtros
   filterName = '';
   filterDocument = '';
+  filterItem = '';
   filterStatus = '';
   filterType = '';
   filterLoanDate = '';
@@ -70,7 +87,38 @@ export class IssueComponent {
     initialValue: false,
   });
 
-  constructor() {
+  ngOnInit(): void {
+    this.categoryService.search({ page: 0, rows: 1000, filters: [{ field: 'parent', type: 'IS_NULL' }] }).subscribe((page: any) => {
+      this.categories.set(page.content);
+      const categoryNodes = this.categoryTreeNodePipe.transform(page.content);
+      
+      const mapNode = (node: TreeNode<any>): TreeNode => {
+        return {
+           label: node.label,
+           key: 'CAT:' + node.data!.id,
+           data: 'CAT:' + node.data!.id,
+           children: node.children?.map(c => mapNode(c)),
+           leaf: node.leaf,
+           icon: node.icon
+        };
+      };
+      
+      const categoryChildren = categoryNodes.map(n => mapNode(n));
+      const allNode: TreeNode = { label: 'Todos os itens', data: 'ALL', key: 'ALL', icon: 'pi pi-list' };
+      
+      this.filterNodes.set([
+        allNode,
+        { label: 'Consumíveis', data: 'TYPE:CONSUMABLE', key: 'TYPE:CONSUMABLE', icon: 'pi pi-box' },
+        { 
+          label: 'Duráveis', 
+          data: 'TYPE:DURABLE', 
+          key: 'TYPE:DURABLE',
+          icon: 'pi pi-server',
+          children: categoryChildren
+        }
+      ]);
+      this.selectedFilterNode.set(allNode);
+    });
     this.loadLoans();
   }
 
@@ -78,7 +126,7 @@ export class IssueComponent {
     this.loading.set(true);
     const request: SearchRequest = {
       filters: [],
-      sort: { field: 'deadline', type: 'ASC' },
+      sort: { field: 'id', type: 'DESC' },
       page: 0,
       rows: 100
     };
@@ -133,6 +181,17 @@ export class IssueComponent {
     }
     if (doc) {
       list = list.filter(l => l.borrower?.documento?.toLowerCase().includes(doc));
+    }
+    const itemSearch = this.filterItem?.toLowerCase() || '';
+    if (itemSearch) {
+      list = list.filter(l => l.items && l.items.some((i: any) => {
+        const itemObj = i.item;
+        if (!itemObj) return false;
+        if (itemObj.name?.toLowerCase().includes(itemSearch)) return true;
+        if (itemObj.code?.toLowerCase().includes(itemSearch)) return true;
+        if (itemObj.assets && itemObj.assets.some((a: any) => a.serialNumber?.toLowerCase().includes(itemSearch))) return true;
+        return false;
+      }));
     }
     if (status) {
       let mappedStatus = '';
@@ -239,6 +298,7 @@ export class IssueComponent {
       header: `Ficha de Empréstimo`,
       width: '90vw',
       modal: true,
+      dismissableMask: true,
       data: { loan },
       styleClass: 'return-ficha-modal'
     });
@@ -251,17 +311,29 @@ export class IssueComponent {
   }
 
   getGroupedItems(loan: any) {
-    const groups: { [key: string]: any[] } = {};
-    if (loan && loan.items) {
-      loan.items.forEach((item: any) => {
-        let groupName = item.item?.category?.description || 'Outros';
-        if (groupName.toLowerCase().includes('ferramenta')) groupName = 'Ferramentas emprestadas';
-        else groupName = 'Componentes emprestados';
-        
-        if (!groups[groupName]) groups[groupName] = [];
-        groups[groupName].push(item);
-      });
+    if (!loan || !loan.items) return [];
+    const filter = this.cardItemFilter();
+    let filteredItems = loan.items;
+    
+    if (filter !== 'ALL') {
+        if (filter.startsWith('TYPE:')) {
+            const type = filter.split(':')[1];
+            filteredItems = filteredItems.filter((i: any) => i.item?.type === type);
+        } else if (filter.startsWith('CAT:')) {
+            const catId = Number(filter.split(':')[1]);
+            filteredItems = filteredItems.filter((i: any) => i.item?.category?.id === catId);
+        }
     }
+
+    const groups: { [key: string]: any[] } = {};
+    filteredItems.forEach((item: any) => {
+      let groupName = item.item?.category?.description || 'Outros';
+      if (groupName.toLowerCase().includes('ferramenta')) groupName = 'Ferramentas emprestadas';
+      else groupName = 'Componentes emprestados';
+      
+      if (!groups[groupName]) groups[groupName] = [];
+      groups[groupName].push(item);
+    });
     return Object.entries(groups).map(([name, items]) => ({ name, items }));
   }
 
@@ -272,6 +344,7 @@ export class IssueComponent {
   clearFilters() {
     this.filterName = '';
     this.filterDocument = '';
+    this.filterItem = '';
     this.filterStatus = '';
     this.filterType = '';
     this.filterLoanDate = '';

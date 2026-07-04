@@ -4,7 +4,7 @@ import { Component } from '@angular/core';
     standalone: true,
     selector: 'app-footer',
     template: `<div class="layout-footer">
-        Sistema de Gerenciamento da Sala de Apoio do DAINF -
+        Sistema de Gerenciamento da Sala de Apoio do DAELE -
         <a href="https://www.utfpr.edu.br" target="_blank" rel="noopener noreferrer" class="text-primary font-bold hover:underline">UTFPR</a>
     </div>`
 })

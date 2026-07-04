@@ -149,6 +149,9 @@
       </div>
 
       <div class="p-8">
+        <div class="mb-6">
+          <app-barcode-scanner (itemScanned)="onItemScanned($event)"></app-barcode-scanner>
+        </div>
 
         <div class="mb-8 flex gap-4 items-stretch">
           <div class="flex-1 relative">

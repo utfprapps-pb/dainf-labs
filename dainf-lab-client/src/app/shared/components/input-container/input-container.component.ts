@@ -63,4 +63,5 @@ const errorMap: Record<string, (error: any) => string> = {
   invalidDates: () => 'A devolução não pode ser anterior à retirada.',
   pastDate: () => 'A data não pode ser no passado.',
   invalidWithdrawal: () => 'A retirada não pode ser anterior à reserva.',
+  invalidQuantity: () => 'A quantidade total não pode ser menor que a disponível.',
 };

@@ -12,7 +12,8 @@ import { LabelValuePipe } from '@/shared/pipes/label-value.pipe';
 import { CartService } from '@/shared/services/cart.service';
 import { StorageImplService } from '@/shared/storage/storage-impl.service';
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, model } from '@angular/core';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { Component, computed, inject, model, OnInit } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
   FormBuilder,
@@ -35,6 +36,7 @@ import { UserService } from '../user/user.service';
 import { ActiveLoansDialog } from './active-loans-dialog/active-loans-dialog';
 import { Asset, Item, ItemType } from './item';
 import { ItemService } from './item.service';
+import { MessageService } from 'primeng/api';
 
 @Component({
   standalone: true,
@@ -67,7 +69,7 @@ import { ItemService } from './item.service';
   selector: 'app-item',
   templateUrl: 'item.component.html',
 })
-export class ItemComponent {
+export class ItemComponent implements OnInit {
   userService = inject(UserService);
   itemService = inject(ItemService);
   categoryService = inject(CategoryService);
@@ -76,6 +78,7 @@ export class ItemComponent {
   labelValue = inject(LabelValuePipe);
   cartService = inject(CartService);
   dialogService = inject(DialogService);
+  messageService = inject(MessageService);
 
   dialogRef: DynamicDialogRef | undefined;
 
@@ -92,6 +95,7 @@ export class ItemComponent {
 
   form: FormGroup = this.formBuilder.group({
     id: [{ value: null, disabled: true }],
+    code: [null],
     name: [
       null,
       Validators.compose([Validators.required, Validators.maxLength(50)]),
@@ -105,21 +109,32 @@ export class ItemComponent {
     location: [null, Validators.compose([Validators.maxLength(255)])],
     type: [null, Validators.required],
     quantity: [
-      { value: null, disabled: true },
+      null,
       Validators.compose([Validators.required]),
     ],
-    minimumStock: [null],
+    minimumStock: [
+      null,
+      (control: any) => {
+        if (!this.form) return null;
+        const qty = this.form.get('quantity')?.value;
+        const minStock = control.value;
+        if (qty !== null && minStock !== null && minStock < qty) {
+          return { invalidQuantity: true };
+        }
+        return null;
+      }
+    ],
   });
 
   assetForm: FormGroup = this.formBuilder.group({
     id: [null],
     location: [
       null,
-      Validators.compose([Validators.required, Validators.maxLength(255)]),
+      Validators.compose([Validators.maxLength(255)]),
     ],
     serialNumber: [
       null,
-      Validators.compose([Validators.required, Validators.maxLength(255)]),
+      Validators.compose([Validators.maxLength(255)]),
     ],
   });
 
@@ -129,7 +144,7 @@ export class ItemComponent {
   ];
 
   cols: Column<Item>[] = [
-    { field: 'id', header: 'Código' },
+    { field: 'code', header: 'Código' },
     { field: 'name', header: 'Nome' },
     { field: 'category.description', header: 'Categoria' },
     { field: 'quantity', header: 'Quantidade' },
@@ -139,7 +154,7 @@ export class ItemComponent {
       transform: (item: Item) =>
         item.type === 'CONSUMABLE'
           ? item.location
-          : item.assets?.map((asset) => asset?.location)?.join(', '),
+          : item.assets?.map((asset) => asset?.location).filter(loc => loc && String(loc).trim() !== '').join(', '),
     },
   ];
 
@@ -147,6 +162,97 @@ export class ItemComponent {
     { field: 'serialNumber', header: 'Patrimônio' },
     { field: 'location', header: 'Localização' },
   ];
+
+  ngOnInit() {
+    const syncAssetsToQuantity = () => {
+      const type = this.form.get('type')?.value;
+      const qtyControl = this.form.get('minimumStock');
+      const qty = qtyControl?.value;
+      
+      if (type === 'DURABLE' && qty != null && qty >= 0) {
+        const currentAssets = this.form.get('assets')?.value || [];
+        if (currentAssets.length !== qty) {
+          if (qty < currentAssets.length) {
+            const filledAssetsCount = currentAssets.filter((a: any) => 
+               (a.serialNumber && String(a.serialNumber).trim() !== '') || 
+               (a.location && String(a.location).trim() !== '')
+            ).length;
+            
+            if (qty < filledAssetsCount) {
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Ação Inválida',
+                detail: 'Não é possível diminuir a quantidade abaixo dos itens já preenchidos. Remova itens pela lixeira primeiro.'
+              });
+              qtyControl?.setValue(currentAssets.length, { emitEvent: false });
+              return;
+            }
+
+            const amountToRemove = currentAssets.length - qty;
+            let removedCount = 0;
+            const newAssets = currentAssets.filter((a: any) => {
+              const isEmpty = (!a.serialNumber || String(a.serialNumber).trim() === '') && (!a.location || String(a.location).trim() === '');
+              if (removedCount < amountToRemove && isEmpty) {
+                removedCount++;
+                return false;
+              }
+              return true;
+            });
+            this.form.get('assets')?.setValue(newAssets, { emitEvent: false });
+            return;
+          }
+
+          const newAssets = [...currentAssets];
+          for (let i = currentAssets.length; i < qty; i++) {
+            newAssets.push({ _isNew: true, _needsEdit: true });
+          }
+          this.form.get('assets')?.setValue(newAssets, { emitEvent: false });
+          
+          setTimeout(() => {
+             const updated = this.form.get('assets')?.value || [];
+             updated.forEach((a: any) => delete a._isNew);
+             this.form.get('assets')?.setValue([...updated], { emitEvent: false });
+          }, 2000);
+        }
+      }
+    };
+
+    this.form.get('minimumStock')?.valueChanges.pipe(
+      debounceTime(800),
+      distinctUntilChanged()
+    ).subscribe(() => syncAssetsToQuantity());
+
+    this.form.get('quantity')?.valueChanges.pipe(
+      debounceTime(800),
+      distinctUntilChanged()
+    ).subscribe(() => {
+      this.form.get('minimumStock')?.updateValueAndValidity({ emitEvent: false });
+    });
+
+    this.form.get('type')?.valueChanges.subscribe(() => syncAssetsToQuantity());
+
+    this.form.get('assets')?.valueChanges.subscribe((assets: any[]) => {
+      const type = this.form.get('type')?.value;
+      if (type === 'DURABLE') {
+        const qty = this.form.get('minimumStock')?.value;
+        if (assets && assets.length !== qty) {
+          this.form.get('minimumStock')?.setValue(assets.length, { emitEvent: false });
+        }
+      }
+    });
+  }
+
+  get hasUneditedNewAssets(): boolean {
+    const assets = this.form.get('assets')?.value;
+    return assets ? assets.some((a: any) => a._needsEdit) : false;
+  }
+
+  selectInputText(event: any) {
+    const target = event.originalEvent?.target || event.target;
+    if (target && target.select) {
+      target.select();
+    }
+  }
 
   nameFilter = model<string | undefined>();
   typeFilter = model<string | undefined>();
@@ -189,9 +295,10 @@ export class ItemComponent {
     this.loanService.getActiveLoansForItem(item.id).subscribe((loans) => {
       this.dialogRef = this.dialogService.open(ActiveLoansDialog, {
         header: `Empréstimos Ativos: ${item.name}`,
-        width: '60%',
-        contentStyle: { 'max-height': '500px', overflow: 'auto' },
+        width: '75vw',
         modal: true,
+        dismissableMask: true,
+        contentStyle: { 'max-height': '500px', overflow: 'auto' },
         baseZIndex: 10000,
         data: {
           loans: loans,
@@ -216,6 +323,7 @@ export class ItemComponent {
         width: '60%',
         contentStyle: { 'max-height': '500px', overflow: 'auto' },
         modal: true,
+        dismissableMask: true,
         baseZIndex: 10000,
         data: {
           loans: loans,

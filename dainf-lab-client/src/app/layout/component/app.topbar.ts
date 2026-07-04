@@ -45,7 +45,7 @@ import { UserDropdownComponent } from './user-dropdown.component';
         </button>
         <a class="layout-topbar-logo" routerLink="/dashboard">
           <app-logo></app-logo>
-          <span>DAINF</span>
+          <span>DAELE</span>
         </a>
       </div>
 
@@ -130,13 +130,13 @@ import { UserDropdownComponent } from './user-dropdown.component';
                   <div *ngIf="notifications.length === 0" class="p-4 text-center text-gray-500 text-sm">
                     Nenhuma notificação não lida.
                   </div>
-                  <div *ngFor="let notif of notifications" class="p-3 mb-2 rounded border bg-white shadow-sm flex flex-col gap-1 relative group transition-colors hover:bg-gray-50">
+                  <div *ngFor="let notif of notifications" (click)="onNotificationClick(notif, notifPopover)" class="cursor-pointer p-3 mb-2 rounded border bg-white shadow-sm flex flex-col gap-1 relative group transition-colors hover:bg-gray-50">
                     <div class="flex justify-between items-start">
                       <span class="font-semibold text-sm text-gray-800">{{ notif.title }}</span>
                       <span class="text-[10px] text-gray-400">{{ formatDate(notif.createdAt) }}</span>
                     </div>
                     <span class="text-xs text-gray-600">{{ notif.message }}</span>
-                    <button class="absolute top-2 right-2 text-gray-300 hover:text-blue-500 hidden group-hover:block" (click)="markAsRead(notif.id)" pTooltip="Marcar como lida" tooltipPosition="left">
+                    <button class="absolute top-2 right-2 text-gray-300 hover:text-blue-500 hidden group-hover:block" (click)="$event.stopPropagation(); markAsRead(notif.id)" pTooltip="Marcar como lida" tooltipPosition="left">
                       <i class="pi pi-check-circle"></i>
                     </button>
                   </div>
@@ -235,6 +235,14 @@ export class AppTopbar implements OnInit {
       this.notifications = this.notifications.filter(n => n.id !== id);
       this.unreadCount.set(Math.max(0, this.unreadCount() - 1));
     });
+  }
+
+  onNotificationClick(notif: Notification, popover: any) {
+    this.markAsRead(notif.id);
+    if (notif.actionUrl) {
+      popover.hide();
+      this.router.navigateByUrl(notif.actionUrl);
+    }
   }
 
   markAllAsRead() {

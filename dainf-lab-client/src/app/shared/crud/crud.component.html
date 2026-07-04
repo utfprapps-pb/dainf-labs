@@ -50,8 +50,10 @@
   [config]="config()"
   [formTemplate]="formTemplate()"
   [loadingSave]="loadingSave()"
+  [showDelete]="!!form()?.get('id')?.value && config()?.allowDeletion !== false"
   (cancelClick)="cancel()"
   (saveClick)="save()"
+  (deleteClick)="onDialogDelete()"
 ></app-crud-dialog>
 
 <p-drawer header="Filtros" [(visible)]="drawerVisible" position="right">

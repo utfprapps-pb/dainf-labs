@@ -14,6 +14,7 @@ import { Observable } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { TokenService } from '../services/token.service';
 import { extractErrorMessage } from '@/shared/utils/error.utils';
+import { UserService } from '../../user/user.service';
 
 @Component({
   selector: 'app-login',
@@ -30,6 +31,7 @@ import { extractErrorMessage } from '@/shared/utils/error.utils';
     LogoComponent,
     ToastModule
   ],
+  providers: [UserService],
   templateUrl: 'login.component.html',
 })
 export class LoginComponent {
@@ -41,6 +43,7 @@ export class LoginComponent {
   private _messageService = inject(MessageService);
   private _tokenService = inject(TokenService);
   private _router = inject(Router);
+  private _userService = inject(UserService);
 
   loginClick() {
     if (!this.email || !this.password) {
@@ -55,7 +58,16 @@ export class LoginComponent {
     this._login().subscribe({
       next: (res) => {
         this._tokenService.setToken(res.token);
-        this._router.navigate(['/dashboard']);
+        this._userService.getRole().subscribe({
+          next: (role) => {
+            if (role === 'ROLE_STUDENT') {
+              this._router.navigate(['/loan']);
+            } else {
+              this._router.navigate(['/dashboard']);
+            }
+          },
+          error: () => this._router.navigate(['/dashboard'])
+        });
       },
       error: (err) => {
         this._messageService.add({
