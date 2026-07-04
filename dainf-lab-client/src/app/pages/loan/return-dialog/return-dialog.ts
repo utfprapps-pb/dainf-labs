@@ -64,6 +64,15 @@ export class LoanReturnDialog implements OnInit {
     
     this._searchReturnByLoan(this.loan).subscribe((res) => {
       this.savedReturn = res;
+      if (this.savedReturn && this.loan.status === 'COMPLETED') {
+        const returnDate = this.savedReturn.returnDate;
+        this.form.patchValue({
+          returnDate: returnDate ? new Date(returnDate).toISOString().split('T')[0] : '',
+          observation: this.savedReturn.observation || ''
+        });
+        this.form.get('returnDate')?.disable();
+        this.form.get('observation')?.disable();
+      }
       this.items.forEach((item: any) => {
         if (this.loan.status === 'COMPLETED') {
           item.returnedQuantity = item.quantity;

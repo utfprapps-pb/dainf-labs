@@ -149,6 +149,7 @@ export class IssueComponent implements OnInit {
             const existingReturn = returns[idx];
             return {
               ...loan,
+              actualReturnDate: existingReturn?.returnDate,
               items: loan.items.map((item: any) => {
                 const retItem = existingReturn?.items?.find((r: any) => r.item?.id === item.item?.id);
                 return {
@@ -214,7 +215,8 @@ export class IssueComponent implements OnInit {
     }
     if (deadlineDate) {
       list = list.filter(l => {
-        const d = new Date(l.deadline).toISOString().split('T')[0];
+        const targetDate = (l as any).actualReturnDate || l.deadline;
+        const d = new Date(targetDate).toISOString().split('T')[0];
         return d === deadlineDate;
       });
     }
