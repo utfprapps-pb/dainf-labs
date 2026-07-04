@@ -13,10 +13,10 @@ import { UserService } from '../../../pages/user/user.service';
   imports: [CommonModule, FormsModule, InputTextModule],
   template: `
     @if(isAdvancedUser()) {
-      <div class="flex items-center gap-2 mb-4 p-4 border border-blue-200 bg-blue-50 rounded-lg">
+      <div class="flex items-center gap-2 mb-4 p-4 border border-blue-200 dark:border-blue-800/50 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
         <i class="pi pi-barcode text-blue-500 text-2xl"></i>
         <div class="flex-1">
-          <label class="block text-sm font-semibold text-blue-800 mb-1">Leitura Rápida (Código de Barras)</label>
+          <label class="block text-sm font-semibold text-blue-800 dark:text-blue-300 mb-1">Leitura Rápida (Código de Barras)</label>
           <input 
             pInputText 
             type="text" 
@@ -26,7 +26,7 @@ import { UserService } from '../../../pages/user/user.service';
             (keyup.enter)="onScan()"
             autofocus
           />
-          <small class="text-blue-600 block mt-1">
+          <small class="text-blue-600 dark:text-blue-400 block mt-1">
             O sistema identificará automaticamente se o código pertence a um aluno ou item.
           </small>
         </div>

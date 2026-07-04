@@ -1,4 +1,4 @@
-/* You can add global styles to this file, and also import other style files */
+/* You can add global styles to this file, and also import other style files */
 @use './tailwind.css';
 @use './layout/layout.scss';
 @use 'primeicons/primeicons.css';
@@ -6,13 +6,14 @@
 
 body { 
     font-family: 'Inter', 'Lato', sans-serif; 
-    background-color: #F8FAFC; 
+    background-color: var(--surface-ground);
+    color: var(--text-color);
 }
 
 .custom-scrollbar::-webkit-scrollbar { width: 8px; }
-.custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px;}
-.custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+.custom-scrollbar::-webkit-scrollbar-track { background: var(--surface-100); border-radius: 4px;}
+.custom-scrollbar::-webkit-scrollbar-thumb { background: var(--surface-300); border-radius: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--surface-400); }
 
 /* Custom Modal Styles */
 .return-ficha-modal .p-dialog-header {
