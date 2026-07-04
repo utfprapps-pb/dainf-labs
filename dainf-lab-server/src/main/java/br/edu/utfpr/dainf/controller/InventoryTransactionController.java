@@ -65,6 +65,7 @@ public class InventoryTransactionController extends BaseController<Long, Invento
                 .userName(entity.getUser() != null ? entity.getUser().getNome() : "Sistema")
                 .date(entity.getDate())
                 .currentQuantity(inventoryService.getItemQuantity(item))
+                .balance(entity.getBalance() != null ? entity.getBalance() : inventoryService.getItemQuantity(item))
                 .build();
     }
 }

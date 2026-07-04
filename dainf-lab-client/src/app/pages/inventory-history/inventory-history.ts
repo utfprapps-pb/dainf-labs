@@ -10,4 +10,5 @@ export interface InventoryTransaction extends Identifiable {
   userName: string;
   date: string;
   currentQuantity: number;
+  balance: number;
 }

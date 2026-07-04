@@ -30,6 +30,7 @@ public class DefaultTransactionAuditor implements TransactionAuditor {
         model.setQuantity(quantity);
         model.setUser(userService.getCurrentUser());
         model.setType(type);
+        model.setBalance(inventory.getQuantity());
         service.save(model);
     }
 }

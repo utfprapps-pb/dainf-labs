@@ -79,7 +79,7 @@ export class InventoryHistoryComponent implements AfterViewInit {
       header: 'Data',
       transform: (row) => this.datePipe.transform(row.date, 'dd/MM/yyyy HH:mm') || '',
     },
-    { field: 'currentQuantity', header: 'Quantidade atual do item' },
+    { field: 'balance', header: 'Quantidade no momento' },
   ];
 
   itemFilter = model<Item | undefined>();

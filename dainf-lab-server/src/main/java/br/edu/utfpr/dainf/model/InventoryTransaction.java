@@ -40,4 +40,6 @@ public class InventoryTransaction implements Identifiable<Long> {
     private User user;
 
     private Instant date;
+
+    private BigDecimal balance;
 }
