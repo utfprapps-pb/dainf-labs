@@ -62,11 +62,11 @@ class LoanControllerTest extends CrudControllerTest<LoanDTO> {
                     .build();
             return userRepository.save(user);
         });
-        borrower = new SimpleUserDTO(adminUser.getId(), adminUser.getEmail(), adminUser.getNome());
+        borrower = new SimpleUserDTO(adminUser.getId(), adminUser.getEmail(), adminUser.getNome(), adminUser.getDocumento());
 
         ResponseEntity<Long> categoryResponse = categoryController.create(
-                new CategoryDTO(null, "Categoria Loan Teste", "icon", List.of()));
-        CategoryDTO category = new CategoryDTO(categoryResponse.getBody(), "Categoria Loan Teste", "icon", List.of());
+                new CategoryDTO(null, "Categoria Loan Teste", "icon", List.of(), true));
+        CategoryDTO category = new CategoryDTO(categoryResponse.getBody(), "Categoria Loan Teste", "icon", List.of(), true);
 
         ItemDTO newItem = ItemDTO.builder()
                 .name("Item Loan Teste")

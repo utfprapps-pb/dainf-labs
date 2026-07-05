@@ -17,6 +17,10 @@
         (onClick)="drawerVisible.set(true)"
       />
     }
+    @if (toolbarStartTemplate()) {
+      <div class="h-5 w-px bg-gray-200 mx-2 inline-block align-middle"></div>
+      <ng-container *ngTemplateOutlet="toolbarStartTemplate()!"></ng-container>
+    }
   </ng-template>
   <ng-template #end>
     <p-button

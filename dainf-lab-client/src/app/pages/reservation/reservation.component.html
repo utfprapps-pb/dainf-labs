@@ -48,16 +48,6 @@
       ></i>
       {{ viewMode === "cards" ? "Lista" : "Cards" }}
     </button>
-    <div class="h-5 w-px bg-gray-200 mx-1"></div>
-    <p-treeSelect
-      [options]="filterNodes()"
-      [(ngModel)]="selectedFilterNode"
-      (ngModelChange)="onFilterChange()"
-      [showClear]="false"
-      placeholder="Filtrar itens..."
-      appendTo="body"
-      styleClass="w-64"
-    ></p-treeSelect>
   </div>
   <div
     class="bg-surface-0 dark:bg-surface-900 rounded-xl shadow-sm border border-surface-200 dark:border-surface-700 p-8 min-h-[calc(100vh-180px)]"

@@ -23,4 +23,6 @@ public class CategoryDTO implements Identifiable<Long> {
     private String icon;
 
     private List<CategoryDTO> subcategories;
+
+    private Boolean showInCard = true;
 }

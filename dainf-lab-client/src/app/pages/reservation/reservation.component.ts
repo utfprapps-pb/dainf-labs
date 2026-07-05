@@ -97,16 +97,6 @@ export class ReservationComponent implements OnInit, OnDestroy {
   crud = viewChild(CrudComponent);
 
   categories = signal<any[]>([]);
-  cardItemFilter = signal<string>('ALL');
-  filterNodes = signal<TreeNode[]>([]);
-  selectedFilterNode = signal<TreeNode | null>(null);
-
-  onFilterChange() {
-    const node = this.selectedFilterNode();
-    this.cardItemFilter.set(node ? (node.data as string) : 'ALL');
-
-    localStorage.setItem('cardItemFilter', this.cardItemFilter());
-  }
 
   private refreshSubscription?: Subscription;
 
@@ -292,72 +282,6 @@ export class ReservationComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.categoryService
-      .search({
-        page: 0,
-        rows: 1000,
-        filters: [{ field: 'parent', type: 'IS_NULL' }],
-      })
-      .subscribe((page: any) => {
-        this.categories.set(page.content);
-        const categoryNodes = this.categoryTreeNodePipe.transform(page.content);
-
-        const mapNode = (node: TreeNode<any>): TreeNode => {
-          return {
-            label: node.label,
-            key: 'CAT:' + node.data!.id,
-            data: 'CAT:' + node.data!.id,
-            children: node.children?.map((c) => mapNode(c)),
-            leaf: node.leaf,
-            icon: node.icon,
-          };
-        };
-
-        const categoryChildren = categoryNodes.map((n) => mapNode(n));
-        const allNode: TreeNode = {
-          label: 'Todos os itens',
-          data: 'ALL',
-          key: 'ALL',
-          icon: 'pi pi-list',
-        };
-
-        this.filterNodes.set([
-          allNode,
-          {
-            label: 'Consumíveis',
-            data: 'TYPE:CONSUMABLE',
-            key: 'TYPE:CONSUMABLE',
-            icon: 'pi pi-box',
-          },
-          {
-            label: 'Duráveis',
-            data: 'TYPE:DURABLE',
-            key: 'TYPE:DURABLE',
-            icon: 'pi pi-server',
-            children: categoryChildren,
-          },
-        ]);
-        this.selectedFilterNode.set(allNode);
-
-        const savedFilter = localStorage.getItem('cardItemFilter');
-        if (savedFilter) {
-          const findNode = (nodes: TreeNode[]): TreeNode | null => {
-            for (const n of nodes) {
-              if (n.data === savedFilter) return n;
-              if (n.children) {
-                const found = findNode(n.children);
-                if (found) return found;
-              }
-            }
-            return null;
-          };
-          const foundNode = findNode(this.filterNodes());
-          if (foundNode) {
-            this.selectedFilterNode.set(foundNode);
-            this.cardItemFilter.set(foundNode.data as string);
-          }
-        }
-      });
 
     // Monitora o reset do formulário pelo crud.component e restaura os defaults
     this.form.valueChanges.subscribe((val) => {
@@ -843,16 +767,12 @@ export class ReservationComponent implements OnInit, OnDestroy {
 
   getFilteredItems(items: any[]) {
     if (!items) return [];
-    const filter = this.cardItemFilter();
-    if (filter === 'ALL') return items;
-    if (filter.startsWith('TYPE:')) {
-      const type = filter.split(':')[1];
-      return items.filter((i) => i.item?.type === type);
-    }
-    if (filter.startsWith('CAT:')) {
-      const catId = Number(filter.split(':')[1]);
-      return items.filter((i) => i.item?.category?.id === catId);
-    }
-    return items;
+    const showConsumables = localStorage.getItem('showConsumablesInCard') === 'true';
+    return items.filter((i) => {
+      if (i.item?.type === 'CONSUMABLE') return showConsumables;
+      const category = i.item?.category;
+      if (!category) return true;
+      return category.showInCard !== false;
+    });
   }
 }

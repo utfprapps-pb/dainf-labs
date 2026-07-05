@@ -24,7 +24,7 @@ class ItemControllerTest extends CrudControllerTest<ItemDTO> {
 
     @BeforeEach
     protected void setUp() {
-        ResponseEntity<Long> response = categoryController.create(new CategoryDTO(null, "Categoria Teste", "icon", List.of()));
+        ResponseEntity<Long> response = categoryController.create(new CategoryDTO(null, "Categoria Teste", "icon", List.of(), true));
         category = new CategoryDTO();
         category.setId(response.getBody());
         category.setDescription("Categoria Teste");

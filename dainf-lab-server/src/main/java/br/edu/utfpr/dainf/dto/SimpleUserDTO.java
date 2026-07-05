@@ -15,5 +15,6 @@ public class SimpleUserDTO implements Identifiable<Long> {
     private Long id;
     private String email;
     private String nome;
+    private String documento;
 }
 

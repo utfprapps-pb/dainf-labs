@@ -19,12 +19,12 @@ class CategoryControllerTest extends CrudControllerTest<CategoryDTO> {
     protected CategoryDTO createValidObject() {
         CategoryDTO child1 = createChild("child1");
         CategoryDTO child2 = createChild("child2");
-        return new CategoryDTO(null, "Teste", "icon", List.of(child1, child2));
+        return new CategoryDTO(null, "Teste", "icon", List.of(child1, child2), true);
     }
 
     @Override
     protected CategoryDTO createInvalidObject() {
-        return new CategoryDTO(null, null, "icon", List.of());
+        return new CategoryDTO(null, null, "icon", List.of(), true);
     }
 
     @Override
@@ -34,13 +34,13 @@ class CategoryControllerTest extends CrudControllerTest<CategoryDTO> {
 
     @Test
     void createWithNullDescription_returns400() throws Exception {
-        CategoryDTO dto = new CategoryDTO(null, null, "icon", List.of());
+        CategoryDTO dto = new CategoryDTO(null, null, "icon", List.of(), true);
         performCreate(dto).andExpect(status().isBadRequest());
     }
 
     @Test
     void createWithEmptyDescription_returns400() throws Exception {
-        CategoryDTO dto = new CategoryDTO(null, "", "icon", List.of());
+        CategoryDTO dto = new CategoryDTO(null, "", "icon", List.of(), true);
         performCreate(dto).andExpect(status().isBadRequest());
     }
 

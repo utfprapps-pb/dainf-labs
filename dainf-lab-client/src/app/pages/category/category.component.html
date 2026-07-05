@@ -7,8 +7,15 @@
   [formTemplate]="crudForm"
   [searchRequest]="searchRequest()"
   [filtersTemplate]="filters"
+  [toolbarStartTemplate]="toolbarStart"
   [templateMap]="templateMap"
 ></app-crud>
+<ng-template #toolbarStart>
+  <div class="flex items-center gap-2 px-2 text-color-secondary">
+    <p-checkbox [(ngModel)]="showConsumables" [binary]="true" inputId="showConsumables" (onChange)="onShowConsumablesChange($event.checked)"></p-checkbox>
+    <label for="showConsumables" class="text-[13px] font-medium cursor-pointer">Mostrar itens consumíveis no card</label>
+  </div>
+</ng-template>
 <ng-template #crudForm>
   <form [formGroup]="form" class="grid grid-cols-12 gap-4">
     <app-input-container
@@ -35,6 +42,10 @@
     >
       <app-icon-select formControlName="icon"></app-icon-select>
     </app-input-container>
+    <div class="col-span-12 md:col-span-6 lg:col-span-3 flex items-center mb-0 mt-8">
+      <p-checkbox formControlName="showInCard" [binary]="true" inputId="showInCard"></p-checkbox>
+      <label for="showInCard" class="ml-2 mb-0">Mostrar no card</label>
+    </div>
     <p-fieldset legend="Subcategorias" class="col-span-12">
       <app-subitem-form
         formControlName="subcategories"
@@ -54,7 +65,7 @@
   <div [formGroup]="subcategoryForm" class="grid grid-cols-12 gap-4">
     <app-input-container
       label="Descrição"
-      class="col-span-12 md:col-span-6 lg:col-span-6"
+      class="col-span-12 md:col-span-8"
     >
       <input
         type="text"
@@ -65,7 +76,7 @@
     </app-input-container>
     <app-input-container
       label="Ícone"
-      class="col-span-12 md:col-span-6 lg:col-span-3"
+      class="col-span-12 md:col-span-4"
     >
       <app-icon-select formControlName="icon"></app-icon-select>
     </app-input-container>

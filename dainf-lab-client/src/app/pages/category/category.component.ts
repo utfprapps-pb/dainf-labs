@@ -13,7 +13,9 @@ import {
   model,
   TemplateRef,
   viewChild,
+  OnInit
 } from '@angular/core';
+import { CheckboxModule } from 'primeng/checkbox';
 import {
   FormBuilder,
   FormGroup,
@@ -43,12 +45,13 @@ import { CategoryService } from './category.service';
     FieldsetModule,
     TreeModule,
     CategoryTreeNodePipe,
+    CheckboxModule,
   ],
   selector: 'app-category',
   templateUrl: 'category.component.html',
   providers: [CategoryService],
 })
-export class CategoryComponent implements AfterViewInit {
+export class CategoryComponent implements OnInit, AfterViewInit {
   subcategoryTemplate = viewChild('subcategoryTemplate', {
     read: TemplateRef<any>,
   });
@@ -72,6 +75,7 @@ export class CategoryComponent implements AfterViewInit {
     id: [{ value: null, disabled: true }],
     description: [null, Validators.required],
     icon: [null],
+    showInCard: [true],
     subcategories: [],
   });
 
@@ -80,6 +84,19 @@ export class CategoryComponent implements AfterViewInit {
     description: [null, Validators.required],
     icon: [null],
   });
+
+  showConsumables = model<boolean>(false);
+
+  ngOnInit() {
+    const saved = localStorage.getItem('showConsumablesInCard');
+    if (saved !== null) {
+      this.showConsumables.set(saved === 'true');
+    }
+  }
+
+  onShowConsumablesChange(checked: boolean) {
+    localStorage.setItem('showConsumablesInCard', String(checked));
+  }
 
   cols: Column<Category>[] = [{ field: 'description', header: 'Descrição' }];
 

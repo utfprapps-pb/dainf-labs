@@ -37,4 +37,7 @@ public class Category implements Identifiable<Long> {
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Category> subcategories;
+
+    @Column(name = "show_in_card", columnDefinition = "boolean default true")
+    private Boolean showInCard = true;
 }

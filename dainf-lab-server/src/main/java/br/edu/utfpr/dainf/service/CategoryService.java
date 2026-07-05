@@ -17,7 +17,10 @@ public class CategoryService extends CrudService<Long, Category, CategoryReposit
     @Override
     public Category save(Category entity) {
         if (entity.getSubcategories() != null) {
-            entity.getSubcategories().forEach(category -> category.setParent(entity));
+            entity.getSubcategories().forEach(category -> {
+                category.setParent(entity);
+                category.setShowInCard(entity.getShowInCard());
+            });
         }
         return super.save(entity);
     }
