@@ -474,6 +474,8 @@
       <app-search-select
         formControlName="item"
         optionLabel="name"
+        [itemLabel]="getItemLabel"
+        [filters]="itemFilters"
         [service]="itemService"
         placeholder="Selecione um item"
       />
