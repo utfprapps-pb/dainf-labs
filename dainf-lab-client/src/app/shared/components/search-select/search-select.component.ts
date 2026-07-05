@@ -13,7 +13,7 @@ import {
   AutoCompleteLazyLoadEvent,
   AutoCompleteModule,
 } from 'primeng/autocomplete';
-import { Observable, take, tap } from 'rxjs';
+import { Observable, take, tap, finalize, catchError, EMPTY } from 'rxjs';
 
 @Component({
   standalone: true,
@@ -66,6 +66,7 @@ export class SearchSelectComponent<T extends Identifiable>
 
   service = input.required<CrudService<T>>();
   filters = input<SearchFilter[]>();
+  clientFilters = input<(item: T) => boolean>();
 
   itemLabel = input<(item: T) => string>();
 
@@ -144,7 +145,11 @@ export class SearchSelectComponent<T extends Identifiable>
     this._search(filters, page)
       .pipe(
         tap((res) => {
-          const content = res.content;
+          let content = res.content;
+          const cFilter = this.clientFilters();
+          if (cFilter) {
+            content = content.filter(cFilter);
+          }
           const labelFn = this.itemLabel();
           if (labelFn) {
             content.forEach((item: any) => {
@@ -157,6 +162,12 @@ export class SearchSelectComponent<T extends Identifiable>
             this.suggestions.set(content);
           }
           this._hasMore = res.page.number < res.page.totalPages - 1;
+        }),
+        catchError((err) => {
+          console.error('Search error', err);
+          return EMPTY;
+        }),
+        finalize(() => {
           this._loading = false;
         }),
         take(1),

@@ -342,7 +342,7 @@
               [(ngModel)]="selectedItem"
               optionLabel="name"
               [itemLabel]="getItemLabel"
-              [filters]="itemFilters"
+              [clientFilters]="itemClientFilter"
               [service]="itemService"
               placeholder="Busque pelo item ou informe código de barras"
             />
@@ -445,3 +445,4 @@
     </div>
   </div>
 }
+

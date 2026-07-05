@@ -41,9 +41,9 @@ export class LoanDetailDialog implements OnInit {
   itemService = inject(ItemService);
   messageService = inject(MessageService);
   returnService = inject(ReturnService);
-  itemFilters = [
-    { field: 'quantity', type: 'GREATER', value: '0' } as any
-  ];
+  itemClientFilter = (item: any) => {
+    return (item.quantity || 0) > 0;
+  };
 
   getItemLabel = (item: any) => {
     return `${item.name} (Estoque: ${item.quantity || 0})`;

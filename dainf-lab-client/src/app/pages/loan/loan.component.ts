@@ -127,9 +127,9 @@ export class LoanComponent implements OnInit, AfterViewInit {
   userService = inject(UserService);
   context = inject(ContextStore);
 
-  itemFilters = [
-    { field: 'quantity', type: 'GREATER', value: '0' } as any
-  ];
+  itemClientFilter = (item: any) => {
+    return (item.quantity || 0) > 0;
+  };
 
   getItemLabel = (item: any) => {
     return `${item.name} (Estoque: ${item.quantity || 0})`;
