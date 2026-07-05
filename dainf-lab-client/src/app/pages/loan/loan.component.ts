@@ -126,6 +126,15 @@ export class LoanComponent implements OnInit, AfterViewInit {
   itemService = inject(ItemService);
   userService = inject(UserService);
   context = inject(ContextStore);
+
+  itemFilters = [
+    { field: 'quantity', type: 'GREATER', value: '0' } as any
+  ];
+
+  getItemLabel = (item: any) => {
+    return `${item.name} (Estoque: ${item.quantity || 0})`;
+  };
+
   datePipe = inject(DatePipe);
   route = inject(ActivatedRoute);
   categoryTreeNodePipe = inject(CategoryTreeNodePipe);
