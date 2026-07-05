@@ -49,7 +49,7 @@ public class MailServiceImpl implements MailService {
     private MimeMessage buildMessage(Mail mail) throws MessagingException, UnsupportedEncodingException {
         MimeMessage message = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-        helper.setFrom(username, "Laboratório de Informática - UTFPR/PB");
+        helper.setFrom(username, "DAELE - Sala de Apoio");
         helper.setReplyTo(username);
         helper.setTo(mail.getTo().toArray(new String[0]));
         if (mail.getCc() != null && !mail.getCc().isEmpty()) {
