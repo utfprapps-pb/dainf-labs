@@ -136,12 +136,12 @@ import { UserDropdownComponent } from './user-dropdown.component';
             >
               <div class="w-80 max-h-96 flex flex-col">
                 <div
-                  class="p-3 border-b flex justify-between items-center bg-gray-50"
+                  class="p-3 border-b border-surface-200 dark:border-surface-700 flex justify-between items-center bg-surface-50 dark:bg-surface-800"
                 >
-                  <span class="font-bold text-gray-700">Notificações</span>
+                  <span class="font-bold text-color">Notificações</span>
                   <button
                     *ngIf="unreadCount() > 0"
-                    class="text-xs text-blue-600 hover:underline"
+                    class="text-xs text-primary hover:underline"
                     (click)="markAllAsRead()"
                   >
                     Marcar todas como lidas
@@ -150,28 +150,28 @@ import { UserDropdownComponent } from './user-dropdown.component';
                 <div class="overflow-y-auto flex-1 p-2">
                   <div
                     *ngIf="notifications.length === 0"
-                    class="p-4 text-center text-gray-500 text-sm"
+                    class="p-4 text-center text-color-secondary text-sm"
                   >
                     Nenhuma notificação não lida.
                   </div>
                   <div
                     *ngFor="let notif of notifications"
                     (click)="onNotificationClick(notif, notifPopover)"
-                    class="cursor-pointer p-3 mb-2 rounded border bg-white shadow-sm flex flex-col gap-1 relative group transition-colors hover:bg-gray-50"
+                    class="cursor-pointer p-3 mb-2 rounded border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 shadow-sm flex flex-col gap-1 relative group transition-colors hover:bg-surface-50 dark:hover:bg-surface-800"
                   >
                     <div class="flex justify-between items-start">
-                      <span class="font-semibold text-sm text-gray-800">{{
+                      <span class="font-semibold text-sm text-color">{{
                         notif.title
                       }}</span>
-                      <span class="text-[10px] text-gray-400">{{
+                      <span class="text-[10px] text-color-secondary">{{
                         formatDate(notif.createdAt)
                       }}</span>
                     </div>
-                    <span class="text-xs text-gray-600">{{
+                    <span class="text-xs text-color-secondary">{{
                       notif.message
                     }}</span>
                     <button
-                      class="absolute top-2 right-2 text-gray-300 hover:text-blue-500 hidden group-hover:block"
+                      class="absolute top-2 right-2 text-color-secondary hover:text-primary hidden group-hover:block"
                       (click)="$event.stopPropagation(); markAsRead(notif.id)"
                       pTooltip="Marcar como lida"
                       tooltipPosition="left"

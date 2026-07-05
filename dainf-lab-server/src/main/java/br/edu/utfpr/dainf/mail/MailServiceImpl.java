@@ -35,7 +35,7 @@ public class MailServiceImpl implements MailService {
             MimeMessage message = buildMessage(mail);
             javaMailSender.send(message);
         } catch (Exception e) {
-            throw new MailException("Falha ao enviar e-mail", e);
+            throw new br.edu.utfpr.dainf.exception.WarnException("Falha ao autenticar no servidor de e-mail. Verifique as credenciais.");
         }
     }
 
@@ -49,7 +49,7 @@ public class MailServiceImpl implements MailService {
     private MimeMessage buildMessage(Mail mail) throws MessagingException, UnsupportedEncodingException {
         MimeMessage message = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-        helper.setFrom(username, "Laboratório de Informática - UTFPR/PB");
+        helper.setFrom(username, "DAELE - Sala de Apoio");
         helper.setReplyTo(username);
         helper.setTo(mail.getTo().toArray(new String[0]));
         if (mail.getCc() != null && !mail.getCc().isEmpty()) {

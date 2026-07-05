@@ -126,6 +126,15 @@ export class LoanComponent implements OnInit, AfterViewInit {
   itemService = inject(ItemService);
   userService = inject(UserService);
   context = inject(ContextStore);
+
+  itemClientFilter = (item: any) => {
+    return (item.quantity || 0) > 0;
+  };
+
+  getItemLabel = (item: any) => {
+    return `${item.name} (Estoque: ${item.quantity || 0})`;
+  };
+
   datePipe = inject(DatePipe);
   route = inject(ActivatedRoute);
   categoryTreeNodePipe = inject(CategoryTreeNodePipe);
@@ -446,19 +455,48 @@ export class LoanComponent implements OnInit, AfterViewInit {
     });
   }
 
+  selectedFilterNode: any = { key: 'ALL', label: 'Todos os Itens' };
+
+  filterNodes() {
+    return [
+      { key: 'ALL', label: 'Todos os Itens' },
+      { key: 'TYPE:DURABLE', label: 'Apenas Duráveis' },
+      { key: 'TYPE:CONSUMABLE', label: 'Apenas Consumíveis' },
+    ];
+  }
+
+  onFilterChange() {
+  }
+
   toggleView() {
     this.viewMode.update((v) => (v === 'list' ? 'cards' : 'list'));
   }
 
   getFilteredItems(items: any[]) {
     if (!items) return [];
-    const showConsumables = localStorage.getItem('showConsumablesInCard') === 'true';
-    return items.filter((i) => {
-      if (i.item?.type === 'CONSUMABLE') return showConsumables;
-      const category = i.item?.category;
-      if (!category) return true;
-      return category.showInCard !== false;
-    });
+    const filter = this.selectedFilterNode?.key || 'ALL';
+    
+    if (filter === 'ALL') {
+      const showConsumables = localStorage.getItem('showConsumablesInCard') === 'true';
+      return items.filter((i) => {
+        if (i.item?.type === 'CONSUMABLE') return showConsumables;
+        const category = i.item?.category;
+        if (!category) return true;
+        return category.showInCard !== false;
+      });
+    }
+    
+    if (filter.startsWith('TYPE:')) {
+      const type = filter.split(':')[1];
+      return items.filter((i) => i.item?.type === type);
+    }
+    
+    if (filter.startsWith('CAT:')) {
+      const catId = Number(filter.split(':')[1]);
+      return items.filter((i) => i.item?.category?.id === catId);
+    }
+    
+    return items;
   }
 
   get groupedUserLoans(): any[] {

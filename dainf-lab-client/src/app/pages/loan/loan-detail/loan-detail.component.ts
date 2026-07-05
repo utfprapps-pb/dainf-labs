@@ -41,6 +41,14 @@ export class LoanDetailDialog implements OnInit {
   itemService = inject(ItemService);
   messageService = inject(MessageService);
   returnService = inject(ReturnService);
+  itemClientFilter = (item: any) => {
+    return (item.quantity || 0) > 0;
+  };
+
+  getItemLabel = (item: any) => {
+    return `${item.name} (Estoque: ${item.quantity || 0})`;
+  };
+
   userService = inject(UserService);
 
   loan!: Loan;
@@ -306,11 +314,8 @@ export class LoanDetailDialog implements OnInit {
         rows: 50,
       })
       .subscribe((page: any) => {
-        // Mostrar todos menos o atual no histórico se ativo, mostrar todos se completado
-        const history =
-          this.loan.status === 'COMPLETED'
-            ? page.content
-            : page.content.filter((l: any) => l.id !== this.loan.id);
+        // Mostrar apenas empréstimos já finalizados no histórico
+        const history = page.content.filter((l: any) => l.status === 'COMPLETED');
 
         // Ensure strictly sorted by date locally just in case
         history.sort(

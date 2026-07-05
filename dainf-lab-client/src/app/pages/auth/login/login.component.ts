@@ -80,6 +80,34 @@ export class LoginComponent {
     });
   }
 
+  resendEmail() {
+    if (!this.email) {
+      this._messageService.add({
+        severity: 'warn',
+        summary: 'Atenção!',
+        detail: 'Preencha seu e-mail acima para reenviar a confirmação',
+      });
+      return;
+    }
+
+    this._authService.resendConfirmationEmail(this.email).subscribe({
+      next: () => {
+        this._messageService.add({
+          severity: 'success',
+          summary: 'Sucesso',
+          detail: 'E-mail de confirmação reenviado. Verifique sua caixa de entrada.',
+        });
+      },
+      error: (err) => {
+        this._messageService.add({
+          severity: 'warn',
+          summary: 'Atenção',
+          detail: extractErrorMessage(err, 'Não foi possível reenviar o e-mail de confirmação.'),
+        });
+      },
+    });
+  }
+
   private _login(): Observable<{ token: string }> {
     return this._authService.login({
       email: this.email,

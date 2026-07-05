@@ -71,12 +71,9 @@
             (onClick)="loginClick()"
           ></p-button>
           <div class="text-center mt-8">
-            <span
-              >Não possui cadastro?
-              <a routerLink="/sign-up" class="text-primary"
-                >Cadastre-se</a
-              ></span
-            >
+            <span>Não possui cadastro? <a routerLink="/sign-up" class="text-primary cursor-pointer">Cadastre-se</a></span>
+            <br/><br/>
+            <span>Não recebeu o e-mail de confirmação? <a (click)="resendEmail()" class="text-primary cursor-pointer font-bold">Reenviar</a></span>
           </div>
         </div>
       </div>

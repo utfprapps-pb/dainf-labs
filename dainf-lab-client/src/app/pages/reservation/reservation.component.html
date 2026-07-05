@@ -144,9 +144,10 @@
       class="mt-4"
     >
       <p-paginator
+        (onPageChange)="crud.onPage({ page: $event.page || 0, size: $event.rows || 10 })"
+        [first]="(crud.lastPagination?.page || 0) * (crud.lastPagination?.rows || 10)"
         [rows]="crud.lastPagination?.rows || 10"
-        [totalRecords]="crud.items()?.page?.totalElements"
-        (onPage)="onPageChange($event)"
+        [totalRecords]="crud.items()?.page?.totalElements || 0"
         [rowsPerPageOptions]="[10, 20, 30]"
         [alwaysShow]="true"
         [showCurrentPageReport]="true"
@@ -464,6 +465,8 @@
       <app-search-select
         formControlName="item"
         optionLabel="name"
+        [itemLabel]="getItemLabel"
+        [clientFilters]="itemClientFilter"
         [service]="itemService"
         placeholder="Selecione um item"
       />
@@ -524,3 +527,4 @@
     </div>
   </div>
 </ng-template>
+

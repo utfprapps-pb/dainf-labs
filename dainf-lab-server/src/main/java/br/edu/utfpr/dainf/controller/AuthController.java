@@ -47,7 +47,10 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<AuthResponse> refresh(@CookieValue(name = "refresh_token") String refreshToken, HttpServletResponse response) {
+    public ResponseEntity<AuthResponse> refresh(@CookieValue(name = "refresh_token", required = false) String refreshToken, HttpServletResponse response) {
+        if (refreshToken == null || refreshToken.isBlank()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         try {
             AuthResponse authResponse = authService.refresh(refreshToken);
             String email = jwtService.extractRefreshTokenSubject(refreshToken);
@@ -80,6 +83,12 @@ public class AuthController {
     public ResponseEntity<?> signUp(@RequestBody @Valid UserSignupDTO user) {
         authService.signUp(user);
         return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @PostMapping("/resend-confirmation")
+    public ResponseEntity<?> resendConfirmation(@RequestBody Map<String, String> request) {
+        userService.resendConfirmationEmail(request.get("email"));
+        return ResponseEntity.ok(Map.of("message", "E-mail de confirmação reenviado"));
     }
 
     @GetMapping("/confirm-email")

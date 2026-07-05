@@ -85,6 +85,15 @@ export class ReservationComponent implements OnInit, OnDestroy {
   reservationService = inject(ReservationService);
   userService = inject(UserService);
   itemService = inject(ItemService);
+
+  itemClientFilter = (item: any) => {
+    return (item.quantity || 0) > 0;
+  };
+
+  getItemLabel = (item: any) => {
+    return `${item.name} (Estoque: ${item.quantity || 0})`;
+  };
+
   datePipe = inject(DatePipe);
   router = inject(Router);
   route = inject(ActivatedRoute);

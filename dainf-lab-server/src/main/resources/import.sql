@@ -1,14 +1,14 @@
 -- Teste123456!
-INSERT INTO app_user (documento, email, email_verificado, foto_url, nome, "password", telefone, role, enabled) VALUES('2343185', 'andreytondo@alunos.utfpr.edu.br', false, NULL, 'Andrey Tondo', '$2a$10$PAT0Rh1KBwjnqaWvGKQgou5Mkjz1iIFJoasd1R9O.V546opfKmXrm', '46991379026', 'ROLE_ADMIN', true);
-INSERT INTO app_user (documento, email, email_verificado, foto_url, nome, "password", telefone, role, enabled) VALUES('2343185', 'pedrozorel@alunos.utfpr.edu.br', false, NULL, 'Pedro Zorel', '$2a$10$PAT0Rh1KBwjnqaWvGKQgou5Mkjz1iIFJoasd1R9O.V546opfKmXrm', '46991379026', 'ROLE_ADMIN', true);
-INSERT INTO app_user (documento, email, email_verificado, foto_url, nome, "password", telefone, role, enabled) VALUES('2343185', 'brunoruaro@alunos.utfpr.edu.br', false, NULL, 'Bruno Ruaro', '$2a$10$PAT0Rh1KBwjnqaWvGKQgou5Mkjz1iIFJoasd1R9O.V546opfKmXrm', '46991379026', 'ROLE_ADMIN', true);
-INSERT INTO app_user (documento, email, email_verificado, foto_url, nome, "password", telefone, role, enabled) VALUES('2343185', 'felipevilhalva@alunos.utfpr.edu.br', false, NULL, 'Felipe Vilhalva', '$2a$10$PAT0Rh1KBwjnqaWvGKQgou5Mkjz1iIFJoasd1R9O.V546opfKmXrm', '46991379026', 'ROLE_ADMIN', true);
-INSERT INTO app_user (documento, email, email_verificado, foto_url, nome, "password", telefone, role, enabled) VALUES('2343185', 'rafaelabandeira@alunos.utfpr.edu.br', false, NULL, 'Rafaela Bandeira', '$2a$10$PAT0Rh1KBwjnqaWvGKQgou5Mkjz1iIFJoasd1R9O.V546opfKmXrm', '46991379026', 'ROLE_ADMIN', true);
-INSERT INTO app_user (documento, email, email_verificado, foto_url, nome, "password", telefone, role, enabled) VALUES('2343185', 'renancezarotto@alunos.utfpr.edu.br', false, NULL, 'Renan Cezarotto', '$2a$10$PAT0Rh1KBwjnqaWvGKQgou5Mkjz1iIFJoasd1R9O.V546opfKmXrm', '46991379026', 'ROLE_ADMIN', true);
-INSERT INTO app_user (documento, email, email_verificado, foto_url, nome, "password", telefone, role, enabled) VALUES('2343185', 'aluno@alunos.utfpr.edu.br', false, NULL, 'Aluno UTFPR', '$2a$10$PAT0Rh1KBwjnqaWvGKQgou5Mkjz1iIFJoasd1R9O.V546opfKmXrm', '46991379026', 'ROLE_STUDENT', true);
-INSERT INTO app_user (documento, email, email_verificado, foto_url, nome, "password", telefone, role, enabled) VALUES('2343185', 'tecnico@alunos.utfpr.edu.br', false, NULL, 'Técnico UTFPR', '$2a$10$PAT0Rh1KBwjnqaWvGKQgou5Mkjz1iIFJoasd1R9O.V546opfKmXrm', '46991379026', 'ROLE_LAB_TECHNICIAN', true);
-INSERT INTO app_user (documento, email, email_verificado, foto_url, nome, "password", telefone, role, enabled) VALUES('2343185', 'professor@alunos.utfpr.edu.br', false, NULL, 'Professor UTFPR', '$2a$10$PAT0Rh1KBwjnqaWvGKQgou5Mkjz1iIFJoasd1R9O.V546opfKmXrm', '46991379026', 'ROLE_PROFESSOR', true);
-INSERT INTO app_user (documento, email, email_verificado, foto_url, nome, "password", telefone, role, enabled) VALUES('2343185', 'inativo@alunos.utfpr.edu.br', false, NULL, 'Inativo UTFPR', '$2a$10$PAT0Rh1KBwjnqaWvGKQgou5Mkjz1iIFJoasd1R9O.V546opfKmXrm', '46991379026', 'ROLE_PROFESSOR', false);
+INSERT INTO app_user (documento, email, email_verificado, foto_url, nome, "password", telefone, role, enabled) VALUES('2215400', 'andreytondo@alunos.utfpr.edu.br', false, NULL, 'Andrey Tondo', '$2a$10$PAT0Rh1KBwjnqaWvGKQgou5Mkjz1iIFJoasd1R9O.V546opfKmXrm', '46991379026', 'ROLE_ADMIN', true);
+INSERT INTO app_user (documento, email, email_verificado, foto_url, nome, "password", telefone, role, enabled) VALUES('2361693', 'pedrozorel@alunos.utfpr.edu.br', false, NULL, 'Pedro Zorel', '$2a$10$PAT0Rh1KBwjnqaWvGKQgou5Mkjz1iIFJoasd1R9O.V546opfKmXrm', '46991379026', 'ROLE_ADMIN', true);
+INSERT INTO app_user (documento, email, email_verificado, foto_url, nome, "password", telefone, role, enabled) VALUES('2921156', 'brunoruaro@alunos.utfpr.edu.br', false, NULL, 'Bruno Ruaro', '$2a$10$PAT0Rh1KBwjnqaWvGKQgou5Mkjz1iIFJoasd1R9O.V546opfKmXrm', '46991379026', 'ROLE_ADMIN', true);
+INSERT INTO app_user (documento, email, email_verificado, foto_url, nome, "password", telefone, role, enabled) VALUES('2106561', 'felipevilhalva@alunos.utfpr.edu.br', false, NULL, 'Felipe Vilhalva', '$2a$10$PAT0Rh1KBwjnqaWvGKQgou5Mkjz1iIFJoasd1R9O.V546opfKmXrm', '46991379026', 'ROLE_ADMIN', true);
+INSERT INTO app_user (documento, email, email_verificado, foto_url, nome, "password", telefone, role, enabled) VALUES('2156233', 'rafaelabandeira@alunos.utfpr.edu.br', false, NULL, 'Rafaela Bandeira', '$2a$10$PAT0Rh1KBwjnqaWvGKQgou5Mkjz1iIFJoasd1R9O.V546opfKmXrm', '46991379026', 'ROLE_ADMIN', true);
+INSERT INTO app_user (documento, email, email_verificado, foto_url, nome, "password", telefone, role, enabled) VALUES('2995405', 'renancezarotto@alunos.utfpr.edu.br', false, NULL, 'Renan Cezarotto', '$2a$10$PAT0Rh1KBwjnqaWvGKQgou5Mkjz1iIFJoasd1R9O.V546opfKmXrm', '46991379026', 'ROLE_ADMIN', true);
+INSERT INTO app_user (documento, email, email_verificado, foto_url, nome, "password", telefone, role, enabled) VALUES('2140059', 'aluno@alunos.utfpr.edu.br', false, NULL, 'Aluno UTFPR', '$2a$10$PAT0Rh1KBwjnqaWvGKQgou5Mkjz1iIFJoasd1R9O.V546opfKmXrm', '46991379026', 'ROLE_STUDENT', true);
+INSERT INTO app_user (documento, email, email_verificado, foto_url, nome, "password", telefone, role, enabled) VALUES('2483251', 'tecnico@alunos.utfpr.edu.br', false, NULL, 'Técnico UTFPR', '$2a$10$PAT0Rh1KBwjnqaWvGKQgou5Mkjz1iIFJoasd1R9O.V546opfKmXrm', '46991379026', 'ROLE_LAB_TECHNICIAN', true);
+INSERT INTO app_user (documento, email, email_verificado, foto_url, nome, "password", telefone, role, enabled) VALUES('2491451', 'professor@alunos.utfpr.edu.br', false, NULL, 'Professor UTFPR', '$2a$10$PAT0Rh1KBwjnqaWvGKQgou5Mkjz1iIFJoasd1R9O.V546opfKmXrm', '46991379026', 'ROLE_PROFESSOR', true);
+INSERT INTO app_user (documento, email, email_verificado, foto_url, nome, "password", telefone, role, enabled) VALUES('2295947', 'inativo@alunos.utfpr.edu.br', false, NULL, 'Inativo UTFPR', '$2a$10$PAT0Rh1KBwjnqaWvGKQgou5Mkjz1iIFJoasd1R9O.V546opfKmXrm', '46991379026', 'ROLE_PROFESSOR', false);
 
 -- categorias
 INSERT INTO category (description, icon, parent_id) VALUES('Ferramentas', 'pi pi-cog', NULL);
@@ -357,48 +357,15 @@ INSERT INTO solicitation_item (quantity,item_id,solicitation_id) VALUES (10.00, 
 
 
 -- loan
-INSERT INTO loan (deadline,loan_date,user_id,observation, status) values ('2025-11-30 00:00:00-03','2025-10-30 23:53:15-03',1,NULL, 'ONGOING');
-INSERT INTO loan (deadline,loan_date,user_id,observation, status) values ('2025-12-06 00:00:00-03','2025-11-06 09:00:00-03', 7, 'Projeto TCC Aluno', 'ONGOING');
-INSERT INTO loan (deadline,loan_date,user_id,observation, status) values ('2025-11-20 00:00:00-03','2025-11-04 10:00:00-03', 1, 'Uso laboratório', 'ONGOING');
-INSERT INTO loan (deadline,loan_date,user_id,observation, status) values ('2025-11-20 00:00:00-03','2025-11-10 09:30:00-03', 7, 'Protoboard extra TCC', 'ONGOING');
-INSERT INTO loan (deadline,loan_date,user_id,observation, status) values ('2025-11-21 00:00:00-03','2025-11-11 10:00:00-03', 7, 'LCD TCC', 'ONGOING');
-INSERT INTO loan (deadline,loan_date,user_id,observation, status) values ('2025-11-22 00:00:00-03','2025-11-12 14:00:00-03', 9, 'Teste fonte Raspberry', 'ONGOING');
-INSERT INTO loan (deadline,loan_date,user_id,observation, status) values ('2025-11-23 00:00:00-03','2025-11-13 10:30:00-03', 7, 'LEDs projeto', 'ONGOING');
-INSERT INTO loan (deadline,loan_date,user_id,observation, status) values ('2025-11-05 00:00:00-03','2025-10-15 09:00:00-03', 7, 'Kit TCC (Sensores e Servos)', 'OVERDUE');
-INSERT INTO loan (deadline,loan_date,user_id,observation, status) values ('2025-11-28 00:00:00-03','2025-11-18 10:00:00-03', 7, 'Baterias p/ carrinho', 'ONGOING');
 
 
 -- loan_item
-INSERT INTO loan_item (quantity,"return",item_id,loan_id) values (5.00,true,3,1);
-INSERT INTO loan_item (quantity,"return",item_id,loan_id) values (5.00, true, 9, 2);
-INSERT INTO loan_item (quantity,"return",item_id,loan_id) values (2.00, true, 2, 3);
-INSERT INTO loan_item (quantity,"return",item_id,loan_id) values (2.00, true, 9, 4);
-INSERT INTO loan_item (quantity,"return",item_id,loan_id) values (2.00, true, 10, 5);
-INSERT INTO loan_item (quantity,"return",item_id,loan_id) values (5.00, true, 14, 6);
-INSERT INTO loan_item (quantity,"return",item_id,loan_id) values (2.00, true, 20, 7);
-INSERT INTO loan_item (quantity,"return",item_id,loan_id) values (10.00, true, 21, 8);
-INSERT INTO loan_item (quantity,"return",item_id,loan_id) values (10.00, true, 22, 8);
-INSERT INTO loan_item (quantity,"return",item_id,loan_id) values (10.00, true, 26, 9);
 
 
 -- reservation
-INSERT INTO reservation (id, description, reservation_date, withdrawal_date, user_id) VALUES (1, 'Reserva TCC', '2025-11-25 10:00:00-03', '2025-11-26 10:00:00-03', 7);
-INSERT INTO reservation (id, description, reservation_date, withdrawal_date, user_id) VALUES (2, 'Reserva Aula Robótica', '2025-11-26 11:00:00-03', '2025-11-28 08:00:00-03', 9);
-INSERT INTO reservation (id, description, reservation_date, withdrawal_date, user_id) VALUES (3, 'Reserva Lab Eletronica', '2025-11-27 14:00:00-03', '2025-11-28 14:00:00-03', 8);
-INSERT INTO reservation (id, description, reservation_date, withdrawal_date, user_id) VALUES (4, 'Reserva Impressora 3D', '2025-11-28 09:00:00-03', '2025-11-28 13:00:00-03', 3);
-INSERT INTO reservation (id, description, reservation_date, withdrawal_date, user_id) VALUES (5, 'Reserva materiais básicos', '2025-11-28 10:00:00-03', '2025-11-29 10:00:00-03', 7);
 
 
 -- reservation_item
-INSERT INTO reservation_item (quantity, item_id, reservation_id) VALUES (2.00, 8, 1);
-INSERT INTO reservation_item (quantity, item_id, reservation_id) VALUES (5.00, 21, 1);
-INSERT INTO reservation_item (quantity, item_id, reservation_id) VALUES (10.00, 30, 2);
-INSERT INTO reservation_item (quantity, item_id, reservation_id) VALUES (10.00, 9, 2);
-INSERT INTO reservation_item (quantity, item_id, reservation_id) VALUES (1.00, 15, 3);
-INSERT INTO reservation_item (quantity, item_id, reservation_id) VALUES (1.00, 24, 4);
-INSERT INTO reservation_item (quantity, item_id, reservation_id) VALUES (1.00, 25, 4);
-INSERT INTO reservation_item (quantity, item_id, reservation_id) VALUES (10.00, 6, 5);
-INSERT INTO reservation_item (quantity, item_id, reservation_id) VALUES (2.00, 7, 5);
 
 
 -- return
@@ -410,14 +377,6 @@ INSERT INTO "return" (id, loan_id, return_date, observation) VALUES (5, 6, '2025
 INSERT INTO "return" (id, loan_id, return_date, observation) VALUES (6, 8, '2025-11-26 14:00:00-03', 'Devolução final TCC. 5 Servos restantes. 5 sensores foram perdidos.');
 
 -- return_item
-INSERT INTO return_item (return_id, item_id, quantity_returned, quantity_issued) VALUES (1, 3, 2.00, 0.00);
-INSERT INTO return_item (return_id, item_id, quantity_returned, quantity_issued) VALUES (2, 2, 2.00, 0.00);
-INSERT INTO return_item (return_id, item_id, quantity_returned, quantity_issued) VALUES (3, 22, 5.00, 0.00);
-INSERT INTO return_item (return_id, item_id, quantity_returned, quantity_issued) VALUES (3, 21, 5.00, 0.00);
-INSERT INTO return_item (return_id, item_id, quantity_returned, quantity_issued) VALUES (4, 9, 5.00, 0.00);
-INSERT INTO return_item (return_id, item_id, quantity_returned, quantity_issued) VALUES (5, 14, 3.00, 2.00);
-INSERT INTO return_item (return_id, item_id, quantity_returned, quantity_issued) VALUES (6, 22, 5.00, 0.00);
-INSERT INTO return_item (return_id, item_id, quantity_returned, quantity_issued) VALUES (6, 21, 0.00, 5.00);
 
 
 INSERT INTO inventory_transaction (quantity,"type","date",inventory_id,user_id) VALUES (2.00,'RETURN','2025-11-20 09:00:00',2,1);

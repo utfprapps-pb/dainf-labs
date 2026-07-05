@@ -18,6 +18,10 @@ export interface AuthResponse {
 export class AuthService extends BaseService {
   private readonly _tokenService = inject(TokenService);
 
+  resendConfirmationEmail(email: string) {
+    return this._http.post(`${this.apiUrl}/auth/resend-confirmation`, { email });
+  }
+
   login(request: AuthRequest): Observable<AuthResponse> {
     return this._http.post<AuthResponse>(`${this.apiUrl}/auth/login`, request);
   }
