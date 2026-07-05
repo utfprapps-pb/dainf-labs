@@ -509,7 +509,10 @@ export class LoanComponent implements OnInit, AfterViewInit {
   getFilteredItems(items: any[]) {
     const filter = this.cardItemFilter();
     if (!items) return [];
-    if (filter === 'ALL') return items;
+    
+    // Por padrao, mostra apenas itens GRANDES (DURABLE) para nǜo poluir o card com componentes.
+    if (filter === 'ALL') return items.filter((i) => i.item?.type === 'DURABLE');
+    
     if (filter.startsWith('TYPE:')) {
       const type = filter.split(':')[1];
       return items.filter((i) => i.item?.type === type);
