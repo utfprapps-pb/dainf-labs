@@ -76,11 +76,15 @@ export class LeakageComponent {
       header: 'Localização',
       transform: (item: Item) =>
         item.type === 'CONSUMABLE'
-          ? item.location
-          : item.assets
-              ?.map((asset) => asset?.location)
-              .filter((loc) => loc && String(loc).trim() !== '')
-              .join(', '),
+          ? item.location?.toUpperCase()
+          : Array.from(
+              new Set(
+                item.assets
+                  ?.map((asset) => asset?.location)
+                  .filter((loc) => loc && String(loc).trim() !== '')
+                  .map((loc) => String(loc).toUpperCase())
+              )
+            ).join(', '),
     },
   ];
 

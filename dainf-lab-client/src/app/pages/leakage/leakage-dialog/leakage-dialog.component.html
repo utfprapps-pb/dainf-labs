@@ -29,6 +29,9 @@
           [disabled]="loading"
           (onChange)="onAssetChange()"
           [showClear]="true"
+          [filter]="true"
+          filterBy="label"
+          filterPlaceholder="Buscar patrimônio..."
         ></p-select>
       </div>
     }
@@ -83,7 +86,7 @@
       styleClass="p-button-danger"
       (click)="save()"
       [loading]="loading"
-      [disabled]="quantity <= 0 || quantity > maxQuantity"
+      [disabled]="quantity <= 0 || quantity > maxQuantity || (item.type === 'DURABLE' && !selectedAsset)"
     ></p-button>
   </div>
 </div>

@@ -81,6 +81,15 @@ export class LeakageDialogComponent implements OnInit {
   }
 
   save(): void {
+    if (this.item.type === 'DURABLE' && !this.selectedAsset) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Erro',
+        detail: 'Selecione um patrimônio',
+      });
+      return;
+    }
+
     if (this.quantity <= 0 || this.quantity > this.maxQuantity) {
       this.messageService.add({
         severity: 'error',
