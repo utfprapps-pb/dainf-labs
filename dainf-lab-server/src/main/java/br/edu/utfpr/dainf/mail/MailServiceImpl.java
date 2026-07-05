@@ -35,7 +35,7 @@ public class MailServiceImpl implements MailService {
             MimeMessage message = buildMessage(mail);
             javaMailSender.send(message);
         } catch (Exception e) {
-            throw new MailException("Falha ao enviar e-mail", e);
+            throw new br.edu.utfpr.dainf.exception.WarnException("Falha ao autenticar no servidor de e-mail. Verifique as credenciais.");
         }
     }
 
