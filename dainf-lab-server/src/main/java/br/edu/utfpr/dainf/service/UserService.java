@@ -92,6 +92,30 @@ public class UserService extends CrudService<Long, User, UserRepository> impleme
         return saved;
     }
 
+    public void resendConfirmationEmail(String email) {
+        User user = repository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
+
+        if (user.isEmailVerificado()) {
+            throw new WarnException("E-mail já verificado");
+        }
+
+        user.setEmailVerificationToken(UUID.randomUUID().toString());
+        user.setEmailVerificationExpiresAt(Instant.now().plus(24, ChronoUnit.HOURS));
+
+        User saved = save(user);
+
+        String mailContent = mailService.buildTemplate("email-verification", Map.of(
+                "nome", saved.getNome(),
+                "linkConfirmacao", builConfirmationLink(saved.getEmailVerificationToken())
+        ));
+
+        mailService.send(Mail.builder()
+                .subject("Confirmação de e-mail")
+                .to(List.of(saved.getEmail()))
+                .content(mailContent)
+                .build());
+    }
+
     public void confirmEmail(String token) {
         User user = repository.findByEmailVerificationToken(token)
                 .orElseThrow(() -> new UsernameNotFoundException("Token inválido"));

@@ -82,6 +82,12 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
+    @PostMapping("/resend-confirmation")
+    public ResponseEntity<?> resendConfirmation(@RequestBody Map<String, String> request) {
+        userService.resendConfirmationEmail(request.get("email"));
+        return ResponseEntity.ok(Map.of("message", "E-mail de confirmação reenviado"));
+    }
+
     @GetMapping("/confirm-email")
     public ResponseEntity<?> confirmEmail(@RequestParam String token) {
         userService.confirmEmail(token);
