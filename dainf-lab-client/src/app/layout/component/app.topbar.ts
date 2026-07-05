@@ -1,7 +1,10 @@
 import { AuthService } from '@/pages/auth/services/auth.service';
 import { CartComponent } from '@/shared/components/cart-component/cart.component';
 import { CartService } from '@/shared/services/cart.service';
-import { NotificationService, Notification } from '@/shared/services/notification.service';
+import {
+  NotificationService,
+  Notification,
+} from '@/shared/services/notification.service';
 import { ContextStore } from '@/shared/store/context-store.service';
 import { UserService } from '@/pages/user/user.service';
 import { CommonModule, DatePipe } from '@angular/common';
@@ -83,9 +86,12 @@ import { UserDropdownComponent } from './user-dropdown.component';
           <i class="pi pi-ellipsis-v"></i>
         </button>
 
-        <div class="layout-topbar-menu hidden lg:flex lg:items-center pr-8 mr-4">
-          <div class="layout-topbar-menu-content flex items-start justify-start gap-2 ">
-
+        <div
+          class="layout-topbar-menu hidden lg:flex lg:items-center pr-8 mr-4"
+        >
+          <div
+            class="layout-topbar-menu-content flex items-start justify-start gap-2 "
+          >
             @if (userCanUseCart$ | async) {
               <!-- BOTÃO DO CARRINHO -->
               <button
@@ -96,7 +102,10 @@ import { UserDropdownComponent } from './user-dropdown.component';
               >
                 <i class="pi pi-shopping-cart text-lg"></i>
                 @if (cartItemCount() > 0) {
-                  <p-badge [value]="cartItemCount()" severity="danger"></p-badge>
+                  <p-badge
+                    [value]="cartItemCount()"
+                    severity="danger"
+                  ></p-badge>
                 }
               </button>
 
@@ -120,23 +129,53 @@ import { UserDropdownComponent } from './user-dropdown.component';
             </button>
 
             <!-- POPOVER DE NOTIFICAÇÕES -->
-            <p-popover #notifPopover [dismissable]="true" styleClass="notif-popover">
+            <p-popover
+              #notifPopover
+              [dismissable]="true"
+              styleClass="notif-popover"
+            >
               <div class="w-80 max-h-96 flex flex-col">
-                <div class="p-3 border-b flex justify-between items-center bg-gray-50">
+                <div
+                  class="p-3 border-b flex justify-between items-center bg-gray-50"
+                >
                   <span class="font-bold text-gray-700">Notificações</span>
-                  <button *ngIf="unreadCount() > 0" class="text-xs text-blue-600 hover:underline" (click)="markAllAsRead()">Marcar todas como lidas</button>
+                  <button
+                    *ngIf="unreadCount() > 0"
+                    class="text-xs text-blue-600 hover:underline"
+                    (click)="markAllAsRead()"
+                  >
+                    Marcar todas como lidas
+                  </button>
                 </div>
                 <div class="overflow-y-auto flex-1 p-2">
-                  <div *ngIf="notifications.length === 0" class="p-4 text-center text-gray-500 text-sm">
+                  <div
+                    *ngIf="notifications.length === 0"
+                    class="p-4 text-center text-gray-500 text-sm"
+                  >
                     Nenhuma notificação não lida.
                   </div>
-                  <div *ngFor="let notif of notifications" (click)="onNotificationClick(notif, notifPopover)" class="cursor-pointer p-3 mb-2 rounded border bg-white shadow-sm flex flex-col gap-1 relative group transition-colors hover:bg-gray-50">
+                  <div
+                    *ngFor="let notif of notifications"
+                    (click)="onNotificationClick(notif, notifPopover)"
+                    class="cursor-pointer p-3 mb-2 rounded border bg-white shadow-sm flex flex-col gap-1 relative group transition-colors hover:bg-gray-50"
+                  >
                     <div class="flex justify-between items-start">
-                      <span class="font-semibold text-sm text-gray-800">{{ notif.title }}</span>
-                      <span class="text-[10px] text-gray-400">{{ formatDate(notif.createdAt) }}</span>
+                      <span class="font-semibold text-sm text-gray-800">{{
+                        notif.title
+                      }}</span>
+                      <span class="text-[10px] text-gray-400">{{
+                        formatDate(notif.createdAt)
+                      }}</span>
                     </div>
-                    <span class="text-xs text-gray-600">{{ notif.message }}</span>
-                    <button class="absolute top-2 right-2 text-gray-300 hover:text-blue-500 hidden group-hover:block" (click)="$event.stopPropagation(); markAsRead(notif.id)" pTooltip="Marcar como lida" tooltipPosition="left">
+                    <span class="text-xs text-gray-600">{{
+                      notif.message
+                    }}</span>
+                    <button
+                      class="absolute top-2 right-2 text-gray-300 hover:text-blue-500 hidden group-hover:block"
+                      (click)="$event.stopPropagation(); markAsRead(notif.id)"
+                      pTooltip="Marcar como lida"
+                      tooltipPosition="left"
+                    >
                       <i class="pi pi-check-circle"></i>
                     </button>
                   </div>
@@ -151,16 +190,18 @@ import { UserDropdownComponent } from './user-dropdown.component';
       </div>
     </div>
   `,
-  styles: [`
-    :host ::ng-deep .cart-popover {
-      width: 350px;
-      padding: 0;
-      overflow: hidden;
-    }
-    :host ::ng-deep .notif-popover {
-      padding: 0;
-    }
-  `]
+  styles: [
+    `
+      :host ::ng-deep .cart-popover {
+        width: 350px;
+        padding: 0;
+        overflow: hidden;
+      }
+      :host ::ng-deep .notif-popover {
+        padding: 0;
+      }
+    `,
+  ],
 })
 export class AppTopbar implements OnInit {
   userMenuItems: MenuItem[] = [
@@ -206,33 +247,45 @@ export class AppTopbar implements OnInit {
   }
 
   loadUnreadCount() {
-    this.notificationService.getUnreadCount().pipe(
-      catchError(err => {
-        console.error('[Notificações] Erro ao buscar contagem não lida:', err);
-        return EMPTY;
-      })
-    ).subscribe(count => {
-      const prev = this.unreadCount();
-      if (!this.isFirstLoad && count > prev) {
-        this.messageService.add({ severity: 'info', summary: 'Nova Notificação', detail: 'Você tem uma nova notificação não lida.' });
-      }
-      this.unreadCount.set(count);
-      this.isFirstLoad = false;
-    });
+    this.notificationService
+      .getUnreadCount()
+      .pipe(
+        catchError((err) => {
+          console.error(
+            '[Notificações] Erro ao buscar contagem não lida:',
+            err,
+          );
+          return EMPTY;
+        }),
+      )
+      .subscribe((count) => {
+        const prev = this.unreadCount();
+        if (!this.isFirstLoad && count > prev) {
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Nova Notificação',
+            detail: 'Você tem uma nova notificação não lida.',
+          });
+        }
+        this.unreadCount.set(count);
+        this.isFirstLoad = false;
+      });
   }
 
   toggleNotifications(event: any, popover: any) {
     if (!popover.overlayVisible) {
-      this.notificationService.getNotifications(true, 0, 10).subscribe(res => {
-        this.notifications = res.content;
-      });
+      this.notificationService
+        .getNotifications(true, 0, 10)
+        .subscribe((res) => {
+          this.notifications = res.content;
+        });
     }
     popover.toggle(event);
   }
 
   markAsRead(id: number) {
     this.notificationService.markAsRead(id).subscribe(() => {
-      this.notifications = this.notifications.filter(n => n.id !== id);
+      this.notifications = this.notifications.filter((n) => n.id !== id);
       this.unreadCount.set(Math.max(0, this.unreadCount() - 1));
     });
   }

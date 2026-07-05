@@ -21,7 +21,7 @@ export interface Page<T> {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class NotificationService {
   private http = inject(HttpClient);
@@ -31,7 +31,11 @@ export class NotificationService {
     return `${this.environmentService.apiUrl}/notifications`;
   }
 
-  getNotifications(unreadOnly: boolean = false, page: number = 0, size: number = 20): Observable<Page<Notification>> {
+  getNotifications(
+    unreadOnly: boolean = false,
+    page: number = 0,
+    size: number = 20,
+  ): Observable<Page<Notification>> {
     let params = new HttpParams()
       .set('unreadOnly', unreadOnly.toString())
       .set('page', page.toString())

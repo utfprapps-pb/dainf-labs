@@ -55,7 +55,10 @@ describe('ReservationComponent forms', () => {
 
   it('is invalid when items is empty', () => {
     const form = buildForm();
-    form.patchValue({ reservationDate: new Date(), withdrawalDate: new Date() });
+    form.patchValue({
+      reservationDate: new Date(),
+      withdrawalDate: new Date(),
+    });
     form.get('items')?.setValue([] as any);
     expect(form.invalid).toBeTrue();
     // Angular treats [] as empty input: Validators.required catches it
@@ -64,21 +67,30 @@ describe('ReservationComponent forms', () => {
 
   it('is invalid when items is null', () => {
     const form = buildForm();
-    form.patchValue({ reservationDate: new Date(), withdrawalDate: new Date() });
+    form.patchValue({
+      reservationDate: new Date(),
+      withdrawalDate: new Date(),
+    });
     form.get('items')?.setValue(null);
     expect(form.invalid).toBeTrue();
   });
 
   it('is valid when all required fields are filled and items has at least one entry', () => {
     const form = buildForm();
-    form.patchValue({ reservationDate: new Date(), withdrawalDate: new Date() });
+    form.patchValue({
+      reservationDate: new Date(),
+      withdrawalDate: new Date(),
+    });
     form.get('items')?.setValue([mockItem] as any);
     expect(form.valid).toBeTrue();
   });
 
   it('description and observation are optional', () => {
     const form = buildForm();
-    form.patchValue({ reservationDate: new Date(), withdrawalDate: new Date() });
+    form.patchValue({
+      reservationDate: new Date(),
+      withdrawalDate: new Date(),
+    });
     form.get('items')?.setValue([mockItem] as any);
     expect(form.valid).toBeTrue();
   });
@@ -117,7 +129,10 @@ describe('ReservationComponent forms', () => {
   it('main form is valid even when sub-form has invalid data', () => {
     const form = buildForm();
     const sub = buildSubForm();
-    form.patchValue({ reservationDate: new Date(), withdrawalDate: new Date() });
+    form.patchValue({
+      reservationDate: new Date(),
+      withdrawalDate: new Date(),
+    });
     form.get('items')?.setValue([mockItem] as any);
     expect(form.valid).toBeTrue();
     expect(sub.invalid).toBeTrue();

@@ -48,10 +48,7 @@ public class LeakageService extends CrudService<Long, Leakage, LeakageRepository
                 : null;
         List<LeakageItem> newItems = entity.getItems() != null ? entity.getItems() : List.of();
         for (LeakageItem item : newItems) {
-            BigDecimal loanedQty = loanService.getLoanedQuantityForItem(item.getItem().getId());
-            if (loanedQty != null && item.getQuantity().compareTo(loanedQty) >= 0) {
-                throw new IllegalArgumentException("Não é possível registrar extravio: a quantidade (" + item.getQuantity() + ") deve ser menor que a quantidade atualmente emprestada deste item (" + loanedQty + ").");
-            }
+
 
             item.setLeakage(entity);
             if (handleTransaction) {
@@ -69,6 +66,29 @@ public class LeakageService extends CrudService<Long, Leakage, LeakageRepository
                 if (diff.compareTo(BigDecimal.ZERO) != 0) {
                     BigDecimal currentMinStock = i.getMinimumStock() != null ? i.getMinimumStock() : BigDecimal.ZERO;
                     i.setMinimumStock(currentMinStock.subtract(diff)); // Subtract for leakage
+                    
+                    if (br.edu.utfpr.dainf.enums.ItemType.DURABLE.equals(i.getType()) && diff.compareTo(BigDecimal.ZERO) > 0) {
+                        for (int k = 0; k < diff.intValue(); k++) {
+                            if (item.getAsset() != null) {
+                                br.edu.utfpr.dainf.model.Asset toRemove = i.getAssets().stream()
+                                    .filter(a -> Objects.equals(a.getId(), item.getAsset().getId()))
+                                    .findFirst().orElse(null);
+                                if (toRemove != null) {
+                                    i.getAssets().remove(toRemove);
+                                }
+                            } else {
+                                br.edu.utfpr.dainf.model.Asset emptyAsset = i.getAssets().stream()
+                                    .filter(a -> (a.getSerialNumber() == null || a.getSerialNumber().trim().isEmpty()) &&
+                                                 (a.getLocation() == null || a.getLocation().trim().isEmpty()))
+                                    .findFirst().orElse(null);
+                                if (emptyAsset != null) {
+                                    i.getAssets().remove(emptyAsset);
+                                } else if (!i.getAssets().isEmpty()) {
+                                    i.getAssets().remove(0); // fallback
+                                }
+                            }
+                        }
+                    }
                     itemService.save(i);
                 }
             }
@@ -89,6 +109,17 @@ public class LeakageService extends CrudService<Long, Leakage, LeakageRepository
                     br.edu.utfpr.dainf.model.Item i = itemService.findById(oldItem.getItem().getId()).orElseThrow();
                     BigDecimal currentMinStock = i.getMinimumStock() != null ? i.getMinimumStock() : BigDecimal.ZERO;
                     i.setMinimumStock(currentMinStock.add(oldItem.getQuantity())); // Revert leakage
+                    
+                    if (br.edu.utfpr.dainf.enums.ItemType.DURABLE.equals(i.getType()) && oldItem.getQuantity().compareTo(BigDecimal.ZERO) > 0) {
+                        if (i.getAssets() == null) {
+                            i.setAssets(new java.util.ArrayList<>());
+                        }
+                        for (int k = 0; k < oldItem.getQuantity().intValue(); k++) {
+                            br.edu.utfpr.dainf.model.Asset newAsset = new br.edu.utfpr.dainf.model.Asset();
+                            newAsset.setItem(i);
+                            i.getAssets().add(newAsset);
+                        }
+                    }
                     itemService.save(i);
                 }
             }

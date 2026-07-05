@@ -24,7 +24,10 @@ describe('leakageComponent forms', () => {
     return fb.group({
       id: [null as any],
       item: [null as any, Validators.required],
-      quantity: [null as number | null, [Validators.required, Validators.min(1)]],
+      quantity: [
+        null as number | null,
+        [Validators.required, Validators.min(1)],
+      ],
     });
   }
 
@@ -119,4 +122,3 @@ describe('leakageComponent forms', () => {
     expect(form.valid).toBeTrue();
   });
 });
-

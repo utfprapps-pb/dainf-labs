@@ -28,7 +28,6 @@ export class CrudDialogComponent<T extends Identifiable> {
     this.deleteClick.emit();
   }
 
-
   save() {
     this.saveClick.emit();
   }

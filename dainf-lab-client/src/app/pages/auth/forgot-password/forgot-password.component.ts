@@ -22,9 +22,9 @@ import { extractErrorMessage } from '@/shared/utils/error.utils';
     RippleModule,
     ToastModule,
     AppFloatingConfigurator,
-    LogoComponent
+    LogoComponent,
   ],
-  templateUrl: './forgot-password.component.html'
+  templateUrl: './forgot-password.component.html',
 })
 export class ForgotPasswordComponent {
   email = '';
@@ -35,21 +35,36 @@ export class ForgotPasswordComponent {
 
   requestRecovery() {
     if (!this.email) {
-      this._messageService.add({ severity: 'warn', summary: 'Atenção!', detail: 'Informe o e-mail cadastrado.' });
+      this._messageService.add({
+        severity: 'warn',
+        summary: 'Atenção!',
+        detail: 'Informe o e-mail cadastrado.',
+      });
       return;
     }
 
     this.isSubmitting = true;
     this._authService.requestPasswordRecovery({ email: this.email }).subscribe({
       next: () => {
-        this._messageService.add({ severity: 'success', summary: 'E-mail enviado', detail: 'Verifique sua caixa de entrada para continuar.' });
+        this._messageService.add({
+          severity: 'success',
+          summary: 'E-mail enviado',
+          detail: 'Verifique sua caixa de entrada para continuar.',
+        });
         this.isSubmitting = false;
       },
       error: (err) => {
-        this._messageService.add({ severity: 'error', summary: 'Falha ao enviar', detail: extractErrorMessage(err, 'Não foi possível iniciar a recuperação de senha.') });
+        this._messageService.add({
+          severity: 'error',
+          summary: 'Falha ao enviar',
+          detail: extractErrorMessage(
+            err,
+            'Não foi possível iniciar a recuperação de senha.',
+          ),
+        });
         console.error('Failed to send recovery e-mail', err);
         this.isSubmitting = false;
-      }
+      },
     });
   }
 }

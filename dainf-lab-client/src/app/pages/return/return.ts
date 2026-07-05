@@ -1,6 +1,6 @@
-import { Identifiable } from "@/shared/crud/crud";
-import { Item } from "../item/item";
-import { Loan } from "../loan/loan";
+import { Identifiable } from '@/shared/crud/crud';
+import { Item } from '../item/item';
+import { Loan } from '../loan/loan';
 
 export interface Return extends Identifiable {
   loan: Loan;

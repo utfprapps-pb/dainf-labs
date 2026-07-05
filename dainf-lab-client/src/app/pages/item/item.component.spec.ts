@@ -12,16 +12,25 @@ describe('ItemComponent forms', () => {
   function buildForm() {
     return fb.group({
       id: [{ value: null as any, disabled: true }],
-      name: [null as string | null, Validators.compose([Validators.required, Validators.maxLength(50)])],
+      name: [
+        null as string | null,
+        Validators.compose([Validators.required, Validators.maxLength(50)]),
+      ],
       description: [null as string | null],
       price: [null as number | null],
       category: [null as any, Validators.required],
       assets: [null as any],
       images: [null as any],
       siorg: [null as string | null],
-      location: [null as string | null, Validators.compose([Validators.maxLength(255)])],
+      location: [
+        null as string | null,
+        Validators.compose([Validators.maxLength(255)]),
+      ],
       type: [null as string | null, Validators.required],
-      quantity: [{ value: null as any, disabled: true }, Validators.compose([Validators.required])],
+      quantity: [
+        { value: null as any, disabled: true },
+        Validators.compose([Validators.required]),
+      ],
       minimumStock: [null as number | null],
     });
   }
@@ -29,8 +38,14 @@ describe('ItemComponent forms', () => {
   function buildAssetSubForm() {
     return fb.group({
       id: [null as any],
-      location: [null as string | null, Validators.compose([Validators.required, Validators.maxLength(255)])],
-      serialNumber: [null as string | null, Validators.compose([Validators.required, Validators.maxLength(255)])],
+      location: [
+        null as string | null,
+        Validators.compose([Validators.required, Validators.maxLength(255)]),
+      ],
+      serialNumber: [
+        null as string | null,
+        Validators.compose([Validators.required, Validators.maxLength(255)]),
+      ],
     });
   }
 

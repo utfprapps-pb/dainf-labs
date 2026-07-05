@@ -19,7 +19,9 @@ export function authInterceptor(
   const isApi = isAPICall(req.url, enviroment.apiUrl);
   const authReq = isApi
     ? req.clone({
-        ...(authToken && { setHeaders: { Authorization: `Bearer ${authToken}` } }),
+        ...(authToken && {
+          setHeaders: { Authorization: `Bearer ${authToken}` },
+        }),
         withCredentials: true,
       })
     : req.clone({ withCredentials: false });

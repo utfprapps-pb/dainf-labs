@@ -1,4 +1,11 @@
-import { Component, computed, inject, model, OnInit, ViewChild } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  model,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
@@ -31,13 +38,13 @@ import { LeakageDialogComponent } from './leakage-dialog/leakage-dialog.componen
     StaticSelectComponent,
     InputTextModule,
     ButtonModule,
-    TooltipModule
+    TooltipModule,
   ],
   providers: [
     ItemService,
     CategoryService,
     DialogService,
-    CategoryTreeNodePipe
+    CategoryTreeNodePipe,
   ],
   selector: 'app-leakage',
   templateUrl: './leakage.component.html',
@@ -45,7 +52,7 @@ import { LeakageDialogComponent } from './leakage-dialog/leakage-dialog.componen
 export class LeakageComponent {
   itemService = inject(ItemService);
   dialogService = inject(DialogService);
-  
+
   @ViewChild('crud') crud!: CrudComponent<Item>;
   dialogRef: DynamicDialogRef | undefined;
 
@@ -69,8 +76,15 @@ export class LeakageComponent {
       header: 'Localização',
       transform: (item: Item) =>
         item.type === 'CONSUMABLE'
-          ? item.location
-          : item.assets?.map((asset) => asset?.location).filter(loc => loc && String(loc).trim() !== '').join(', '),
+          ? item.location?.toUpperCase()
+          : Array.from(
+              new Set(
+                item.assets
+                  ?.map((asset) => asset?.location)
+                  .filter((loc) => loc && String(loc).trim() !== '')
+                  .map((loc) => String(loc).toUpperCase())
+              )
+            ).join(', '),
     },
   ];
 
@@ -113,7 +127,8 @@ export class LeakageComponent {
       });
     if (this.locationFilter())
       filters.push({
-        field: this.typeFilter() === 'CONSUMABLE' ? 'location' : 'assets.location',
+        field:
+          this.typeFilter() === 'CONSUMABLE' ? 'location' : 'assets.location',
         value: this.locationFilter(),
         type: 'ILIKE',
       });
@@ -131,7 +146,10 @@ export class LeakageComponent {
 
     this.dialogRef.onClose.subscribe((success) => {
       if (success && this.crud) {
-         this.crud.loadItems(this.crud.lastPagination?.page, this.crud.lastPagination?.rows);
+        this.crud.loadItems(
+          this.crud.lastPagination?.page,
+          this.crud.lastPagination?.rows,
+        );
       }
     });
   }

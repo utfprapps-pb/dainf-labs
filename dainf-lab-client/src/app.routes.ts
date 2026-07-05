@@ -10,9 +10,9 @@ export const appRoutes: Routes = [
     canActivate: [AuthGuard],
     children: [
       { path: '', loadChildren: () => import('./app/pages/pages.routes') },
-    ]
+    ],
   },
   { path: '', loadChildren: () => import('./app/pages/auth/auth.routes') },
   { path: 'not-found', component: NotfoundComponent },
-  { path: '**', redirectTo: '/not-found' }
+  { path: '**', redirectTo: '/not-found' },
 ];

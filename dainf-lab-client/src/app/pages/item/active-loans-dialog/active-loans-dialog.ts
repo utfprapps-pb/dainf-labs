@@ -7,9 +7,9 @@ import { TagModule } from 'primeng/tag';
 import { LoanItemTracking } from '@/pages/loan/loan';
 @Component({
   selector: 'app-active-loans-dialog',
-  imports: [CommonModule, TableModule, ButtonModule, TagModule],  
+  imports: [CommonModule, TableModule, ButtonModule, TagModule],
   templateUrl: './active-loans-dialog.html',
-  styleUrl: './active-loans-dialog.scss'
+  styleUrl: './active-loans-dialog.scss',
 })
 export class ActiveLoansDialog {
   config = inject(DynamicDialogConfig);
@@ -26,5 +26,4 @@ export class ActiveLoansDialog {
   closeDialog() {
     this.ref.close();
   }
- 
 }

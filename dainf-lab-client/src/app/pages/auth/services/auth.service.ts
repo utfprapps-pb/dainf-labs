@@ -1,7 +1,12 @@
 import { BaseService } from '@/shared/services/base.service';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { AuthRequest, RecoveryRequest, ResetPasswordRequest, SignUpRequest } from '../auth';
+import {
+  AuthRequest,
+  RecoveryRequest,
+  ResetPasswordRequest,
+  SignUpRequest,
+} from '../auth';
 import { TokenService } from './token.service';
 
 export interface AuthResponse {
@@ -11,7 +16,6 @@ export interface AuthResponse {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService extends BaseService {
-
   private readonly _tokenService = inject(TokenService);
 
   login(request: AuthRequest): Observable<AuthResponse> {
@@ -40,7 +44,8 @@ export class AuthService extends BaseService {
   }
 
   confirmEmail(token: string) {
-    return this._http.get(`${this.apiUrl}/auth/confirm-email`, { params: { token } });
+    return this._http.get(`${this.apiUrl}/auth/confirm-email`, {
+      params: { token },
+    });
   }
-
 }

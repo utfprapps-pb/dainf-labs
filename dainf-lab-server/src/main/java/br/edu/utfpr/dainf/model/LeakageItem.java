@@ -34,4 +34,8 @@ public class LeakageItem {
     @JoinColumn(name = "Leakage_id", referencedColumnName = "id")
     @JsonIgnore
     private Leakage Leakage;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "asset_id", referencedColumnName = "id")
+    private Asset asset;
 }

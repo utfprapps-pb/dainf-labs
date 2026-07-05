@@ -38,11 +38,17 @@ export class StorageImplService extends BaseService implements StorageService {
     const key = `temp/${random}_${file.name}`;
     return this.getSignedUrl(key, 'PUT').pipe(
       switchMap((url) =>
-        this._http.put(url, file, { headers: { 'Content-Type': file.type } }).pipe(
-          map(() => ({ bucket: this.bucket, contentType: file.type, name: key, originalName: file.name }))
-        ),
+        this._http
+          .put(url, file, { headers: { 'Content-Type': file.type } })
+          .pipe(
+            map(() => ({
+              bucket: this.bucket,
+              contentType: file.type,
+              name: key,
+              originalName: file.name,
+            })),
+          ),
       ),
-
     );
   }
 

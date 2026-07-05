@@ -14,13 +14,25 @@ describe('FornecedorComponent form', () => {
   function buildForm() {
     return fb.group({
       id: [{ value: null as any, disabled: true }],
-      razaoSocial: [null as string | null, [Validators.required, Validators.maxLength(80)]],
-      nomeFantasia: [null as string | null, [Validators.required, Validators.maxLength(80)]],
+      razaoSocial: [
+        null as string | null,
+        [Validators.required, Validators.maxLength(80)],
+      ],
+      nomeFantasia: [
+        null as string | null,
+        [Validators.required, Validators.maxLength(80)],
+      ],
       cnpj: [null as string | null, [Validators.required, cnpjValidator()]],
       ie: [null as string | null, Validators.maxLength(14)],
-      telefone: [null as string | null, [Validators.required, phoneValidator(), Validators.maxLength(15)]],
+      telefone: [
+        null as string | null,
+        [Validators.required, phoneValidator(), Validators.maxLength(15)],
+      ],
       email: [null as string | null, [Validators.required, Validators.email]],
-      endereco: [null as string | null, [Validators.required, Validators.maxLength(100)]],
+      endereco: [
+        null as string | null,
+        [Validators.required, Validators.maxLength(100)],
+      ],
       estado: [null as string | null, Validators.required],
       cidade: [null as string | null, Validators.required],
       cep: [null as string | null],

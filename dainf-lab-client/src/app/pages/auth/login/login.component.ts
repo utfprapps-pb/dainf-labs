@@ -29,7 +29,7 @@ import { UserService } from '../../user/user.service';
     RippleModule,
     AppFloatingConfigurator,
     LogoComponent,
-    ToastModule
+    ToastModule,
   ],
   providers: [UserService],
   templateUrl: 'login.component.html',
@@ -66,7 +66,7 @@ export class LoginComponent {
               this._router.navigate(['/dashboard']);
             }
           },
-          error: () => this._router.navigate(['/dashboard'])
+          error: () => this._router.navigate(['/dashboard']),
         });
       },
       error: (err) => {

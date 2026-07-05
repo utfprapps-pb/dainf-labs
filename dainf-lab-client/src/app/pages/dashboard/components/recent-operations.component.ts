@@ -39,7 +39,9 @@ import { InventoryOperation } from '../dashboard.service';
                   <div class="text-sm text-muted-color">
                     {{ op.userName }} • {{ op.date | date: 'dd/MM/yyyy' }}
                   </div>
-                  <div class="text-xs text-muted-color">Qtd: {{ op.quantity }}</div>
+                  <div class="text-xs text-muted-color">
+                    Qtd: {{ op.quantity }}
+                  </div>
                 </div>
               </div>
               <p-tag

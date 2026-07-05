@@ -24,9 +24,9 @@ import { extractErrorMessage } from '@/shared/utils/error.utils';
     RippleModule,
     ToastModule,
     AppFloatingConfigurator,
-    LogoComponent
+    LogoComponent,
   ],
-  templateUrl: './reset-password.component.html'
+  templateUrl: './reset-password.component.html',
 })
 export class ResetPasswordComponent {
   token: string | null = null;
@@ -40,49 +40,83 @@ export class ResetPasswordComponent {
   private readonly _messageService = inject(MessageService);
 
   constructor() {
-    this._route.queryParamMap.subscribe(params => {
+    this._route.queryParamMap.subscribe((params) => {
       this.token = params.get('token');
     });
   }
 
   resetPassword() {
     if (!this.token) {
-      this._messageService.add({ severity: 'warn', summary: 'Token ausente', detail: 'Use o link enviado por e-mail.' });
+      this._messageService.add({
+        severity: 'warn',
+        summary: 'Token ausente',
+        detail: 'Use o link enviado por e-mail.',
+      });
       return;
     }
 
     if (!this.password || !this.confirmPassword) {
-      this._messageService.add({ severity: 'warn', summary: 'Atenção!', detail: 'Preencha a nova senha.' });
+      this._messageService.add({
+        severity: 'warn',
+        summary: 'Atenção!',
+        detail: 'Preencha a nova senha.',
+      });
       return;
     }
 
     if (this.password.length < 6) {
-      this._messageService.add({ severity: 'warn', summary: 'Senha inválida', detail: 'A senha deve ter no mínimo 6 caracteres.' });
+      this._messageService.add({
+        severity: 'warn',
+        summary: 'Senha inválida',
+        detail: 'A senha deve ter no mínimo 6 caracteres.',
+      });
       return;
     }
 
     if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).*$/.test(this.password)) {
-      this._messageService.add({ severity: 'warn', summary: 'Senha inválida', detail: 'A senha deve conter ao menos uma letra maiúscula, uma minúscula e um número.' });
+      this._messageService.add({
+        severity: 'warn',
+        summary: 'Senha inválida',
+        detail:
+          'A senha deve conter ao menos uma letra maiúscula, uma minúscula e um número.',
+      });
       return;
     }
 
     if (this.password !== this.confirmPassword) {
-      this._messageService.add({ severity: 'warn', summary: 'Senhas diferentes', detail: 'As senhas informadas não coincidem.' });
+      this._messageService.add({
+        severity: 'warn',
+        summary: 'Senhas diferentes',
+        detail: 'As senhas informadas não coincidem.',
+      });
       return;
     }
 
     this.isSubmitting = true;
-    this._authService.resetPassword({ token: this.token, newPassword: this.password }).subscribe({
-      next: () => {
-        this._messageService.add({ severity: 'success', summary: 'Senha alterada', detail: 'Você já pode fazer login com a nova senha.' });
-        this.isSubmitting = false;
-        this._router.navigate(['/login']);
-      },
-      error: (err) => {
-        this._messageService.add({ severity: 'error', summary: 'Falha ao redefinir', detail: extractErrorMessage(err, 'Não foi possível alterar a senha.') });
-        console.error('Failed to reset password', err);
-        this.isSubmitting = false;
-      }
-    });
+    this._authService
+      .resetPassword({ token: this.token, newPassword: this.password })
+      .subscribe({
+        next: () => {
+          this._messageService.add({
+            severity: 'success',
+            summary: 'Senha alterada',
+            detail: 'Você já pode fazer login com a nova senha.',
+          });
+          this.isSubmitting = false;
+          this._router.navigate(['/login']);
+        },
+        error: (err) => {
+          this._messageService.add({
+            severity: 'error',
+            summary: 'Falha ao redefinir',
+            detail: extractErrorMessage(
+              err,
+              'Não foi possível alterar a senha.',
+            ),
+          });
+          console.error('Failed to reset password', err);
+          this.isSubmitting = false;
+        },
+      });
   }
 }

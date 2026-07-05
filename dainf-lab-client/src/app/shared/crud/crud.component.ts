@@ -103,7 +103,9 @@ export class CrudComponent<T extends Identifiable> implements OnInit {
   }
 
   private _openFromQueryParam(): void {
-    const rawId = this.route.snapshot.queryParamMap.get(CrudComponent.OPEN_ID_QUERY_PARAM);
+    const rawId = this.route.snapshot.queryParamMap.get(
+      CrudComponent.OPEN_ID_QUERY_PARAM,
+    );
     if (!rawId) {
       return;
     }
@@ -223,7 +225,9 @@ export class CrudComponent<T extends Identifiable> implements OnInit {
           this.dialogVisible.set(true);
         }),
         catchError((error) => {
-          this._showWarn(`Falha ao carregar o registro: ${extractErrorMessage(error)}`);
+          this._showWarn(
+            `Falha ao carregar o registro: ${extractErrorMessage(error)}`,
+          );
           return throwError(() => error);
         }),
         finalize(() => this.loadingEntity.set(false)),
@@ -264,7 +268,9 @@ export class CrudComponent<T extends Identifiable> implements OnInit {
           this.loadItems(this.lastPagination?.page, this.lastPagination?.rows),
         ),
         catchError((error) => {
-          this._showWarn(`Falha ao deletar o registro: ${extractErrorMessage(error)}`);
+          this._showWarn(
+            `Falha ao deletar o registro: ${extractErrorMessage(error)}`,
+          );
           return throwError(() => error);
         }),
         take(1),

@@ -2,38 +2,70 @@
   <div class="p-fluid">
     <div class="mb-3">
       <span class="font-bold text-gray-700 dark:text-gray-300">Item:</span>
-      <p class="mt-1 text-gray-900 dark:text-gray-100">{{ item.name }} ({{ item.code }})</p>
+      <p class="mt-1 text-gray-900 dark:text-gray-100">
+        {{ item.name }} ({{ item.code }})
+      </p>
     </div>
 
     <div class="mb-4">
-      <span class="font-bold text-gray-700 dark:text-gray-300">Quantidade Disponível:</span>
+      <span class="font-bold text-gray-700 dark:text-gray-300"
+        >Quantidade Disponível:</span
+      >
       <p class="mt-1 text-gray-900 dark:text-gray-100">{{ maxQuantity }}</p>
     </div>
 
+    @if (item.type === "DURABLE") {
+      <div class="field mb-4">
+        <label for="asset" class="font-bold text-gray-700 dark:text-gray-300"
+          >Selecione o Patrimônio</label
+        >
+        <p-select
+          id="asset"
+          [options]="assetOptions"
+          [(ngModel)]="selectedAsset"
+          optionLabel="label"
+          placeholder="Selecione um patrimônio"
+          styleClass="w-full mt-1"
+          [disabled]="loading"
+          (onChange)="onAssetChange()"
+          [showClear]="true"
+          [filter]="true"
+          filterBy="label"
+          filterPlaceholder="Buscar patrimônio..."
+        ></p-select>
+      </div>
+    }
+
     <div class="field mb-4">
-      <label for="quantity" class="font-bold text-gray-700 dark:text-gray-300">Quantidade Extraviada</label>
-      <p-inputNumber 
-        id="quantity" 
-        [(ngModel)]="quantity" 
-        [min]="1" 
-        [max]="maxQuantity" 
-        [showButtons]="true" 
-        buttonLayout="horizontal" 
-        spinnerMode="horizontal" 
-        incrementButtonIcon="pi pi-plus" 
+      <label for="quantity" class="font-bold text-gray-700 dark:text-gray-300"
+        >Quantidade Extraviada</label
+      >
+      <p-inputNumber
+        id="quantity"
+        [(ngModel)]="quantity"
+        [min]="1"
+        [max]="maxQuantity"
+        [showButtons]="true"
+        buttonLayout="horizontal"
+        spinnerMode="horizontal"
+        incrementButtonIcon="pi pi-plus"
         decrementButtonIcon="pi pi-minus"
         styleClass="w-full mt-1"
-        [disabled]="loading"
+        [disabled]="loading || (selectedAsset && selectedAsset.id !== -1)"
       ></p-inputNumber>
     </div>
 
     <div class="field mb-4">
-      <label for="observation" class="font-bold text-gray-700 dark:text-gray-300">Observação (Opcional)</label>
-      <input 
-        id="observation" 
-        type="text" 
-        pInputText 
-        [(ngModel)]="observation" 
+      <label
+        for="observation"
+        class="font-bold text-gray-700 dark:text-gray-300"
+        >Observação (Opcional)</label
+      >
+      <input
+        id="observation"
+        type="text"
+        pInputText
+        [(ngModel)]="observation"
         class="w-full mt-1 border border-gray-300 dark:border-gray-600 rounded-md p-2"
         [disabled]="loading"
       />
@@ -41,20 +73,20 @@
   </div>
 
   <div class="flex justify-end gap-2 mt-4">
-    <p-button 
-      label="Cancelar" 
-      icon="pi pi-times" 
-      styleClass="p-button-text" 
+    <p-button
+      label="Cancelar"
+      icon="pi pi-times"
+      styleClass="p-button-text"
       (click)="cancel()"
       [disabled]="loading"
     ></p-button>
-    <p-button 
-      label="Registrar" 
-      icon="pi pi-check" 
-      styleClass="p-button-danger" 
+    <p-button
+      label="Registrar"
+      icon="pi pi-check"
+      styleClass="p-button-danger"
       (click)="save()"
       [loading]="loading"
-      [disabled]="quantity <= 0 || quantity > maxQuantity"
+      [disabled]="quantity <= 0 || quantity > maxQuantity || (item.type === 'DURABLE' && !selectedAsset)"
     ></p-button>
   </div>
 </div>

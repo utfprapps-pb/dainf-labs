@@ -13,7 +13,7 @@ export interface Item extends Identifiable {
   code?: string;
   minimumStock: number;
   type: ItemType;
-  images: any
+  images: any;
 }
 
 export interface Asset extends Identifiable {
@@ -24,4 +24,8 @@ export interface Asset extends Identifiable {
 }
 
 export type ItemType = 'CONSUMABLE' | 'DURABLE';
-export type AssetStatus = 'AVAILABLE' | 'LOANED' | 'RESERVED' | 'UNDER_MAINTENANCE'
+export type AssetStatus =
+  | 'AVAILABLE'
+  | 'LOANED'
+  | 'RESERVED'
+  | 'UNDER_MAINTENANCE';

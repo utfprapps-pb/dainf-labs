@@ -55,6 +55,16 @@ public class PurchaseService extends CrudService<Long, Purchase, PurchaseReposit
             if (diff.compareTo(BigDecimal.ZERO) != 0) {
                 BigDecimal currentMinStock = i.getMinimumStock() != null ? i.getMinimumStock() : BigDecimal.ZERO;
                 i.setMinimumStock(currentMinStock.add(diff));
+                if (br.edu.utfpr.dainf.enums.ItemType.DURABLE.equals(i.getType()) && diff.compareTo(BigDecimal.ZERO) > 0) {
+                    if (i.getAssets() == null) {
+                        i.setAssets(new java.util.ArrayList<>());
+                    }
+                    for (int k = 0; k < diff.intValue(); k++) {
+                        br.edu.utfpr.dainf.model.Asset newAsset = new br.edu.utfpr.dainf.model.Asset();
+                        newAsset.setItem(i);
+                        i.getAssets().add(newAsset);
+                    }
+                }
                 itemService.save(i);
             }
         }

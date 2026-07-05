@@ -1,6 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, Renderer2, signal, ViewChild } from '@angular/core';
-import { NavigationCancel, NavigationEnd, NavigationError, NavigationStart, Router, RouterModule } from '@angular/router';
+import {
+  NavigationCancel,
+  NavigationEnd,
+  NavigationError,
+  NavigationStart,
+  Router,
+  RouterModule,
+} from '@angular/router';
 import { filter, Subscription } from 'rxjs';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { LayoutService } from '../service/layout.service';
@@ -11,7 +18,14 @@ import { AppTopbar } from './app.topbar';
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [CommonModule, AppTopbar, AppSidebar, RouterModule, AppFooter, ProgressSpinnerModule],
+  imports: [
+    CommonModule,
+    AppTopbar,
+    AppSidebar,
+    RouterModule,
+    AppFooter,
+    ProgressSpinnerModule,
+  ],
   template: `
     <div class="layout-wrapper" [ngClass]="containerClass">
       <app-topbar></app-topbar>
@@ -33,18 +47,20 @@ import { AppTopbar } from './app.topbar';
       }
     </div>
   `,
-  styles: [`
-    .layout-nav-loader {
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0, 0, 0, 0.25);
-      backdrop-filter: blur(2px);
-    }
-  `]
+  styles: [
+    `
+      .layout-nav-loader {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.25);
+        backdrop-filter: blur(2px);
+      }
+    `,
+  ],
 })
 export class AppLayout {
   overlayMenuOpenSubscription: Subscription;
@@ -57,26 +73,35 @@ export class AppLayout {
   constructor(
     public layoutService: LayoutService,
     public renderer: Renderer2,
-    public router: Router
+    public router: Router,
   ) {
-    this.overlayMenuOpenSubscription = this.layoutService.overlayOpen$.subscribe(() => {
-      if (!this.menuOutsideClickListener) {
-        this.menuOutsideClickListener = this.renderer.listen('document', 'click', (event) => {
-          if (this.isOutsideClicked(event)) {
-            this.hideMenu();
-          }
-        });
-      }
+    this.overlayMenuOpenSubscription =
+      this.layoutService.overlayOpen$.subscribe(() => {
+        if (!this.menuOutsideClickListener) {
+          this.menuOutsideClickListener = this.renderer.listen(
+            'document',
+            'click',
+            (event) => {
+              if (this.isOutsideClicked(event)) {
+                this.hideMenu();
+              }
+            },
+          );
+        }
 
-      if (this.layoutService.layoutState().staticMenuMobileActive) {
-        this.blockBodyScroll();
-      }
-    });
+        if (this.layoutService.layoutState().staticMenuMobileActive) {
+          this.blockBodyScroll();
+        }
+      });
 
     this.router.events.subscribe((event) => {
       if (event instanceof NavigationStart) {
         this.navigating.set(true);
-      } else if (event instanceof NavigationEnd || event instanceof NavigationCancel || event instanceof NavigationError) {
+      } else if (
+        event instanceof NavigationEnd ||
+        event instanceof NavigationCancel ||
+        event instanceof NavigationError
+      ) {
         this.navigating.set(false);
         this.hideMenu();
       }
@@ -101,7 +126,7 @@ export class AppLayout {
       ...prev,
       overlayMenuActive: false,
       staticMenuMobileActive: false,
-      menuHoverActive: false
+      menuHoverActive: false,
     }));
 
     if (this.menuOutsideClickListener) {
@@ -122,13 +147,16 @@ export class AppLayout {
 
   get containerClass() {
     return {
-      'layout-overlay': this.layoutService.layoutConfig().menuMode === 'overlay',
+      'layout-overlay':
+        this.layoutService.layoutConfig().menuMode === 'overlay',
       'layout-static': this.layoutService.layoutConfig().menuMode === 'static',
       'layout-static-inactive':
         this.layoutService.layoutState().staticMenuDesktopInactive &&
         this.layoutService.layoutConfig().menuMode === 'static',
-      'layout-overlay-active': this.layoutService.layoutState().overlayMenuActive,
-      'layout-mobile-active': this.layoutService.layoutState().staticMenuMobileActive,
+      'layout-overlay-active':
+        this.layoutService.layoutState().overlayMenuActive,
+      'layout-mobile-active':
+        this.layoutService.layoutState().staticMenuMobileActive,
     };
   }
 

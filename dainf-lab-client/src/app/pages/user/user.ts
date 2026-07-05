@@ -1,4 +1,4 @@
-import { Identifiable } from "@/shared/crud/crud";
+import { Identifiable } from '@/shared/crud/crud';
 
 export interface User extends Identifiable {
   id: number;

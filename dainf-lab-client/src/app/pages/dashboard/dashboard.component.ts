@@ -92,7 +92,12 @@ const DATE_RANGE_STORAGE_KEY = 'dashboardDateRange';
       @if (hasAdvancedPrivileges()) {
         @if (loading() || !loansByDay()) {
           <div class="card">
-            <p-skeleton width="12rem" height="1.5rem" borderRadius="0.5rem" styleClass="mb-4" />
+            <p-skeleton
+              width="12rem"
+              height="1.5rem"
+              borderRadius="0.5rem"
+              styleClass="mb-4"
+            />
             <p-skeleton height="16rem" borderRadius="0.75rem" />
           </div>
         } @else {
@@ -105,22 +110,22 @@ const DATE_RANGE_STORAGE_KEY = 'dashboardDateRange';
         }
 
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-           @if (!loading() && returnRateSummary()) {
-             <app-chart
-                type="doughnut"
-                [chartData]="returnRateSummary()!.data"
-                [chartOptions]="returnRateSummary()!.options"
-                [title]="returnRateSummary()!.title"
-             />
-           }
-           @if (!loading() && topBorrowedItems()) {
-             <app-chart
-                type="bar"
-                [chartData]="topBorrowedItems()!.data"
-                [chartOptions]="topBorrowedItems()!.options"
-                [title]="topBorrowedItems()!.title"
-             />
-           }
+          @if (!loading() && returnRateSummary()) {
+            <app-chart
+              type="doughnut"
+              [chartData]="returnRateSummary()!.data"
+              [chartOptions]="returnRateSummary()!.options"
+              [title]="returnRateSummary()!.title"
+            />
+          }
+          @if (!loading() && topBorrowedItems()) {
+            <app-chart
+              type="bar"
+              [chartData]="topBorrowedItems()!.data"
+              [chartOptions]="topBorrowedItems()!.options"
+              [title]="topBorrowedItems()!.title"
+            />
+          }
         </div>
 
         <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -303,14 +308,23 @@ export class DashboardComponent implements OnInit {
   }
 
   private _mapReturnRateSummary(data: any) {
-    const returnRate = this.dashboardService.mapReturnRateSummary(data.returnRateSummary);
-    if (!returnRate.datasets.length || !returnRate.datasets[0].data.length) return;
-    
+    const returnRate = this.dashboardService.mapReturnRateSummary(
+      data.returnRateSummary,
+    );
+    if (!returnRate.datasets.length || !returnRate.datasets[0].data.length)
+      return;
+
     const { data: chartData, options: chartOptions } =
-      this.chartService.getPieChart(returnRate.labels, returnRate.datasets[0].data, 'doughnut');
-    
-    (chartData.datasets[0] as any).backgroundColor = returnRate.datasets[0].backgroundColor;
-    (chartData.datasets[0] as any).hoverBackgroundColor = returnRate.datasets[0].hoverBackgroundColor;
+      this.chartService.getPieChart(
+        returnRate.labels,
+        returnRate.datasets[0].data,
+        'doughnut',
+      );
+
+    (chartData.datasets[0] as any).backgroundColor =
+      returnRate.datasets[0].backgroundColor;
+    (chartData.datasets[0] as any).hoverBackgroundColor =
+      returnRate.datasets[0].hoverBackgroundColor;
 
     this.returnRateSummary.set({
       data: chartData,
@@ -320,14 +334,16 @@ export class DashboardComponent implements OnInit {
   }
 
   private _mapTopBorrowedItems(data: any) {
-    const topItems = this.dashboardService.mapTopBorrowedItems(data.topBorrowedItems);
+    const topItems = this.dashboardService.mapTopBorrowedItems(
+      data.topBorrowedItems,
+    );
     if (!topItems.datasets.length) return;
 
     const { data: chartData, options: chartOptions } =
       this.chartService.getBarChart(topItems.labels, topItems.datasets);
-    
+
     chartOptions.indexAxis = 'y'; // Torna o gráfico de barras horizontal
-    
+
     this.topBorrowedItems.set({
       data: chartData,
       options: chartOptions,

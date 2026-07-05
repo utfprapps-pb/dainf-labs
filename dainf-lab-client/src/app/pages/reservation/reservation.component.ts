@@ -1,8 +1,21 @@
 import { CommonModule, DatePipe } from '@angular/common';
-import { Component, inject, OnInit, OnDestroy, viewChild, signal } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnInit,
+  OnDestroy,
+  viewChild,
+  signal,
+} from '@angular/core';
 import { Subscription, interval } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService, TreeNode } from 'primeng/api';
 import { TreeSelectModule } from 'primeng/treeselect';
@@ -45,15 +58,28 @@ import { CategoryTreeNodePipe } from '@/shared/pipes/category-tree-node.pipe';
     ButtonModule,
     BarcodeScannerComponent,
     PaginatorModule,
-    TreeSelectModule
+    TreeSelectModule,
   ],
-  providers: [ReservationService, UserService, ItemService, DatePipe, LoanService, CategoryService],
+  providers: [
+    ReservationService,
+    UserService,
+    ItemService,
+    DatePipe,
+    LoanService,
+    CategoryService,
+  ],
   selector: 'app-reservation',
   templateUrl: 'reservation.component.html',
-  styles: [`
-    :host ::ng-deep .hide-crud-toolbar p-toolbar { display: none !important; }
-    :host ::ng-deep .hide-crud-list app-crud-table { display: none !important; }
-  `]
+  styles: [
+    `
+      :host ::ng-deep .hide-crud-toolbar p-toolbar {
+        display: none !important;
+      }
+      :host ::ng-deep .hide-crud-list app-crud-table {
+        display: none !important;
+      }
+    `,
+  ],
 })
 export class ReservationComponent implements OnInit, OnDestroy {
   reservationService = inject(ReservationService);
@@ -66,7 +92,7 @@ export class ReservationComponent implements OnInit, OnDestroy {
   formBuilder = inject(FormBuilder);
   cartService = inject(CartService);
   categoryService = inject(CategoryService);
-  
+
   categoryTreeNodePipe = new CategoryTreeNodePipe();
   crud = viewChild(CrudComponent);
 
@@ -78,6 +104,8 @@ export class ReservationComponent implements OnInit, OnDestroy {
   onFilterChange() {
     const node = this.selectedFilterNode();
     this.cardItemFilter.set(node ? (node.data as string) : 'ALL');
+
+    localStorage.setItem('cardItemFilter', this.cardItemFilter());
   }
 
   private refreshSubscription?: Subscription;
@@ -87,15 +115,18 @@ export class ReservationComponent implements OnInit, OnDestroy {
     dialogWidth: '80vw',
   };
 
-  form: FormGroup = this.formBuilder.group({
-    id: [{ value: null, disabled: true }],
-    user: [null, Validators.required],
-    status: ['PENDENTE'],
-    reservationDate: [new Date(), Validators.required],
-    withdrawalDate: [null, Validators.required],
-    returnDate: [null],
-    items: [[], [Validators.required, Validators.minLength(1)]],
-  }, { validators: this.dateComparisonValidator });
+  form: FormGroup = this.formBuilder.group(
+    {
+      id: [{ value: null, disabled: true }],
+      user: [null, Validators.required],
+      status: ['PENDENTE'],
+      reservationDate: [new Date(), Validators.required],
+      withdrawalDate: [null, Validators.required],
+      returnDate: [null],
+      items: [[], [Validators.required, Validators.minLength(1)]],
+    },
+    { validators: this.dateComparisonValidator },
+  );
 
   dateComparisonValidator(g: FormGroup) {
     const reservationDate = g.get('reservationDate');
@@ -103,15 +134,24 @@ export class ReservationComponent implements OnInit, OnDestroy {
     const returnDate = g.get('returnDate');
 
     if (reservationDate?.errors?.['pastDate']) {
-      const { pastDate, ...rest } = reservationDate.errors as Record<string, unknown>;
+      const { pastDate, ...rest } = reservationDate.errors as Record<
+        string,
+        unknown
+      >;
       reservationDate.setErrors(Object.keys(rest).length ? rest : null);
     }
     if (withdrawalDate?.errors?.['invalidWithdrawal']) {
-      const { invalidWithdrawal, ...rest } = withdrawalDate.errors as Record<string, unknown>;
+      const { invalidWithdrawal, ...rest } = withdrawalDate.errors as Record<
+        string,
+        unknown
+      >;
       withdrawalDate.setErrors(Object.keys(rest).length ? rest : null);
     }
     if (returnDate?.errors?.['invalidDates']) {
-      const { invalidDates, ...rest } = returnDate.errors as Record<string, unknown>;
+      const { invalidDates, ...rest } = returnDate.errors as Record<
+        string,
+        unknown
+      >;
       returnDate.setErrors(Object.keys(rest).length ? rest : null);
     }
 
@@ -123,7 +163,10 @@ export class ReservationComponent implements OnInit, OnDestroy {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       if (resDate < today) {
-        reservationDate.setErrors({ ...reservationDate.errors, pastDate: true });
+        reservationDate.setErrors({
+          ...reservationDate.errors,
+          pastDate: true,
+        });
         hasError = true;
       }
     }
@@ -134,7 +177,10 @@ export class ReservationComponent implements OnInit, OnDestroy {
       const withDate = new Date(withdrawalDate.value);
       withDate.setHours(0, 0, 0, 0);
       if (withDate < resDate) {
-        withdrawalDate.setErrors({ ...withdrawalDate.errors, invalidWithdrawal: true });
+        withdrawalDate.setErrors({
+          ...withdrawalDate.errors,
+          invalidWithdrawal: true,
+        });
         hasError = true;
       }
     }
@@ -153,7 +199,6 @@ export class ReservationComponent implements OnInit, OnDestroy {
     return hasError ? { invalidDates: true } : null;
   }
 
-
   reservationItensForm: FormGroup = this.formBuilder.group({
     id: [null],
     item: [null, Validators.required],
@@ -162,8 +207,18 @@ export class ReservationComponent implements OnInit, OnDestroy {
 
   cols: Column<Reservation>[] = [
     { field: 'id', header: 'Código' },
-    { field: 'reservationDate', header: 'Data da Reserva', transform: (row) => this.datePipe.transform(row.reservationDate, 'dd/MM/yyyy') || '' },
-    { field: 'withdrawalDate', header: 'Data da Retirada', transform: (row) => this.datePipe.transform(row.withdrawalDate, 'dd/MM/yyyy') || '' },
+    {
+      field: 'reservationDate',
+      header: 'Data da Reserva',
+      transform: (row) =>
+        this.datePipe.transform(row.reservationDate, 'dd/MM/yyyy') || '',
+    },
+    {
+      field: 'withdrawalDate',
+      header: 'Data da Retirada',
+      transform: (row) =>
+        this.datePipe.transform(row.withdrawalDate, 'dd/MM/yyyy') || '',
+    },
     { field: 'user.nome', header: 'Usuário' },
   ];
 
@@ -213,55 +268,102 @@ export class ReservationComponent implements OnInit, OnDestroy {
   applyFilters() {
     const filters = [];
     if (this.filterName) {
-      filters.push({ field: 'user.nome', value: `%${this.filterName}%`, type: 'ILIKE' });
+      filters.push({
+        field: 'user.nome',
+        value: `%${this.filterName}%`,
+        type: 'ILIKE',
+      });
     }
     if (this.filterRA) {
-      filters.push({ field: 'user.documento', value: `%${this.filterRA}%`, type: 'ILIKE' });
+      filters.push({
+        field: 'user.documento',
+        value: `%${this.filterRA}%`,
+        type: 'ILIKE',
+      });
     }
     if (this.filterStatus) {
-      filters.push({ field: 'status', value: this.filterStatus, type: 'EQUALS' });
+      filters.push({
+        field: 'status',
+        value: this.filterStatus,
+        type: 'EQUALS',
+      });
     }
     this.searchReq = { filters, sort: { field: 'id', type: 'DESC' } };
   }
 
   ngOnInit(): void {
-    this.categoryService.search({ page: 0, rows: 1000, filters: [{ field: 'parent', type: 'IS_NULL' }] }).subscribe((page: any) => {
-      this.categories.set(page.content);
-      const categoryNodes = this.categoryTreeNodePipe.transform(page.content);
-      
-      const mapNode = (node: TreeNode<any>): TreeNode => {
-        return {
-           label: node.label,
-           key: 'CAT:' + node.data!.id,
-           data: 'CAT:' + node.data!.id,
-           children: node.children?.map(c => mapNode(c)),
-           leaf: node.leaf,
-           icon: node.icon
+    this.categoryService
+      .search({
+        page: 0,
+        rows: 1000,
+        filters: [{ field: 'parent', type: 'IS_NULL' }],
+      })
+      .subscribe((page: any) => {
+        this.categories.set(page.content);
+        const categoryNodes = this.categoryTreeNodePipe.transform(page.content);
+
+        const mapNode = (node: TreeNode<any>): TreeNode => {
+          return {
+            label: node.label,
+            key: 'CAT:' + node.data!.id,
+            data: 'CAT:' + node.data!.id,
+            children: node.children?.map((c) => mapNode(c)),
+            leaf: node.leaf,
+            icon: node.icon,
+          };
         };
-      };
-      
-      const categoryChildren = categoryNodes.map(n => mapNode(n));
-      const allNode: TreeNode = { label: 'Todos os itens', data: 'ALL', key: 'ALL', icon: 'pi pi-list' };
-      
-      this.filterNodes.set([
-        allNode,
-        { label: 'Consumíveis', data: 'TYPE:CONSUMABLE', key: 'TYPE:CONSUMABLE', icon: 'pi pi-box' },
-        { 
-          label: 'Duráveis', 
-          data: 'TYPE:DURABLE', 
-          key: 'TYPE:DURABLE',
-          icon: 'pi pi-server',
-          children: categoryChildren
+
+        const categoryChildren = categoryNodes.map((n) => mapNode(n));
+        const allNode: TreeNode = {
+          label: 'Todos os itens',
+          data: 'ALL',
+          key: 'ALL',
+          icon: 'pi pi-list',
+        };
+
+        this.filterNodes.set([
+          allNode,
+          {
+            label: 'Consumíveis',
+            data: 'TYPE:CONSUMABLE',
+            key: 'TYPE:CONSUMABLE',
+            icon: 'pi pi-box',
+          },
+          {
+            label: 'Duráveis',
+            data: 'TYPE:DURABLE',
+            key: 'TYPE:DURABLE',
+            icon: 'pi pi-server',
+            children: categoryChildren,
+          },
+        ]);
+        this.selectedFilterNode.set(allNode);
+
+        const savedFilter = localStorage.getItem('cardItemFilter');
+        if (savedFilter) {
+          const findNode = (nodes: TreeNode[]): TreeNode | null => {
+            for (const n of nodes) {
+              if (n.data === savedFilter) return n;
+              if (n.children) {
+                const found = findNode(n.children);
+                if (found) return found;
+              }
+            }
+            return null;
+          };
+          const foundNode = findNode(this.filterNodes());
+          if (foundNode) {
+            this.selectedFilterNode.set(foundNode);
+            this.cardItemFilter.set(foundNode.data as string);
+          }
         }
-      ]);
-      this.selectedFilterNode.set(allNode);
-    });
+      });
 
     // Monitora o reset do formulário pelo crud.component e restaura os defaults
-    this.form.valueChanges.subscribe(val => {
+    this.form.valueChanges.subscribe((val) => {
       let needsPatch = false;
       const patch: any = {};
-      
+
       if (!this.hasAdvancedPrivileges() && !val.user && this.currentUser) {
         patch.user = this.currentUser;
         needsPatch = true;
@@ -289,122 +391,169 @@ export class ReservationComponent implements OnInit, OnDestroy {
         this.currentUser = user;
         // Se for criação de nova reserva para Aluno, já preenche o usuário
         if (!this.hasAdvancedPrivileges()) {
-           this.form.get('user')?.setValue(user);
+          this.form.get('user')?.setValue(user);
         }
-        
+
         // Listener para redirecionamento automático
-        this.form.get('user')?.valueChanges.subscribe(selectedUser => {
-          if (selectedUser && !this.selectedReservation && this.crud()?.dialogVisible()) {
+        this.form.get('user')?.valueChanges.subscribe((selectedUser) => {
+          if (
+            selectedUser &&
+            !this.selectedReservation &&
+            this.crud()?.dialogVisible()
+          ) {
             // Salvar os itens do form atual ANTES de fazer a busca e cancelar o dialog
-            const currentItems = this.form.get('items')?.value ? [...this.form.get('items')?.value] : [];
-            
+            const currentItems = this.form.get('items')?.value
+              ? [...this.form.get('items')?.value]
+              : [];
+
             // Caso o usuário tenha preenchido um item mas esqueceu de clicar em adicionar
-            if (this.reservationItensForm.valid && this.reservationItensForm.get('item')?.value) {
-                currentItems.push(this.reservationItensForm.getRawValue());
-                this.reservationItensForm.reset({ quantity: 1 });
+            if (
+              this.reservationItensForm.valid &&
+              this.reservationItensForm.get('item')?.value
+            ) {
+              currentItems.push(this.reservationItensForm.getRawValue());
+              this.reservationItensForm.reset({ quantity: 1 });
             }
-            
-            this.reservationService.search({
-              filters: [
-                { field: 'user.id', value: selectedUser.id, type: 'EQUALS' },
-                { field: 'status', value: ['PENDENTE', 'EM_SEPARACAO', 'PRONTO_RETIRADA'], type: 'IN' }
-              ],
-              sort: { field: 'id', type: 'DESC' }
-            }).subscribe(res => {
-              if (res.content && res.content.length > 0) {
-                 this.messageService.add({severity:'info', summary:'Aviso', detail:'Usuário já possui reserva ativa. Os itens foram mesclados na ficha existente.'});
-                 
-                 // Busca a reserva completa para garantir que os itens estão preenchidos
-                 this.reservationService.get(res.content[0].id).subscribe(existingRes => {
-                     const existingItems = existingRes.items ? [...existingRes.items] : [];
-                     
-                     // Mesclar itens selecionados no form com os da reserva existente
-                     currentItems.forEach((newItem: any) => {
-                       if (newItem && newItem.item) {
-                         const existingIndex = existingItems.findIndex(i => i.item.id === newItem.item.id);
-                         if (existingIndex > -1) {
+
+            this.reservationService
+              .search({
+                filters: [
+                  { field: 'user.id', value: selectedUser.id, type: 'EQUALS' },
+                  {
+                    field: 'status',
+                    value: ['PENDENTE', 'EM_SEPARACAO', 'PRONTO_RETIRADA'],
+                    type: 'IN',
+                  },
+                ],
+                sort: { field: 'id', type: 'DESC' },
+              })
+              .subscribe((res) => {
+                if (res.content && res.content.length > 0) {
+                  this.messageService.add({
+                    severity: 'info',
+                    summary: 'Aviso',
+                    detail:
+                      'Usuário já possui reserva ativa. Os itens foram mesclados na ficha existente.',
+                  });
+
+                  // Busca a reserva completa para garantir que os itens estão preenchidos
+                  this.reservationService
+                    .get(res.content[0].id)
+                    .subscribe((existingRes) => {
+                      const existingItems = existingRes.items
+                        ? [...existingRes.items]
+                        : [];
+
+                      // Mesclar itens selecionados no form com os da reserva existente
+                      currentItems.forEach((newItem: any) => {
+                        if (newItem && newItem.item) {
+                          const existingIndex = existingItems.findIndex(
+                            (i) => i.item.id === newItem.item.id,
+                          );
+                          if (existingIndex > -1) {
                             existingItems[existingIndex] = {
-                               ...existingItems[existingIndex],
-                               quantity: Number(existingItems[existingIndex].quantity) + Number(newItem.quantity)
+                              ...existingItems[existingIndex],
+                              quantity:
+                                Number(existingItems[existingIndex].quantity) +
+                                Number(newItem.quantity),
                             };
-                         } else {
+                          } else {
                             const itemToPush = { ...newItem };
                             delete itemToPush.id;
                             existingItems.push(itemToPush);
-                         }
-                       }
-                     });
-                     existingRes.items = existingItems;
-    
-                     this.crud()?.cancel();
-                     setTimeout(() => {
-                       this.openModal(existingRes);
-                     }, 300);
-                 });
-              }
-            });
+                          }
+                        }
+                      });
+                      existingRes.items = existingItems;
+
+                      this.crud()?.cancel();
+                      setTimeout(() => {
+                        this.openModal(existingRes);
+                      }, 300);
+                    });
+                }
+              });
           }
         });
-        
+
         const cartData = this.context.consume('cart');
         if (cartData && Array.isArray(cartData)) {
           this.cartService.clearCart();
-          
-          this.reservationService.search({
-            filters: [
-              { field: 'user.id', value: user.id, type: 'EQUALS' },
-              { field: 'status', value: ['PENDENTE', 'EM_SEPARACAO', 'PRONTO_RETIRADA'], type: 'IN' }
-            ],
-            sort: { field: 'id', type: 'DESC' }
-          }).subscribe(res => {
-             if (res.content && res.content.length > 0) {
-                 // Busca a reserva completa para garantir que os itens estão carregados
-                 this.reservationService.get(res.content[0].id).subscribe(existingRes => {
-                     const existingItems = existingRes.items ? [...existingRes.items] : [];
-                     cartData.forEach((newItem: any) => {
-                         const existingIndex = existingItems.findIndex(i => i.item.id === newItem.item.id);
-                         if (existingIndex > -1) {
-                            existingItems[existingIndex] = {
-                               ...existingItems[existingIndex],
-                               quantity: Number(existingItems[existingIndex].quantity) + Number(newItem.quantity)
-                            };
-                         } else {
-                            const itemToPush = { ...newItem };
-                            delete itemToPush.id;
-                            existingItems.push(itemToPush);
-                         }
-                     });
-                     existingRes.items = existingItems;
-                     this.openModal(existingRes);
-                     this.messageService.add({severity:'info', summary:'Aviso', detail:'Você já possui uma reserva ativa. Os itens do carrinho foram adicionados à sua ficha.'});
-                 });
-             } else {
-                 const newRes = {
-                   id: null,
-                   user: user,
-                   status: 'PENDENTE',
-                   reservationDate: new Date().toISOString(),
-                   items: cartData.map(c => {
-                     const copy = { ...c };
-                     delete copy.id;
-                     return copy;
-                   })
-                 };
-                 this.openModal(newRes as any);
-             }
-          });
+
+          this.reservationService
+            .search({
+              filters: [
+                { field: 'user.id', value: user.id, type: 'EQUALS' },
+                {
+                  field: 'status',
+                  value: ['PENDENTE', 'EM_SEPARACAO', 'PRONTO_RETIRADA'],
+                  type: 'IN',
+                },
+              ],
+              sort: { field: 'id', type: 'DESC' },
+            })
+            .subscribe((res) => {
+              if (res.content && res.content.length > 0) {
+                // Busca a reserva completa para garantir que os itens estão carregados
+                this.reservationService
+                  .get(res.content[0].id)
+                  .subscribe((existingRes) => {
+                    const existingItems = existingRes.items
+                      ? [...existingRes.items]
+                      : [];
+                    cartData.forEach((newItem: any) => {
+                      const existingIndex = existingItems.findIndex(
+                        (i) => i.item.id === newItem.item.id,
+                      );
+                      if (existingIndex > -1) {
+                        existingItems[existingIndex] = {
+                          ...existingItems[existingIndex],
+                          quantity:
+                            Number(existingItems[existingIndex].quantity) +
+                            Number(newItem.quantity),
+                        };
+                      } else {
+                        const itemToPush = { ...newItem };
+                        delete itemToPush.id;
+                        existingItems.push(itemToPush);
+                      }
+                    });
+                    existingRes.items = existingItems;
+                    this.openModal(existingRes);
+                    this.messageService.add({
+                      severity: 'info',
+                      summary: 'Aviso',
+                      detail:
+                        'Você já possui uma reserva ativa. Os itens do carrinho foram adicionados à sua ficha.',
+                    });
+                  });
+              } else {
+                const newRes = {
+                  id: null,
+                  user: user,
+                  status: 'PENDENTE',
+                  reservationDate: new Date().toISOString(),
+                  items: cartData.map((c) => {
+                    const copy = { ...c };
+                    delete copy.id;
+                    return copy;
+                  }),
+                };
+                this.openModal(newRes as any);
+              }
+            });
         }
       },
       error: (err) => {
         console.error('Erro ao obter usuário atual', err);
-      }
+      },
     });
 
     this.refreshSubscription = interval(5000).subscribe(() => {
       this.pollReservations();
     });
 
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.subscribe((params) => {
       if (params['id']) {
         const id = +params['id'];
         this.reservationService.get(id).subscribe({
@@ -413,7 +562,7 @@ export class ReservationComponent implements OnInit, OnDestroy {
               this.openModal(res);
             }
           },
-          error: (err) => console.error('Erro ao buscar reserva da URL', err)
+          error: (err) => console.error('Erro ao buscar reserva da URL', err),
         });
       }
     });
@@ -439,17 +588,26 @@ export class ReservationComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error('Erro ao recarregar reservas silenciosamente', err);
-      }
+      },
     });
   }
 
-
   onEntityLoad(reservation: Reservation) {
     this.form.patchValue({
-      user: reservation.user ? reservation.user : (!this.hasAdvancedPrivileges() ? this.currentUser : null),
-      reservationDate: reservation.reservationDate ? new Date(reservation.reservationDate) : null,
-      withdrawalDate: reservation.withdrawalDate ? new Date(reservation.withdrawalDate) : null,
-      returnDate: reservation.returnDate ? new Date(reservation.returnDate) : null,
+      user: reservation.user
+        ? reservation.user
+        : !this.hasAdvancedPrivileges()
+          ? this.currentUser
+          : null,
+      reservationDate: reservation.reservationDate
+        ? new Date(reservation.reservationDate)
+        : null,
+      withdrawalDate: reservation.withdrawalDate
+        ? new Date(reservation.withdrawalDate)
+        : null,
+      returnDate: reservation.returnDate
+        ? new Date(reservation.returnDate)
+        : null,
     });
   }
 
@@ -461,7 +619,9 @@ export class ReservationComponent implements OnInit, OnDestroy {
 
   onItemScanned(item: any) {
     const currentItems = this.form.get('items')?.value || [];
-    const existingIndex = currentItems.findIndex((i: any) => i.item.id === item.id);
+    const existingIndex = currentItems.findIndex(
+      (i: any) => i.item.id === item.id,
+    );
     if (existingIndex > -1) {
       currentItems[existingIndex].quantity += 1;
     } else {
@@ -477,16 +637,18 @@ export class ReservationComponent implements OnInit, OnDestroy {
   openModal(reservation: Reservation): void {
     this.selectedReservation = reservation;
     this.modalStatus = reservation.status || 'Pendente';
-    
+
     this.modalDatePickup = this.formatDateForInput(reservation.withdrawalDate);
-    this.modalDateReturn = this.formatDateForInput(reservation.returnDate); 
-    
+    this.modalDateReturn = this.formatDateForInput(reservation.returnDate);
+
     this.modalDescription = reservation.description || '';
     this.modalObservations = reservation.observation || '';
-    
+
     // Injetando os itens no formGroup para que o app-subitem-form possa gerenciá-los
-    this.form.patchValue({ items: reservation.items ? [...reservation.items] : [] });
-    
+    this.form.patchValue({
+      items: reservation.items ? [...reservation.items] : [],
+    });
+
     this.isModalOpen = true;
   }
 
@@ -497,7 +659,12 @@ export class ReservationComponent implements OnInit, OnDestroy {
   }
 
   handleConfirm(): void {
-    if (!this.selectedReservation || !this.isDateValid() || this.form.get('items')?.invalid) return;
+    if (
+      !this.selectedReservation ||
+      !this.isDateValid() ||
+      this.form.get('items')?.invalid
+    )
+      return;
 
     const formItems = this.form.get('items')?.value || [];
 
@@ -506,38 +673,68 @@ export class ReservationComponent implements OnInit, OnDestroy {
       status: this.modalStatus,
       description: this.modalDescription,
       observation: this.modalObservations,
-      withdrawalDate: this.modalDatePickup ? new Date(this.modalDatePickup.replace(/-/g, '\/')).toISOString() : undefined,
-      returnDate: this.modalDateReturn ? new Date(this.modalDateReturn.replace(/-/g, '\/')).toISOString() : undefined,
-      items: formItems
+      withdrawalDate: this.modalDatePickup
+        ? new Date(this.modalDatePickup.replace(/-/g, '\/')).toISOString()
+        : undefined,
+      returnDate: this.modalDateReturn
+        ? new Date(this.modalDateReturn.replace(/-/g, '\/')).toISOString()
+        : undefined,
+      items: formItems,
     };
 
     if (updatedReservation.id) {
-      this.reservationService.update(updatedReservation.id, updatedReservation).subscribe({
-        next: () => {
-          this.messageService.add({severity:'success', summary:'Sucesso', detail:'Reserva atualizada com sucesso.'});
-          this.crud()?.loadItems();
-          this.closeModal();
-        },
-        error: (err) => {
-          console.error('Erro ao atualizar reserva', err);
-          const errorMsg = err.error?.message || err.error?.detail || err.error?.errors?.[0]?.defaultMessage || 'Erro ao atualizar reserva. Verifique os campos.';
-          this.messageService.add({severity:'error', summary:'Erro', detail: errorMsg});
-          this.crud()?.loadItems();
-        }
-      });
+      this.reservationService
+        .update(updatedReservation.id, updatedReservation)
+        .subscribe({
+          next: () => {
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Sucesso',
+              detail: 'Reserva atualizada com sucesso.',
+            });
+            this.crud()?.loadItems();
+            this.closeModal();
+          },
+          error: (err) => {
+            console.error('Erro ao atualizar reserva', err);
+            const errorMsg =
+              err.error?.message ||
+              err.error?.detail ||
+              err.error?.errors?.[0]?.defaultMessage ||
+              'Erro ao atualizar reserva. Verifique os campos.';
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Erro',
+              detail: errorMsg,
+            });
+            this.crud()?.loadItems();
+          },
+        });
     } else {
       this.reservationService.create(updatedReservation).subscribe({
         next: () => {
-          this.messageService.add({severity:'success', summary:'Sucesso', detail:'Reserva solicitada com sucesso.'});
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Sucesso',
+            detail: 'Reserva solicitada com sucesso.',
+          });
           this.crud()?.loadItems();
           this.closeModal();
         },
         error: (err) => {
           console.error('Erro ao criar reserva', err);
-          const errorMsg = err.error?.message || err.error?.detail || err.error?.errors?.[0]?.defaultMessage || 'Erro ao criar reserva. Verifique os campos.';
-          this.messageService.add({severity:'error', summary:'Erro', detail: errorMsg});
+          const errorMsg =
+            err.error?.message ||
+            err.error?.detail ||
+            err.error?.errors?.[0]?.defaultMessage ||
+            'Erro ao criar reserva. Verifique os campos.';
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Erro',
+            detail: errorMsg,
+          });
           this.crud()?.loadItems();
-        }
+        },
       });
     }
   }
@@ -564,32 +761,48 @@ export class ReservationComponent implements OnInit, OnDestroy {
       borrower: reservation.user,
       raSiape: reservation.user.documento,
       items: loanItems,
-      loanDate: this.modalDatePickup ? new Date(this.modalDatePickup.replace(/-/g, '\/')).toISOString() : new Date().toISOString(),
-      deadline: this.modalDateReturn ? new Date(this.modalDateReturn.replace(/-/g, '\/')).toISOString() : undefined,
+      loanDate: this.modalDatePickup
+        ? new Date(this.modalDatePickup.replace(/-/g, '\/')).toISOString()
+        : new Date().toISOString(),
+      deadline: this.modalDateReturn
+        ? new Date(this.modalDateReturn.replace(/-/g, '\/')).toISOString()
+        : undefined,
       observation: this.modalObservations,
-      status: 'ONGOING'
+      status: 'ONGOING',
     };
 
     this.loanService.create(loanData).subscribe({
       next: () => {
-        this.messageService.add({severity:'success', summary:'Empréstimo Gerado', detail:'O empréstimo foi gerado e já está disponível nas outras telas!'});
-        
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Empréstimo Gerado',
+          detail:
+            'O empréstimo foi gerado e já está disponível nas outras telas!',
+        });
+
         if (reservation.id) {
           this.reservationService.delete(reservation.id).subscribe({
             next: () => {
               this.loadReservations();
             },
-            error: (err) => console.error('Erro ao excluir reserva', err)
+            error: (err) => console.error('Erro ao excluir reserva', err),
           });
         }
-        
+
         this.closeModal();
       },
       error: (err) => {
         console.error(err);
-        const errorMsg = err.error?.message || err.error?.detail || 'Não foi possível gerar o empréstimo';
-        this.messageService.add({severity:'error', summary:'Erro', detail: errorMsg});
-      }
+        const errorMsg =
+          err.error?.message ||
+          err.error?.detail ||
+          'Não foi possível gerar o empréstimo';
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erro',
+          detail: errorMsg,
+        });
+      },
     });
   }
 
@@ -633,12 +846,12 @@ export class ReservationComponent implements OnInit, OnDestroy {
     const filter = this.cardItemFilter();
     if (filter === 'ALL') return items;
     if (filter.startsWith('TYPE:')) {
-        const type = filter.split(':')[1];
-        return items.filter(i => i.item?.type === type);
+      const type = filter.split(':')[1];
+      return items.filter((i) => i.item?.type === type);
     }
     if (filter.startsWith('CAT:')) {
-        const catId = Number(filter.split(':')[1]);
-        return items.filter(i => i.item?.category?.id === catId);
+      const catId = Number(filter.split(':')[1]);
+      return items.filter((i) => i.item?.category?.id === catId);
     }
     return items;
   }

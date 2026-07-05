@@ -1,5 +1,11 @@
 import { Item } from '@/pages/item/item';
-import { computed, inject, Injectable, signal, WritableSignal } from '@angular/core';
+import {
+  computed,
+  inject,
+  Injectable,
+  signal,
+  WritableSignal,
+} from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { catchError, tap, throwError } from 'rxjs';
 import { CartItem } from '../models/cart';
@@ -7,7 +13,7 @@ import { BaseService } from './base.service';
 import { extractErrorMessage } from '@/shared/utils/error.utils';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class CartService extends BaseService {
   private messageService = inject(MessageService);
@@ -25,35 +31,52 @@ export class CartService extends BaseService {
   loadCart(): void {
     this.cartItems.set([]);
     this.isCartVisible.set(false);
-    this._http.get<CartItem[]>(this._apiUrl).pipe(
-      tap(items => this.cartItems.set(items)),
-      catchError(err => {
-        console.error("Failed to load cart", err);
-        this.messageService.add({ severity: 'error', summary: 'Erro', detail: extractErrorMessage(err, 'Falha ao carregar carrinho.') });
-        return throwError(() => err);
-      })
-    ).subscribe();
+    this._http
+      .get<CartItem[]>(this._apiUrl)
+      .pipe(
+        tap((items) => this.cartItems.set(items)),
+        catchError((err) => {
+          console.error('Failed to load cart', err);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Erro',
+            detail: extractErrorMessage(err, 'Falha ao carregar carrinho.'),
+          });
+          return throwError(() => err);
+        }),
+      )
+      .subscribe();
   }
 
   private saveCart(): void {
-    this._http.put<CartItem[]>(this._apiUrl, this.cartItems()).pipe(
-      tap(updatedItems => this.cartItems.set(updatedItems)),
-      catchError(err => {
-        console.error("Failed to save cart", err);
-        this.messageService.add({ severity: 'error', summary: 'Erro', detail: extractErrorMessage(err, 'Falha ao salvar carrinho.') });
-        return throwError(() => err);
-      })
-    ).subscribe();
+    this._http
+      .put<CartItem[]>(this._apiUrl, this.cartItems())
+      .pipe(
+        tap((updatedItems) => this.cartItems.set(updatedItems)),
+        catchError((err) => {
+          console.error('Failed to save cart', err);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Erro',
+            detail: extractErrorMessage(err, 'Falha ao salvar carrinho.'),
+          });
+          return throwError(() => err);
+        }),
+      )
+      .subscribe();
   }
-
 
   addItem(itemToAdd: Item, quantity: number = 1): void {
     const currentItems = this.cartItems();
-    const existingItemIndex = currentItems.findIndex(ci => ci.item.id === itemToAdd.id);
+    const existingItemIndex = currentItems.findIndex(
+      (ci) => ci.item.id === itemToAdd.id,
+    );
 
     if (existingItemIndex > -1) {
       const updatedItems = currentItems.map((ci, index) =>
-        index === existingItemIndex ? { ...ci, quantity: ci.quantity + quantity } : ci
+        index === existingItemIndex
+          ? { ...ci, quantity: ci.quantity + quantity }
+          : ci,
       );
       this.cartItems.set(updatedItems);
     } else {
@@ -61,11 +84,17 @@ export class CartService extends BaseService {
       this.cartItems.set([...currentItems, newItem]);
     }
     this.saveCart();
-    this.messageService.add({ severity: 'success', summary: 'Adicionado', detail: `${itemToAdd.name} adicionado ao carrinho.` });
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Adicionado',
+      detail: `${itemToAdd.name} adicionado ao carrinho.`,
+    });
   }
 
   removeItem(itemId: number): void {
-    this.cartItems.update(items => items.filter(ci => ci.item.id !== itemId));
+    this.cartItems.update((items) =>
+      items.filter((ci) => ci.item.id !== itemId),
+    );
     this.saveCart();
   }
 
@@ -74,9 +103,11 @@ export class CartService extends BaseService {
       this.removeItem(itemId);
       return;
     }
-    this.cartItems.update(items => items.map(ci =>
-      ci.item.id === itemId ? { ...ci, quantity: newQuantity } : ci
-    ));
+    this.cartItems.update((items) =>
+      items.map((ci) =>
+        ci.item.id === itemId ? { ...ci, quantity: newQuantity } : ci,
+      ),
+    );
     this.saveCart();
   }
 
@@ -91,6 +122,6 @@ export class CartService extends BaseService {
   }
 
   toggleCartVisibility(): void {
-    this.isCartVisible.update(visible => !visible);
+    this.isCartVisible.update((visible) => !visible);
   }
 }

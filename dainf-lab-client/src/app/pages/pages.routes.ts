@@ -1,4 +1,3 @@
-
 import { Routes } from '@angular/router';
 import { RoleGuard } from './auth/guards/role.guard';
 import { AboutComponent } from './about/about.component';
@@ -23,22 +22,62 @@ export default [
   {
     path: '',
     children: [
-      { path: 'dashboard', component: DashboardComponent, canActivate: [RoleGuard] },
-      { path: 'inventory-history', component: InventoryHistoryComponent, canActivate: [RoleGuard] },
-      { path: 'category', component: CategoryComponent, canActivate: [RoleGuard] },
-      { path: 'supplier', component: FornecedorComponent, canActivate: [RoleGuard] },
+      {
+        path: 'dashboard',
+        component: DashboardComponent,
+        canActivate: [RoleGuard],
+      },
+      {
+        path: 'inventory-history',
+        component: InventoryHistoryComponent,
+        canActivate: [RoleGuard],
+      },
+      {
+        path: 'category',
+        component: CategoryComponent,
+        canActivate: [RoleGuard],
+      },
+      {
+        path: 'supplier',
+        component: FornecedorComponent,
+        canActivate: [RoleGuard],
+      },
       { path: 'user', component: UserComponent, canActivate: [RoleGuard] },
-      { path: 'item', component: ItemWrapperComponent, canActivate: [RoleGuard] },
-      { path: 'purchase', component: PurchaseComponent, canActivate: [RoleGuard] },
+      {
+        path: 'item',
+        component: ItemWrapperComponent,
+        canActivate: [RoleGuard],
+      },
+      {
+        path: 'purchase',
+        component: PurchaseComponent,
+        canActivate: [RoleGuard],
+      },
       { path: 'loan', component: LoanComponent, canActivate: [RoleGuard] },
       { path: 'issue', component: IssueComponent, canActivate: [RoleGuard] },
-      { path: 'leakage', component: LeakageComponent, canActivate: [RoleGuard] },
+      {
+        path: 'leakage',
+        component: LeakageComponent,
+        canActivate: [RoleGuard],
+      },
       { path: 'return', component: ReturnComponent, canActivate: [RoleGuard] },
-      { path: 'reservation', component: ReservationComponent, canActivate: [RoleGuard] },
-      { path: 'purchase-solicitation', component: PurchaseSolicitationComponent, canActivate: [RoleGuard] },
-      { path: 'configuration', component: ConfigurationComponent, canActivate: [RoleGuard] },
+      {
+        path: 'reservation',
+        component: ReservationComponent,
+        canActivate: [RoleGuard],
+      },
+      {
+        path: 'purchase-solicitation',
+        component: PurchaseSolicitationComponent,
+        canActivate: [RoleGuard],
+      },
+      {
+        path: 'configuration',
+        component: ConfigurationComponent,
+        canActivate: [RoleGuard],
+      },
       { path: 'audit', component: AuditComponent, canActivate: [RoleGuard] },
       { path: 'about', component: AboutComponent, canActivate: [RoleGuard] },
-    ]
+    ],
   },
 ] as Routes;

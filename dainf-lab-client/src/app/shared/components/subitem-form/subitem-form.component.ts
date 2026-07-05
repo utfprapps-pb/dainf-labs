@@ -6,7 +6,7 @@ import {
   contentChild,
   forwardRef,
   input,
-  signal
+  signal,
 } from '@angular/core';
 import {
   ControlValueAccessor,
@@ -28,7 +28,7 @@ import { TableModule } from 'primeng/table';
     ReactiveFormsModule,
     TableModule,
     Button,
-    DeepValuePipe
+    DeepValuePipe,
   ],
   providers: [
     {
@@ -38,7 +38,9 @@ import { TableModule } from 'primeng/table';
     },
   ],
 })
-export class SubItemFormComponent<T extends Identifiable> implements ControlValueAccessor {
+export class SubItemFormComponent<T extends Identifiable>
+  implements ControlValueAccessor
+{
   formTemplate: any = contentChild('formTemplate');
   columns = input<Column<T>[]>([]);
   form = input.required<FormGroup>();
@@ -115,11 +117,15 @@ export class SubItemFormComponent<T extends Identifiable> implements ControlValu
       this.items.set(arr);
     } else {
       const currentItems = [...this.items()];
-      const existingIndex = currentItems.findIndex((i: any) => i.item?.id === value.item?.id && value.item?.id != null);
+      const existingIndex = currentItems.findIndex(
+        (i: any) => i.item?.id === value.item?.id && value.item?.id != null,
+      );
       if (existingIndex > -1) {
         currentItems[existingIndex] = {
           ...currentItems[existingIndex],
-          quantity: Number(currentItems[existingIndex].quantity) + Number(value.quantity)
+          quantity:
+            Number(currentItems[existingIndex].quantity) +
+            Number(value.quantity),
         };
         this.items.set(currentItems);
       } else {

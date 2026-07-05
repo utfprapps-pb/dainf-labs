@@ -34,8 +34,24 @@ import { ItemService } from '../item/item.service';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, FormsModule, TableModule, PaginatorModule, BarcodeScannerComponent, TreeSelectModule],
-  providers: [LoanService, ReturnService, DialogService, UserService, MessageService, ItemService, CategoryService, CategoryTreeNodePipe],
+  imports: [
+    CommonModule,
+    FormsModule,
+    TableModule,
+    PaginatorModule,
+    BarcodeScannerComponent,
+    TreeSelectModule,
+  ],
+  providers: [
+    LoanService,
+    ReturnService,
+    DialogService,
+    UserService,
+    MessageService,
+    ItemService,
+    CategoryService,
+    CategoryTreeNodePipe,
+  ],
   selector: 'app-issue',
   templateUrl: './issue.component.html',
 })
@@ -60,6 +76,8 @@ export class IssueComponent implements OnInit {
   onFilterChange() {
     const node = this.selectedFilterNode();
     this.cardItemFilter.set(node ? (node.data as string) : 'ALL');
+
+    localStorage.setItem('cardItemFilter', this.cardItemFilter());
   }
 
   first = 0;
@@ -88,37 +106,72 @@ export class IssueComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.categoryService.search({ page: 0, rows: 1000, filters: [{ field: 'parent', type: 'IS_NULL' }] }).subscribe((page: any) => {
-      this.categories.set(page.content);
-      const categoryNodes = this.categoryTreeNodePipe.transform(page.content);
-      
-      const mapNode = (node: TreeNode<any>): TreeNode => {
-        return {
-           label: node.label,
-           key: 'CAT:' + node.data!.id,
-           data: 'CAT:' + node.data!.id,
-           children: node.children?.map(c => mapNode(c)),
-           leaf: node.leaf,
-           icon: node.icon
+    this.categoryService
+      .search({
+        page: 0,
+        rows: 1000,
+        filters: [{ field: 'parent', type: 'IS_NULL' }],
+      })
+      .subscribe((page: any) => {
+        this.categories.set(page.content);
+        const categoryNodes = this.categoryTreeNodePipe.transform(page.content);
+
+        const mapNode = (node: TreeNode<any>): TreeNode => {
+          return {
+            label: node.label,
+            key: 'CAT:' + node.data!.id,
+            data: 'CAT:' + node.data!.id,
+            children: node.children?.map((c) => mapNode(c)),
+            leaf: node.leaf,
+            icon: node.icon,
+          };
         };
-      };
-      
-      const categoryChildren = categoryNodes.map(n => mapNode(n));
-      const allNode: TreeNode = { label: 'Todos os itens', data: 'ALL', key: 'ALL', icon: 'pi pi-list' };
-      
-      this.filterNodes.set([
-        allNode,
-        { label: 'Consumíveis', data: 'TYPE:CONSUMABLE', key: 'TYPE:CONSUMABLE', icon: 'pi pi-box' },
-        { 
-          label: 'Duráveis', 
-          data: 'TYPE:DURABLE', 
-          key: 'TYPE:DURABLE',
-          icon: 'pi pi-server',
-          children: categoryChildren
+
+        const categoryChildren = categoryNodes.map((n) => mapNode(n));
+        const allNode: TreeNode = {
+          label: 'Todos os itens',
+          data: 'ALL',
+          key: 'ALL',
+          icon: 'pi pi-list',
+        };
+
+        this.filterNodes.set([
+          allNode,
+          {
+            label: 'Consumíveis',
+            data: 'TYPE:CONSUMABLE',
+            key: 'TYPE:CONSUMABLE',
+            icon: 'pi pi-box',
+          },
+          {
+            label: 'Duráveis',
+            data: 'TYPE:DURABLE',
+            key: 'TYPE:DURABLE',
+            icon: 'pi pi-server',
+            children: categoryChildren,
+          },
+        ]);
+        this.selectedFilterNode.set(allNode);
+
+        const savedFilter = localStorage.getItem('cardItemFilter');
+        if (savedFilter) {
+          const findNode = (nodes: TreeNode[]): TreeNode | null => {
+            for (const n of nodes) {
+              if (n.data === savedFilter) return n;
+              if (n.children) {
+                const found = findNode(n.children);
+                if (found) return found;
+              }
+            }
+            return null;
+          };
+          const foundNode = findNode(this.filterNodes());
+          if (foundNode) {
+            this.selectedFilterNode.set(foundNode);
+            this.cardItemFilter.set(foundNode.data as string);
+          }
         }
-      ]);
-      this.selectedFilterNode.set(allNode);
-    });
+      });
     this.loadLoans();
   }
 
@@ -128,7 +181,7 @@ export class IssueComponent implements OnInit {
       filters: [],
       sort: { field: 'id', type: 'DESC' },
       page: 0,
-      rows: 100
+      rows: 100,
     };
 
     this.loanService.search(request).subscribe({
@@ -140,8 +193,8 @@ export class IssueComponent implements OnInit {
           return;
         }
 
-        const observables = loans.map((loan: Loan) => 
-          this.returnService.findByLoan(loan).pipe(catchError(() => of(null)))
+        const observables = loans.map((loan: Loan) =>
+          this.returnService.findByLoan(loan).pipe(catchError(() => of(null))),
         );
 
         forkJoin(observables).subscribe((returns: any[]) => {
@@ -151,20 +204,22 @@ export class IssueComponent implements OnInit {
               ...loan,
               actualReturnDate: existingReturn?.returnDate,
               items: loan.items.map((item: any) => {
-                const retItem = existingReturn?.items?.find((r: any) => r.item?.id === item.item?.id);
+                const retItem = existingReturn?.items?.find(
+                  (r: any) => r.item?.id === item.item?.id,
+                );
                 return {
                   ...item,
                   returnedQuantity: retItem ? retItem.quantityReturned : 0,
-                  tempReturnQty: 0
+                  tempReturnQty: 0,
                 };
-              })
+              }),
             };
           });
           this.loans.set(loansWithTemp);
           this.loading.set(false);
         });
       },
-      error: () => this.loading.set(false)
+      error: () => this.loading.set(false),
     });
   }
 
@@ -178,43 +233,59 @@ export class IssueComponent implements OnInit {
     const deadlineDate = this.filterDeadlineDate;
 
     if (name) {
-      list = list.filter(l => l.borrower?.nome?.toLowerCase().includes(name));
+      list = list.filter((l) => l.borrower?.nome?.toLowerCase().includes(name));
     }
     if (doc) {
-      list = list.filter(l => l.borrower?.documento?.toLowerCase().includes(doc));
+      list = list.filter((l) =>
+        l.borrower?.documento?.toLowerCase().includes(doc),
+      );
     }
     const itemSearch = this.filterItem?.toLowerCase() || '';
     if (itemSearch) {
-      list = list.filter(l => l.items && l.items.some((i: any) => {
-        const itemObj = i.item;
-        if (!itemObj) return false;
-        if (itemObj.name?.toLowerCase().includes(itemSearch)) return true;
-        if (itemObj.code?.toLowerCase().includes(itemSearch)) return true;
-        if (itemObj.assets && itemObj.assets.some((a: any) => a.serialNumber?.toLowerCase().includes(itemSearch))) return true;
-        return false;
-      }));
+      list = list.filter(
+        (l) =>
+          l.items &&
+          l.items.some((i: any) => {
+            const itemObj = i.item;
+            if (!itemObj) return false;
+            if (itemObj.name?.toLowerCase().includes(itemSearch)) return true;
+            if (itemObj.code?.toLowerCase().includes(itemSearch)) return true;
+            if (
+              itemObj.assets &&
+              itemObj.assets.some((a: any) =>
+                a.serialNumber?.toLowerCase().includes(itemSearch),
+              )
+            )
+              return true;
+            return false;
+          }),
+      );
     }
     if (status) {
       let mappedStatus = '';
       if (status === 'Atrasado') mappedStatus = 'OVERDUE';
       else if (status === 'Em dia') mappedStatus = 'ONGOING';
       else if (status === 'Finalizado') mappedStatus = 'COMPLETED';
-      
-      list = list.filter(l => l.status === mappedStatus);
+
+      list = list.filter((l) => l.status === mappedStatus);
     } else {
-      list = list.filter(l => l.status !== 'COMPLETED');
+      list = list.filter((l) => l.status !== 'COMPLETED');
     }
     if (type) {
-      list = list.filter(l => l.items && l.items.some((i: any) => i.item?.category?.description === type));
+      list = list.filter(
+        (l) =>
+          l.items &&
+          l.items.some((i: any) => i.item?.category?.description === type),
+      );
     }
     if (loanDate) {
-      list = list.filter(l => {
+      list = list.filter((l) => {
         const d = new Date(l.loanDate).toISOString().split('T')[0];
         return d === loanDate;
       });
     }
     if (deadlineDate) {
-      list = list.filter(l => {
+      list = list.filter((l) => {
         const targetDate = (l as any).actualReturnDate || l.deadline;
         const d = new Date(targetDate).toISOString().split('T')[0];
         return d === deadlineDate;
@@ -223,8 +294,39 @@ export class IssueComponent implements OnInit {
     return list;
   }
 
+  get groupedLoansForCards() {
+    const list = this.filteredLoansList;
+    if (this.filterStatus === 'Finalizado') {
+      const userMap = new Map<number, any>();
+      for (const loan of list) {
+        const borrowerId = loan.borrower.id;
+        if (!userMap.has(borrowerId)) {
+          userMap.set(borrowerId, {
+            ...loan,
+            isGroupedHistory: true,
+            items: [...loan.items],
+          });
+        } else {
+          const existing = userMap.get(borrowerId);
+          existing.items.push(...loan.items);
+        }
+      }
+      return Array.from(userMap.values());
+    }
+    return list;
+  }
+
+  get totalCardsLength() {
+    return this.viewMode === 'cards'
+      ? this.groupedLoansForCards.length
+      : this.filteredLoansList.length;
+  }
   get paginatedLoansList() {
-    return this.filteredLoansList.slice(this.first, this.first + this.rows);
+    const listToSlice =
+      this.viewMode === 'cards'
+        ? this.groupedLoansForCards
+        : this.filteredLoansList;
+    return listToSlice.slice(this.first, this.first + this.rows);
   }
 
   hasItemsToReturn(loan: any): boolean {
@@ -260,39 +362,45 @@ export class IssueComponent implements OnInit {
   }
 
   confirmReturn(loan: any) {
-    const itemsToReturn = loan.items.filter((item: any) => item.tempReturnQty > 0);
+    const itemsToReturn = loan.items.filter(
+      (item: any) => item.tempReturnQty > 0,
+    );
     if (itemsToReturn.length === 0) return;
 
     // Buscar se jÃ¡ existe um return para esse loan
-    this.returnService.findByLoan(loan).pipe(
-      catchError(() => of(null))
-    ).subscribe({
-      next: (existingReturn) => {
-        const payload: Return = {
-          id: existingReturn?.id,
-          loan: loan,
-          returnDate: new Date().toISOString(),
-          items: loan.items.map((item: any) => {
-            const oldReturnItem = existingReturn?.items?.find((r: any) => r.item?.id === item.item?.id);
-            return {
-              item: item.item,
-              quantityIssued: oldReturnItem?.quantityIssued || 0,
-              quantityReturned: (item.returnedQuantity || 0) + (item.tempReturnQty || 0)
-            };
-          })
-        } as Return;
+    this.returnService
+      .findByLoan(loan)
+      .pipe(catchError(() => of(null)))
+      .subscribe({
+        next: (existingReturn) => {
+          const payload: Return = {
+            id: existingReturn?.id,
+            loan: loan,
+            returnDate: new Date().toISOString(),
+            items: loan.items.map((item: any) => {
+              const oldReturnItem = existingReturn?.items?.find(
+                (r: any) => r.item?.id === item.item?.id,
+              );
+              return {
+                item: item.item,
+                quantityIssued: oldReturnItem?.quantityIssued || 0,
+                quantityReturned:
+                  (item.returnedQuantity || 0) + (item.tempReturnQty || 0),
+              };
+            }),
+          } as Return;
 
-        const obs = existingReturn?.id 
-          ? this.returnService.update(existingReturn.id, payload)
-          : this.returnService.create(payload);
+          const obs = existingReturn?.id
+            ? this.returnService.update(existingReturn.id, payload)
+            : this.returnService.create(payload);
 
-        obs.subscribe({
-          next: () => {
-            this.loadLoans();
-          }
-        });
-      }
-    });
+          obs.subscribe({
+            next: () => {
+              this.loadLoans();
+            },
+          });
+        },
+      });
   }
 
   openReturnDialog(loan: any) {
@@ -302,7 +410,7 @@ export class IssueComponent implements OnInit {
       modal: true,
       dismissableMask: true,
       data: { loan },
-      styleClass: 'return-ficha-modal'
+      styleClass: 'return-ficha-modal',
     });
 
     ref.onClose.subscribe((result: any) => {
@@ -316,23 +424,26 @@ export class IssueComponent implements OnInit {
     if (!loan || !loan.items) return [];
     const filter = this.cardItemFilter();
     let filteredItems = loan.items;
-    
+
     if (filter !== 'ALL') {
-        if (filter.startsWith('TYPE:')) {
-            const type = filter.split(':')[1];
-            filteredItems = filteredItems.filter((i: any) => i.item?.type === type);
-        } else if (filter.startsWith('CAT:')) {
-            const catId = Number(filter.split(':')[1]);
-            filteredItems = filteredItems.filter((i: any) => i.item?.category?.id === catId);
-        }
+      if (filter.startsWith('TYPE:')) {
+        const type = filter.split(':')[1];
+        filteredItems = filteredItems.filter((i: any) => i.item?.type === type);
+      } else if (filter.startsWith('CAT:')) {
+        const catId = Number(filter.split(':')[1]);
+        filteredItems = filteredItems.filter(
+          (i: any) => i.item?.category?.id === catId,
+        );
+      }
     }
 
     const groups: { [key: string]: any[] } = {};
     filteredItems.forEach((item: any) => {
       let groupName = item.item?.category?.description || 'Outros';
-      if (groupName.toLowerCase().includes('ferramenta')) groupName = 'Ferramentas emprestadas';
+      if (groupName.toLowerCase().includes('ferramenta'))
+        groupName = 'Ferramentas emprestadas';
       else groupName = 'Componentes emprestados';
-      
+
       if (!groups[groupName]) groups[groupName] = [];
       groups[groupName].push(item);
     });
@@ -358,18 +469,28 @@ export class IssueComponent implements OnInit {
     this.filterDocument = user.documento;
     const filtered = this.filteredLoansList;
     if (filtered.length === 1) {
-       this.openReturnDialog(filtered[0]);
+      this.openReturnDialog(filtered[0]);
     }
   }
 
   onItemScanned(item: any) {
-    const loansWithItem = this.filteredLoansList.filter(l => l.items.some((i: any) => i.item.id === item.id));
+    const loansWithItem = this.filteredLoansList.filter((l) =>
+      l.items.some((i: any) => i.item.id === item.id),
+    );
     if (loansWithItem.length === 1) {
-       this.openReturnDialog(loansWithItem[0]);
+      this.openReturnDialog(loansWithItem[0]);
     } else if (loansWithItem.length > 1) {
-       this.messageService.add({severity: 'warn', summary: 'Atenção', detail: 'Este item aparece em mais de um empréstimo na lista atual.'});
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Atenção',
+        detail: 'Este item aparece em mais de um empréstimo na lista atual.',
+      });
     } else {
-       this.messageService.add({severity: 'error', summary: 'Não Encontrado', detail: 'Não há empréstimos pendentes contendo este item.'});
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Não Encontrado',
+        detail: 'Não há empréstimos pendentes contendo este item.',
+      });
     }
   }
 }

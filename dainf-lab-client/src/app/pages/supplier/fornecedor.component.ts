@@ -37,7 +37,7 @@ import { phoneValidator } from '@/shared/validator/phone.validator';
     InputTextModule,
     TextareaModule,
     SelectModule,
-    InputMaskModule
+    InputMaskModule,
   ],
   selector: 'app-fornecedor',
   templateUrl: './fornecedor.component.html',
@@ -56,7 +56,10 @@ export class FornecedorComponent implements OnInit {
     nomeFantasia: [null, [Validators.required, Validators.maxLength(80)]],
     cnpj: [null, [Validators.required, cnpjValidator()]],
     ie: [null, Validators.maxLength(14)],
-    telefone: [null, [Validators.required, phoneValidator(), Validators.maxLength(15)]],
+    telefone: [
+      null,
+      [Validators.required, phoneValidator(), Validators.maxLength(15)],
+    ],
     email: [null, [Validators.required, Validators.email]],
     endereco: [null, [Validators.required, Validators.maxLength(100)]],
     estado: [null, Validators.required],
@@ -69,7 +72,11 @@ export class FornecedorComponent implements OnInit {
     { field: 'id', header: 'Código' },
     { field: 'razaoSocial', header: 'Razão Social' },
     { field: 'nomeFantasia', header: 'Nome Fantasia' },
-    { field: 'cnpj', header: 'CNPJ', transform: (row: Fornecedor) => this.cnpjPipe.transform(row.cnpj) },
+    {
+      field: 'cnpj',
+      header: 'CNPJ',
+      transform: (row: Fornecedor) => this.cnpjPipe.transform(row.cnpj),
+    },
   ];
 
   config: CrudConfig<Fornecedor> = {
@@ -107,22 +114,21 @@ export class FornecedorComponent implements OnInit {
     this._handleCEPChanges();
   }
 
-    private _handleCEPChanges() {
+  private _handleCEPChanges() {
     this.form
       .get('cep')
       ?.valueChanges.pipe(
         debounceTime(700),
         filter((value): value is string => {
-            if (!value) return false;
-            const cleanValue = value.replace(/\D/g, '');
-            return cleanValue.length === 8;
+          if (!value) return false;
+          const cleanValue = value.replace(/\D/g, '');
+          return cleanValue.length === 8;
         }),
         switchMap((cep: string) => this.cepService.search(cep)),
         tap((cepResult: CEPResult) => this._mapCEPResultToForm(cepResult)),
       )
       .subscribe();
   }
-
 
   private _mapCEPResultToForm(cepResult: CEPResult) {
     this.form.get('estado')?.patchValue(cepResult.uf);

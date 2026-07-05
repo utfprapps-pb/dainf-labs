@@ -39,7 +39,9 @@ export class CrudTableComponent<T extends Identifiable> implements OnChanges {
   items = input<Page<T> | undefined>(undefined);
   loading = input<boolean>(false);
   loadingEntity = input<boolean>(false);
-  templateMap = input<Map<keyof T | string, TemplateRef<any>> | undefined>(new Map());
+  templateMap = input<Map<keyof T | string, TemplateRef<any>> | undefined>(
+    new Map(),
+  );
 
   skeletonRows = Array(8).fill(0);
   first = signal(0);

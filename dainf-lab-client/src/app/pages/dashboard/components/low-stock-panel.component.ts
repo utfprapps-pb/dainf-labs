@@ -14,7 +14,9 @@ import { LowStockItem } from '../dashboard.service';
       <div class="flex items-center justify-between mb-4">
         <div>
           <div class="font-semibold text-xl">Estoque crítico</div>
-          <p class="text-sm text-muted-color">Itens que atingiram o mínimo definido</p>
+          <p class="text-sm text-muted-color">
+            Itens que atingiram o mínimo definido
+          </p>
         </div>
         <i class="pi pi-exclamation-triangle text-orange-400 text-xl"></i>
       </div>
@@ -36,7 +38,8 @@ import { LowStockItem } from '../dashboard.service';
                     {{ item.category || 'Sem categoria' }}
                   </div>
                   <div class="text-xs text-muted-color">
-                    {{ item.quantity }} em estoque • mínimo {{ item.minimumStock }}
+                    {{ item.quantity }} em estoque • mínimo
+                    {{ item.minimumStock }}
                   </div>
                 </div>
                 <p-tag

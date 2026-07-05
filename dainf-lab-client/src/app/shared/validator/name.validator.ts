@@ -10,8 +10,6 @@ export function nameValidator(): ValidatorFn {
 
     const parts = value.trim().split(/\s+/);
 
-    return parts.length >= 2
-      ? null
-      : { name: 'Deve conter nome e sobrenome' };
+    return parts.length >= 2 ? null : { name: 'Deve conter nome e sobrenome' };
   };
 }

@@ -49,12 +49,25 @@ export class UserComponent {
 
   form: FormGroup = this.formBuilder.group({
     id: [{ value: null, disabled: true }],
-    email: [null, Validators.compose([Validators.required, Validators.email, utfprEmailValidator()])],
+    email: [
+      null,
+      Validators.compose([
+        Validators.required,
+        Validators.email,
+        utfprEmailValidator(),
+      ]),
+    ],
     nome: [null, Validators.required],
     telefone: [null],
     documento: [null],
     role: [null, Validators.required],
-    password: [null, Validators.compose([Validators.minLength(6), passwordStrengthValidator()])],
+    password: [
+      null,
+      Validators.compose([
+        Validators.minLength(6),
+        passwordStrengthValidator(),
+      ]),
+    ],
     enabled: [true],
   });
 
@@ -124,7 +137,7 @@ export class UserComponent {
           this.messageService.add({
             severity: 'warn',
             summary: 'Atenção!',
-            detail: err?.error?.message ||  'Falha ao emitir o documento.',
+            detail: err?.error?.message || 'Falha ao emitir o documento.',
           });
           return err;
         }),

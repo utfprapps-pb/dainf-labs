@@ -1,1 +1,154 @@
-@if (loading() || !items()) { <div class="overflow-x-auto"> <table class="w-full border-collapse" style="min-width: 75rem"> <thead> <tr class="border-b border-surface-200 dark:border-surface-700 "> @for (column of columns(); track $index) { <th class="text-left p-4 font-semibold text-surface-700 dark:text-surface-100" [style.width]="column.width"> {{ column.header }} </th> } @if (showActionsColumn()) { <th class="text-left p-4 font-semibold text-surface-700 dark:text-surface-100" style="width: 12rem">Ações</th> } </tr> </thead> <tbody> @for (_ of skeletonRows; track $index) { <tr class="border-b border-surface-100 "> @for (column of columns(); track $index) { <td class="p-4"> <p-skeleton height="1.5rem" [style]="{ width: column.width ? '80%' : '70%' }" /> </td> } @if (showActionsColumn()) { <td class="p-4"> <div class="flex gap-2"> <p-skeleton height="2rem" width="2.5rem" borderRadius="6px" /> <p-skeleton height="2rem" width="2.5rem" borderRadius="6px" /> </div> </td> } </tr> } </tbody> </table> </div> } @else { <p-table #dt [value]="items()!.content" [columns]="columns()" [globalFilterFields]="globalFilterFields()" [tableStyle]="{ 'min-width': '75rem' }" [rowHover]="true" dataKey="id" > <ng-template #caption> <div class="flex items-center justify-between"> <h5 class="m-0">{{ config()?.title || "Sem título" }}</h5> </div> </ng-template> <ng-template #header> <tr> @for (column of columns(); track $index) { <th [style.width]="column.width">{{ column.header }}</th> } @if (showActionsColumn()) { <th style="width: 12rem">Ações</th> } </tr> </ng-template> <ng-template #body let-row> <ng-container *ngTemplateOutlet="item; context: { $implicit: row }" ></ng-container> </ng-template> <ng-template #emptymessage> <ng-container *ngTemplateOutlet="empty"></ng-container> </ng-template> </p-table> <p-paginator [first]="first()" [rows]="rows()" [totalRecords]="items()!.page.totalElements" [rowsPerPageOptions]="[10, 20, 30]" [showCurrentPageReport]="true" currentPageReportTemplate="Exibindo itens {last} de {totalRecords}" (onPageChange)="onPage($event)" > </p-paginator> } <ng-template #item let-row> <tr> @for (column of columns(); track $index) { @if (templateMap()?.get(column.field)) { <td> <ng-container *ngTemplateOutlet=" templateMap()?.get(column.field); context: { $implicit: row } " ></ng-container> </td> } @else { <td> {{ column.transform ? column.transform(row) : (row | deepValue: column.field) }} </td> } } @if (showActionsColumn()) { <td> @if (actionsTemplate()) { <ng-container *ngTemplateOutlet="actionsTemplate(); context: { $implicit: row }" ></ng-container> } @else { @if (config()?.allowEditing !== false) { <p-button icon="pi pi-pencil" class="mr-2" severity="secondary" [loading]="loadingEntity()" [disabled]="loadingEntity()" (click)="edit(row)" ></p-button> } @if (config()?.allowDeletion !== false) { <p-button icon="pi pi-trash" severity="danger" [disabled]="loadingEntity()" (click)="deleteOne(row)" ></p-button> } } </td> } </tr> </ng-template> <ng-template #empty> <tr> <td [attr.colspan]="(columns()!.length || 0) + (showActionsColumn() ? 1 : 0)" class="text-center"> Nenhum registro encontrado. </td> </tr> </ng-template> 
+@if (loading() || !items()) {
+  <div class="overflow-x-auto">
+    <table class="w-full border-collapse" style="min-width: 75rem">
+      <thead>
+        <tr class="border-b border-surface-200 dark:border-surface-700">
+          @for (column of columns(); track $index) {
+            <th
+              class="text-left p-4 font-semibold text-surface-700 dark:text-surface-100"
+              [style.width]="column.width"
+            >
+              {{ column.header }}
+            </th>
+          }
+          @if (showActionsColumn()) {
+            <th
+              class="text-left p-4 font-semibold text-surface-700 dark:text-surface-100"
+              style="width: 12rem"
+            >
+              Ações
+            </th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (_ of skeletonRows; track $index) {
+          <tr class="border-b border-surface-100">
+            @for (column of columns(); track $index) {
+              <td class="p-4">
+                <p-skeleton
+                  height="1.5rem"
+                  [style]="{ width: column.width ? '80%' : '70%' }"
+                />
+              </td>
+            }
+            @if (showActionsColumn()) {
+              <td class="p-4">
+                <div class="flex gap-2">
+                  <p-skeleton height="2rem" width="2.5rem" borderRadius="6px" />
+                  <p-skeleton height="2rem" width="2.5rem" borderRadius="6px" />
+                </div>
+              </td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+} @else {
+  <p-table
+    #dt
+    [value]="items()!.content"
+    [columns]="columns()"
+    [globalFilterFields]="globalFilterFields()"
+    [tableStyle]="{ 'min-width': '75rem' }"
+    [rowHover]="true"
+    dataKey="id"
+  >
+    <ng-template #caption>
+      <div class="flex items-center justify-between">
+        <h5 class="m-0">{{ config()?.title || "Sem título" }}</h5>
+      </div>
+    </ng-template>
+    <ng-template #header>
+      <tr>
+        @for (column of columns(); track $index) {
+          <th [style.width]="column.width">{{ column.header }}</th>
+        }
+        @if (showActionsColumn()) {
+          <th style="width: 12rem">Ações</th>
+        }
+      </tr>
+    </ng-template>
+    <ng-template #body let-row>
+      <ng-container
+        *ngTemplateOutlet="item; context: { $implicit: row }"
+      ></ng-container>
+    </ng-template>
+    <ng-template #emptymessage>
+      <ng-container *ngTemplateOutlet="empty"></ng-container>
+    </ng-template>
+  </p-table>
+  <p-paginator
+    [first]="first()"
+    [rows]="rows()"
+    [totalRecords]="items()!.page.totalElements"
+    [rowsPerPageOptions]="[10, 20, 30]"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="Exibindo itens {last} de {totalRecords}"
+    (onPageChange)="onPage($event)"
+  >
+  </p-paginator>
+}
+<ng-template #item let-row>
+  <tr>
+    @for (column of columns(); track $index) {
+      @if (templateMap()?.get(column.field)) {
+        <td>
+          <ng-container
+            *ngTemplateOutlet="
+              templateMap()?.get(column.field);
+              context: { $implicit: row }
+            "
+          ></ng-container>
+        </td>
+      } @else {
+        <td>
+          {{
+            column.transform
+              ? column.transform(row)
+              : (row | deepValue: column.field)
+          }}
+        </td>
+      }
+    }
+    @if (showActionsColumn()) {
+      <td>
+        @if (actionsTemplate()) {
+          <ng-container
+            *ngTemplateOutlet="actionsTemplate(); context: { $implicit: row }"
+          ></ng-container>
+        } @else {
+          @if (config()?.allowEditing !== false) {
+            <p-button
+              icon="pi pi-pencil"
+              class="mr-2"
+              severity="secondary"
+              [loading]="loadingEntity()"
+              [disabled]="loadingEntity()"
+              (click)="edit(row)"
+            ></p-button>
+          }
+          @if (config()?.allowDeletion !== false) {
+            <p-button
+              icon="pi pi-trash"
+              severity="danger"
+              [disabled]="loadingEntity()"
+              (click)="deleteOne(row)"
+            ></p-button>
+          }
+        }
+      </td>
+    }
+  </tr>
+</ng-template>
+<ng-template #empty>
+  <tr>
+    <td
+      [attr.colspan]="(columns()!.length || 0) + (showActionsColumn() ? 1 : 0)"
+      class="text-center"
+    >
+      Nenhum registro encontrado.
+    </td>
+  </tr>
+</ng-template>

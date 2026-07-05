@@ -2,7 +2,11 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
-import { DynamicDialogConfig, DynamicDialogRef, DialogService } from 'primeng/dynamicdialog';
+import {
+  DynamicDialogConfig,
+  DynamicDialogRef,
+  DialogService,
+} from 'primeng/dynamicdialog';
 import { TableModule } from 'primeng/table';
 import { Loan, LoanItem } from '../loan';
 import { LoanService } from '../loan.service';
@@ -24,7 +28,7 @@ import { UserService } from '../../user/user.service';
     TableModule,
     SearchSelectComponent,
     InputNumberModule,
-    BarcodeScannerComponent
+    BarcodeScannerComponent,
   ],
   providers: [ReturnService, UserService],
   selector: 'app-loan-detail-dialog',
@@ -42,7 +46,7 @@ export class LoanDetailDialog implements OnInit {
   loan!: Loan;
   showAddModal = signal(false);
   isReadOnly = signal(true);
-  
+
   // Para adicionar novos itens
   newItems = signal<{ item: any; quantity: number }[]>([]);
   selectedItem: any = null;
@@ -56,8 +60,12 @@ export class LoanDetailDialog implements OnInit {
 
   ngOnInit(): void {
     this.loan = this.config.data?.loan;
-    this.editLoanDate = this.loan.loanDate ? new Date(this.loan.loanDate).toISOString().split('T')[0] : '';
-    this.editDeadline = this.loan.deadline ? new Date(this.loan.deadline).toISOString().split('T')[0] : '';
+    this.editLoanDate = this.loan.loanDate
+      ? new Date(this.loan.loanDate).toISOString().split('T')[0]
+      : '';
+    this.editDeadline = this.loan.deadline
+      ? new Date(this.loan.deadline).toISOString().split('T')[0]
+      : '';
     this.editObservation = this.loan.observation || '';
 
     if (this.config.data?.showHistory) {
@@ -70,7 +78,7 @@ export class LoanDetailDialog implements OnInit {
       },
       error: () => {
         this.isReadOnly.set(true);
-      }
+      },
     });
 
     this.returnService.findByLoan(this.loan).subscribe({
@@ -78,42 +86,63 @@ export class LoanDetailDialog implements OnInit {
         if (ret) {
           if (ret.items) {
             this.loan.items.forEach((item: any) => {
-              const retItem = ret.items!.find((r: any) => r.item?.id === item.item?.id);
+              const retItem = ret.items!.find(
+                (r: any) => r.item?.id === item.item?.id,
+              );
               item.returnedQuantity = retItem ? retItem.quantityReturned : 0;
             });
           }
           if (this.loan.status === 'COMPLETED') {
             if (ret.returnDate) {
-              this.editDeadline = new Date(ret.returnDate).toISOString().split('T')[0];
+              this.editDeadline = new Date(ret.returnDate)
+                .toISOString()
+                .split('T')[0];
             }
             if (ret.observation) {
-              this.editObservation = (this.loan.observation ? this.loan.observation + '\n\n---\n\n' : '') + 'Observação da Devolução:\n' + ret.observation;
+              this.editObservation =
+                (this.loan.observation
+                  ? this.loan.observation + '\n\n---\n\n'
+                  : '') +
+                'Observação da Devolução:\n' +
+                ret.observation;
             }
           }
         }
       },
-      error: () => {}
+      error: () => {},
     });
   }
 
   saveChanges() {
     if (!this.isDateValid()) return;
-    
+
     const payload = {
       ...this.loan,
-      loanDate: this.editLoanDate ? new Date(this.editLoanDate.replace(/-/g, '\/')).toISOString() : this.loan.loanDate,
-      deadline: this.editDeadline ? new Date(this.editDeadline.replace(/-/g, '\/')).toISOString() : this.loan.deadline,
-      observation: this.editObservation
+      loanDate: this.editLoanDate
+        ? new Date(this.editLoanDate.replace(/-/g, '\/')).toISOString()
+        : this.loan.loanDate,
+      deadline: this.editDeadline
+        ? new Date(this.editDeadline.replace(/-/g, '\/')).toISOString()
+        : this.loan.deadline,
+      observation: this.editObservation,
     };
 
     this.loanService.update(this.loan.id, payload).subscribe({
       next: (res) => {
-        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Alterações salvas com sucesso' });
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Sucesso',
+          detail: 'Alterações salvas com sucesso',
+        });
         this.ref.close(res);
       },
       error: (err) => {
-        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao atualizar empréstimo' });
-      }
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erro',
+          detail: 'Falha ao atualizar empréstimo',
+        });
+      },
     });
   }
 
@@ -126,16 +155,18 @@ export class LoanDetailDialog implements OnInit {
 
   getGroupedItems() {
     const groups: { [key: string]: LoanItem[] } = {};
-    this.loan.items.forEach(item => {
+    this.loan.items.forEach((item) => {
       // Busca a categoria pai se existir para agrupar em "Ferramentas" ou "Componentes"
       let category = item.item.category;
       let groupName = category?.description || 'Outros';
-      
+
       // Se for uma subcategoria, tenta pegar a descrição da categoria pai
       // Nota: No frontend o objeto Category pode não ter o objeto 'parent' carregado dependendo da API
       // Mas baseando-se no design, se a descrição contiver "Ferramenta" ou "Componente" ou se for o grupo principal.
-      if (groupName.toLowerCase().includes('ferramenta')) groupName = 'Ferramentas';
-      else if (groupName.toLowerCase().includes('componente')) groupName = 'Componentes';
+      if (groupName.toLowerCase().includes('ferramenta'))
+        groupName = 'Ferramentas';
+      else if (groupName.toLowerCase().includes('componente'))
+        groupName = 'Componentes';
 
       if (!groups[groupName]) {
         groups[groupName] = [];
@@ -158,15 +189,20 @@ export class LoanDetailDialog implements OnInit {
 
   addItemToList() {
     if (!this.selectedItem) return;
-    
-    const existing = this.newItems().find(i => i.item.id === this.selectedItem.id);
+
+    const existing = this.newItems().find(
+      (i) => i.item.id === this.selectedItem.id,
+    );
     const currentRequested = existing ? existing.quantity : 0;
-    
-    if ((currentRequested + this.itemQuantity) > (this.selectedItem.quantity || 0)) {
-      this.messageService.add({ 
-        severity: 'error', 
-        summary: 'Estoque Insuficiente', 
-        detail: `O item possui apenas ${this.selectedItem.quantity || 0} unidades disponíveis em estoque.` 
+
+    if (
+      currentRequested + this.itemQuantity >
+      (this.selectedItem.quantity || 0)
+    ) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Estoque Insuficiente',
+        detail: `O item possui apenas ${this.selectedItem.quantity || 0} unidades disponíveis em estoque.`,
       });
       return;
     }
@@ -175,9 +211,12 @@ export class LoanDetailDialog implements OnInit {
       existing.quantity += this.itemQuantity;
       this.newItems.set([...this.newItems()]);
     } else {
-      this.newItems.update(items => [...items, { item: this.selectedItem, quantity: this.itemQuantity }]);
+      this.newItems.update((items) => [
+        ...items,
+        { item: this.selectedItem, quantity: this.itemQuantity },
+      ]);
     }
-    
+
     this.selectedItem = null;
     this.itemQuantity = 1;
   }
@@ -187,14 +226,22 @@ export class LoanDetailDialog implements OnInit {
       this.selectedItem = result.data;
       this.itemQuantity = 1;
       this.addItemToList();
-      this.messageService.add({ severity: 'success', summary: 'Item Adicionado', detail: `O item ${result.data.name} foi adicionado à lista.` });
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Item Adicionado',
+        detail: `O item ${result.data.name} foi adicionado à lista.`,
+      });
     } else {
-      this.messageService.add({ severity: 'warn', summary: 'Aviso', detail: 'Por favor, bipe um item, não um aluno.' });
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Aviso',
+        detail: 'Por favor, bipe um item, não um aluno.',
+      });
     }
   }
 
   removeItemFromList(index: number) {
-    this.newItems.update(items => items.filter((_, i) => i !== index));
+    this.newItems.update((items) => items.filter((_, i) => i !== index));
   }
 
   confirmAddItems() {
@@ -202,58 +249,78 @@ export class LoanDetailDialog implements OnInit {
 
     // Adiciona os novos itens ao empréstimo existente
     const updatedItems = [...this.loan.items];
-    
-    this.newItems().forEach(newItem => {
-      const existing = updatedItems.find(li => li.item.id === newItem.item.id);
+
+    this.newItems().forEach((newItem) => {
+      const existing = updatedItems.find(
+        (li) => li.item.id === newItem.item.id,
+      );
       if (existing) {
         existing.quantity += newItem.quantity;
       } else {
         updatedItems.push({
           item: newItem.item,
-          quantity: newItem.quantity
+          quantity: newItem.quantity,
         } as LoanItem);
       }
     });
 
     const payload = {
       ...this.loan,
-      items: updatedItems
+      items: updatedItems,
     };
 
     this.loanService.update(this.loan.id, payload).subscribe({
       next: (res) => {
         this.loan = res;
-        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Itens adicionados com sucesso' });
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Sucesso',
+          detail: 'Itens adicionados com sucesso',
+        });
         this.closeAddModal();
         this.close(); // Close the main dialog to return to the loans list
       },
       error: (err) => {
-        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao adicionar itens' });
-      }
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erro',
+          detail: 'Falha ao adicionar itens',
+        });
+      },
     });
   }
 
   fetchUserLoans() {
-      // Busca os últimos empréstimos desse mutuário
-      this.loanService.search({
+    // Busca os últimos empréstimos desse mutuário
+    this.loanService
+      .search({
         filters: [
-          { field: 'borrower.id', value: this.loan.borrower.id, type: 'EQUALS' }
+          {
+            field: 'borrower.id',
+            value: this.loan.borrower.id,
+            type: 'EQUALS',
+          },
         ],
         sort: { field: 'loanDate', type: 'DESC' },
         page: 0,
-        rows: 50
-      }).subscribe((page: any) => {
+        rows: 50,
+      })
+      .subscribe((page: any) => {
         // Mostrar todos menos o atual no histórico se ativo, mostrar todos se completado
-        const history = this.loan.status === 'COMPLETED' 
-          ? page.content 
-          : page.content.filter((l: any) => l.id !== this.loan.id);
-        
+        const history =
+          this.loan.status === 'COMPLETED'
+            ? page.content
+            : page.content.filter((l: any) => l.id !== this.loan.id);
+
         // Ensure strictly sorted by date locally just in case
-        history.sort((a: any, b: any) => new Date(b.loanDate).getTime() - new Date(a.loanDate).getTime());
-        
+        history.sort(
+          (a: any, b: any) =>
+            new Date(b.loanDate).getTime() - new Date(a.loanDate).getTime(),
+        );
+
         this.userLoans.set(history);
       });
-    }
+  }
 
   close() {
     this.ref.close(this.loan);

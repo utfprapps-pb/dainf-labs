@@ -1,11 +1,11 @@
 import { Identifiable } from '@/shared/crud/crud';
 import { User } from '../user/user';
-import { Item } from '../item/item'; 
+import { Item } from '../item/item';
 
 export interface ReservationItem extends Identifiable {
-  item: Item; 
+  item: Item;
   quantity: number;
-  price?: number; 
+  price?: number;
 }
 
 export interface Reservation extends Identifiable {

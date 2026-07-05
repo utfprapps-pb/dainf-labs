@@ -1,1 +1,109 @@
-@if (formTemplate()) { <div> <ng-container *ngTemplateOutlet="formTemplate()"></ng-container> <ng-container> <div class="flex justify-end col-span-12"> @if (allowAdding()) { @if (editing()) { <p-button icon="pi pi-pencil" label="Salvar" severity="info" (click)="save()" /> } @else { <p-button icon="pi pi-plus" label="Adicionar" severity="success" (click)="save()" /> } } </div> </ng-container> </div> } <p-table [value]="items()" [columns]="columns()" [rowHover]="true" dataKey="id"> <ng-template #header> <tr> @for (column of columns(); track $index) { <th [style.width]="column.width">{{ column.header }}</th> } <th style="width: 12rem">Ações</th> </tr> </ng-template> <ng-template #body let-row let-rowIndex="rowIndex"> <tr [ngClass]="{'bg-green-100 transition-colors duration-1000': row._isNew, 'bg-blue-50/50 shadow-[inset_0_0_0_2px_#3b82f6]': inlineEdit() && editingIndex === rowIndex}"> @for (column of columns(); track $index) { <td> @if (!inlineEdit() || editingIndex !== rowIndex) { {{ column.transform ? column.transform(row) : (row | deepValue: column.field) }} } @if (inlineEdit() && editingIndex === rowIndex) { <input pInputText type="text" [(ngModel)]="editingItem[column.field]" class="w-full p-3 text-base font-medium border-2 border-blue-400 rounded-lg shadow-sm focus:border-blue-600 focus:ring-2 focus:ring-blue-200 transition-all bg-surface-0 dark:bg-surface-900 text-color" /> } </td> } <td> @if (editingIndex !== rowIndex) { @if (allowEditing()) { <p-button icon="pi pi-pencil" class="mr-2" severity="secondary" [styleClass]="row._needsEdit ? 'animate-[pulse_1.5s_infinite] shadow-[0_0_10px_rgba(59,130,246,0.6)] border-blue-400 bg-blue-100 text-blue-700' : ''" (click)="edit(rowIndex)" /> } @if (allowDeleting()) { <p-button icon="pi pi-trash" severity="danger" (click)="remove(rowIndex)" /> } } @if (inlineEdit() && editingIndex === rowIndex) { <p-button icon="pi pi-check" class="mr-2" severity="success" (click)="saveInline()" /> <p-button icon="pi pi-times" severity="secondary" (click)="cancel()" /> } </td> </tr> </ng-template> <ng-template #emptymessage> <tr> <td [attr.colspan]="(columns()!.length || 0) + 1" class="text-center"> Nenhum registro encontrado. </td> </tr> </ng-template> </p-table> 
+@if (formTemplate()) {
+  <div>
+    <ng-container *ngTemplateOutlet="formTemplate()"></ng-container>
+    <ng-container>
+      <div class="flex justify-end col-span-12">
+        @if (allowAdding()) {
+          @if (editing()) {
+            <p-button
+              icon="pi pi-pencil"
+              label="Salvar"
+              severity="info"
+              (click)="save()"
+            />
+          } @else {
+            <p-button
+              icon="pi pi-plus"
+              label="Adicionar"
+              severity="success"
+              (click)="save()"
+            />
+          }
+        }
+      </div>
+    </ng-container>
+  </div>
+}
+<p-table [value]="items()" [columns]="columns()" [rowHover]="true" dataKey="id">
+  <ng-template #header>
+    <tr>
+      @for (column of columns(); track $index) {
+        <th [style.width]="column.width">{{ column.header }}</th>
+      }
+      <th style="width: 12rem">Ações</th>
+    </tr>
+  </ng-template>
+  <ng-template #body let-row let-rowIndex="rowIndex">
+    <tr
+      [ngClass]="{
+        'bg-green-100 transition-colors duration-1000': row._isNew,
+        'bg-blue-50/50 shadow-[inset_0_0_0_2px_#3b82f6]':
+          inlineEdit() && editingIndex === rowIndex,
+      }"
+    >
+      @for (column of columns(); track $index) {
+        <td>
+          @if (!inlineEdit() || editingIndex !== rowIndex) {
+            {{
+              column.transform
+                ? column.transform(row)
+                : (row | deepValue: column.field)
+            }}
+          }
+          @if (inlineEdit() && editingIndex === rowIndex) {
+            <input
+              pInputText
+              type="text"
+              [(ngModel)]="editingItem[column.field]"
+              class="w-full p-3 text-base font-medium border-2 border-blue-400 rounded-lg shadow-sm focus:border-blue-600 focus:ring-2 focus:ring-blue-200 transition-all bg-surface-0 dark:bg-surface-900 text-color"
+            />
+          }
+        </td>
+      }
+      <td>
+        @if (editingIndex !== rowIndex) {
+          @if (allowEditing()) {
+            <p-button
+              icon="pi pi-pencil"
+              class="mr-2"
+              severity="secondary"
+              [styleClass]="
+                row._needsEdit
+                  ? 'animate-[pulse_1.5s_infinite] shadow-[0_0_10px_rgba(59,130,246,0.6)] border-blue-400 bg-blue-100 text-blue-700'
+                  : ''
+              "
+              (click)="edit(rowIndex)"
+            />
+          }
+          @if (allowDeleting()) {
+            <p-button
+              icon="pi pi-trash"
+              severity="danger"
+              (click)="remove(rowIndex)"
+            />
+          }
+        }
+        @if (inlineEdit() && editingIndex === rowIndex) {
+          <p-button
+            icon="pi pi-check"
+            class="mr-2"
+            severity="success"
+            (click)="saveInline()"
+          />
+          <p-button
+            icon="pi pi-times"
+            severity="secondary"
+            (click)="cancel()"
+          />
+        }
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template #emptymessage>
+    <tr>
+      <td [attr.colspan]="(columns()!.length || 0) + 1" class="text-center">
+        Nenhum registro encontrado.
+      </td>
+    </tr>
+  </ng-template>
+</p-table>

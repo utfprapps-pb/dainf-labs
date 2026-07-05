@@ -21,7 +21,10 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { TagModule } from 'primeng/tag';
 import { Item } from '../item/item';
 import { ItemService } from '../item/item.service';
-import { InventoryTransaction, InventoryTransactionType } from './inventory-history';
+import {
+  InventoryTransaction,
+  InventoryTransactionType,
+} from './inventory-history';
 import { InventoryHistoryService } from './inventory-history.service';
 
 const ADDITION_TYPES: InventoryTransactionType[] = ['PURCHASE', 'RETURN'];
@@ -50,7 +53,9 @@ export class InventoryHistoryComponent implements AfterViewInit {
   labelValue = inject(LabelValuePipe);
   datePipe = inject(DatePipe);
 
-  templateMap: Map<keyof InventoryTransaction | string, TemplateRef<any>> | undefined;
+  templateMap:
+    | Map<keyof InventoryTransaction | string, TemplateRef<any>>
+    | undefined;
 
   config: CrudConfig<InventoryTransaction> = {
     title: 'Histórico de Estoque',
@@ -78,7 +83,8 @@ export class InventoryHistoryComponent implements AfterViewInit {
     {
       field: 'date',
       header: 'Data',
-      transform: (row) => this.datePipe.transform(row.date, 'dd/MM/yyyy HH:mm') || '',
+      transform: (row) =>
+        this.datePipe.transform(row.date, 'dd/MM/yyyy HH:mm') || '',
     },
     { field: 'balance', header: 'Quantidade no momento' },
   ];
@@ -142,7 +148,9 @@ export class InventoryHistoryComponent implements AfterViewInit {
 
   onItemFilterChange(item: Item | undefined) {
     this.itemFilter.set(item);
-    this.selectedItemQuantity.set(item ? Number(item.quantity ?? 0) : undefined);
+    this.selectedItemQuantity.set(
+      item ? Number(item.quantity ?? 0) : undefined,
+    );
   }
 
   clearFilters() {
