@@ -64,6 +64,7 @@ export class InventoryHistoryComponent implements AfterViewInit {
     { label: 'Empréstimo', value: 'LOAN' },
     { label: 'Saída', value: 'ISSUE' },
     { label: 'Devolução', value: 'RETURN' },
+    { label: 'Perda/Extravio', value: 'LEAKAGE' },
   ];
 
   cols: Column<InventoryTransaction>[] = [

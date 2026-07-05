@@ -8,6 +8,7 @@ import { ConfigurationComponent } from './config/config.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { InventoryHistoryComponent } from './inventory-history/inventory-history.component';
 import { IssueComponent } from './issue/issue.component';
+import { LeakageComponent } from './leakage/leakage.component';
 import { ItemComponent } from './item/item.component';
 import { LoanComponent } from './loan/loan.component';
 import { ReturnComponent } from './return/return.component';
@@ -31,6 +32,7 @@ export default [
       { path: 'purchase', component: PurchaseComponent, canActivate: [RoleGuard] },
       { path: 'loan', component: LoanComponent, canActivate: [RoleGuard] },
       { path: 'issue', component: IssueComponent, canActivate: [RoleGuard] },
+      { path: 'leakage', component: LeakageComponent, canActivate: [RoleGuard] },
       { path: 'return', component: ReturnComponent, canActivate: [RoleGuard] },
       { path: 'reservation', component: ReservationComponent, canActivate: [RoleGuard] },
       { path: 'purchase-solicitation', component: PurchaseSolicitationComponent, canActivate: [RoleGuard] },

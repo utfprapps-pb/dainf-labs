@@ -10,7 +10,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -35,22 +37,24 @@ class PurchaseServiceInventoryTest {
     @Mock ConfigurationService configurationService;
     @Mock TransactionAuditor auditor;
     @Mock UserService userService;
+    @Mock ItemService itemService;
 
     InventoryService inventoryService;
-    PurchaseService purchaseService;
+    @InjectMocks PurchaseService purchaseService;
 
     final Map<Long, Inventory> store = new HashMap<>();
     long idSeq = 1;
 
     @BeforeEach
     void setUp() {
+        MockitoAnnotations.openMocks(this);
         store.clear();
         idSeq = 1;
 
         inventoryService = new InventoryService(auditor, configurationService);
         ReflectionTestUtils.setField(inventoryService, "repository", inventoryRepository);
 
-        purchaseService = new PurchaseService(inventoryService, userService);
+        purchaseService = new PurchaseService(inventoryService, userService, itemService);
         ReflectionTestUtils.setField(purchaseService, "repository", purchaseRepository);
 
         lenient().when(inventoryRepository.findByItem(any())).thenAnswer(inv -> {

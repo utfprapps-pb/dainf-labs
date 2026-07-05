@@ -14,14 +14,37 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class ItemService extends CrudService<Long, Item, ItemRepository> {
 
     private final StorageService storageService;
+    private final br.edu.utfpr.dainf.repository.InventoryRepository inventoryRepository;
+    private final br.edu.utfpr.dainf.repository.InventoryTransactionRepository inventoryTransactionRepository;
+    private final jakarta.persistence.EntityManager entityManager;
 
-    public ItemService(StorageService storageService) {
+    public ItemService(StorageService storageService, br.edu.utfpr.dainf.repository.InventoryRepository inventoryRepository, br.edu.utfpr.dainf.repository.InventoryTransactionRepository inventoryTransactionRepository, jakarta.persistence.EntityManager entityManager) {
         this.storageService = storageService;
+        this.inventoryRepository = inventoryRepository;
+        this.inventoryTransactionRepository = inventoryTransactionRepository;
+        this.entityManager = entityManager;
     }
 
     @Override
     public JpaSpecificationExecutor<Item> getSpecExecutor() {
         return repository;
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void deleteById(Long id) {
+        Item item = repository.findById(id).orElse(null);
+        if (item != null) {
+            entityManager.createQuery("DELETE FROM CartItem ci WHERE ci.item = :item")
+                         .setParameter("item", item)
+                         .executeUpdate();
+                         
+            inventoryRepository.findByItem(item).ifPresent(inventory -> {
+                inventoryTransactionRepository.deleteByInventory(inventory);
+                inventoryRepository.delete(inventory);
+            });
+            super.deleteById(id);
+        }
     }
 
     @Override
@@ -42,6 +65,11 @@ public class ItemService extends CrudService<Long, Item, ItemRepository> {
         }
 
         if (savedEntity.getImages() != null && moveTempImages(savedEntity)) {
+            savedEntity = super.save(savedEntity);
+        }
+
+        if (savedEntity.getMinimumStock() == null) {
+            savedEntity.setMinimumStock(java.math.BigDecimal.ZERO);
             savedEntity = super.save(savedEntity);
         }
 

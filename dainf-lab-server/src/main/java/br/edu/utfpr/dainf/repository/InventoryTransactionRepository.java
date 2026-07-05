@@ -10,6 +10,9 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 
 public interface InventoryTransactionRepository extends CrudRepository<Long, InventoryTransaction>, InventoryTransactionSpecExecutor {
+    
+    void deleteByInventory(br.edu.utfpr.dainf.model.Inventory inventory);
+    
     @Query("""
             SELECT new br.edu.utfpr.dainf.dto.InventoryOperationDTO(
                 it.id,

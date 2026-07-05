@@ -162,6 +162,14 @@ public class LoanService extends CrudService<Long, Loan, LoanRepository> {
         return repository.findHistoryByItem(itemId);
     }
 
+    public BigDecimal getLoanedQuantityForItem(Long itemId) {
+        BigDecimal loaned = repository.sumActiveLoanQuantityByItem(itemId);
+        BigDecimal returned = returnRepository.sumActiveReturnQuantityByItem(itemId);
+        loaned = loaned != null ? loaned : BigDecimal.ZERO;
+        returned = returned != null ? returned : BigDecimal.ZERO;
+        return loaned.subtract(returned);
+    }
+
     public Loan refreshStatus(Loan loan) {
         if (loan == null || loan.getId() == null) {
             return loan;

@@ -18,10 +18,12 @@ public class PurchaseService extends CrudService<Long, Purchase, PurchaseReposit
 
     private final InventoryService inventoryService;
     private final UserService userService;
+    private final ItemService itemService;
 
-    public PurchaseService(InventoryService inventoryService, UserService userService) {
+    public PurchaseService(InventoryService inventoryService, UserService userService, ItemService itemService) {
         this.inventoryService = inventoryService;
         this.userService = userService;
+        this.itemService = itemService;
     }
 
     @Override
@@ -46,6 +48,15 @@ public class PurchaseService extends CrudService<Long, Purchase, PurchaseReposit
                     InventoryTransactionType.PURCHASE,
                     item.getQuantity()
             );
+
+            br.edu.utfpr.dainf.model.Item i = itemService.findById(item.getItem().getId()).orElseThrow();
+            BigDecimal oldQty = oldItem != null ? oldItem.getQuantity() : BigDecimal.ZERO;
+            BigDecimal diff = item.getQuantity().subtract(oldQty);
+            if (diff.compareTo(BigDecimal.ZERO) != 0) {
+                BigDecimal currentMinStock = i.getMinimumStock() != null ? i.getMinimumStock() : BigDecimal.ZERO;
+                i.setMinimumStock(currentMinStock.add(diff));
+                itemService.save(i);
+            }
         }
         // Undo inventory for items removed from the purchase entirely (not just set to 0)
         if (existing != null && existing.getItems() != null) {
@@ -59,6 +70,11 @@ public class PurchaseService extends CrudService<Long, Purchase, PurchaseReposit
                             InventoryTransactionType.PURCHASE,
                             BigDecimal.ZERO
                     );
+
+                    br.edu.utfpr.dainf.model.Item i = itemService.findById(oldItem.getItem().getId()).orElseThrow();
+                    BigDecimal currentMinStock = i.getMinimumStock() != null ? i.getMinimumStock() : BigDecimal.ZERO;
+                    i.setMinimumStock(currentMinStock.subtract(oldItem.getQuantity()));
+                    itemService.save(i);
                 }
             }
         }
