@@ -1,5 +1,12 @@
 import { CommonModule, DatePipe } from '@angular/common';
-import { Component, computed, inject, model, OnInit, signal } from '@angular/core'; // Adicionado OnInit
+import {
+  Component,
+  computed,
+  inject,
+  model,
+  OnInit,
+  signal,
+} from '@angular/core'; // Adicionado OnInit
 import {
   AbstractControl,
   FormBuilder,
@@ -69,7 +76,7 @@ export class PurchaseComponent implements OnInit {
 
   config: CrudConfig<Purchase> = {
     title: 'Compras',
-    allowDeletion: false
+    allowDeletion: false,
   };
 
   form: FormGroup = this.formBuilder.group({

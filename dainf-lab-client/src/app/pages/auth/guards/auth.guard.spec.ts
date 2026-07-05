@@ -9,10 +9,7 @@ describe('AuthGuard', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [
-        TokenService,
-        provideRouter([]),
-      ],
+      providers: [TokenService, provideRouter([])],
     });
     tokenService = TestBed.inject(TokenService);
     router = TestBed.inject(Router);
@@ -24,9 +21,7 @@ describe('AuthGuard', () => {
   });
 
   function runGuard() {
-    return TestBed.runInInjectionContext(() =>
-      AuthGuard({} as any, {} as any)
-    );
+    return TestBed.runInInjectionContext(() => AuthGuard({} as any, {} as any));
   }
 
   it('returns true when a token is present', () => {

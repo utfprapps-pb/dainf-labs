@@ -13,15 +13,17 @@ import { InputNumberModule } from 'primeng/inputnumber';
   standalone: true,
   imports: [CommonModule, ButtonModule, InputNumberModule, FormsModule],
   templateUrl: './cart.component.html',
-  styles: [`
-    .cart-item-name {
-      display: block;
-      max-width: 200px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-  `],
+  styles: [
+    `
+      .cart-item-name {
+        display: block;
+        max-width: 200px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    `,
+  ],
 })
 export class CartComponent {
   cartService = inject(CartService);

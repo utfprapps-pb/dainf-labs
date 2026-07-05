@@ -22,9 +22,9 @@ type ConfirmationStatus = 'loading' | 'success' | 'error';
     ProgressSpinnerModule,
     RippleModule,
     AppFloatingConfigurator,
-    LogoComponent
+    LogoComponent,
   ],
-  templateUrl: './confirm-email.component.html'
+  templateUrl: './confirm-email.component.html',
 })
 export class ConfirmEmailComponent implements OnDestroy {
   status: ConfirmationStatus = 'loading';
@@ -36,7 +36,7 @@ export class ConfirmEmailComponent implements OnDestroy {
   private _redirectTimeout: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
-    this._route.queryParamMap.subscribe(params => {
+    this._route.queryParamMap.subscribe((params) => {
       const token = params.get('token');
       if (token) {
         this._confirm(token);
@@ -68,9 +68,11 @@ export class ConfirmEmailComponent implements OnDestroy {
       },
       error: (err) => {
         this.status = 'error';
-        this.errorMessage = err?.error?.message || 'Não foi possível confirmar o e-mail. O token pode estar inválido ou expirado.';
+        this.errorMessage =
+          err?.error?.message ||
+          'Não foi possível confirmar o e-mail. O token pode estar inválido ou expirado.';
         console.error('Failed to confirm e-mail', err);
-      }
+      },
     });
   }
 }

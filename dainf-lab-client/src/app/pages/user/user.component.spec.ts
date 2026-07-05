@@ -14,12 +14,25 @@ describe('UserComponent form', () => {
   function buildForm() {
     return fb.group({
       id: [{ value: null as any, disabled: true }],
-      email: [null as string | null, Validators.compose([Validators.required, Validators.email, utfprEmailValidator()])],
+      email: [
+        null as string | null,
+        Validators.compose([
+          Validators.required,
+          Validators.email,
+          utfprEmailValidator(),
+        ]),
+      ],
       nome: [null as string | null, Validators.required],
       telefone: [null as string | null],
       documento: [null as string | null],
       role: [null as string | null, Validators.required],
-      password: [null as string | null, Validators.compose([Validators.minLength(6), passwordStrengthValidator()])],
+      password: [
+        null as string | null,
+        Validators.compose([
+          Validators.minLength(6),
+          passwordStrengthValidator(),
+        ]),
+      ],
       enabled: [true],
     });
   }
@@ -55,33 +68,53 @@ describe('UserComponent form', () => {
 
   it('is invalid with a malformed email', () => {
     const form = buildForm();
-    form.patchValue({ email: 'not-an-email', nome: 'João', role: 'ROLE_STUDENT' });
+    form.patchValue({
+      email: 'not-an-email',
+      nome: 'João',
+      role: 'ROLE_STUDENT',
+    });
     expect(form.invalid).toBeTrue();
     expect(form.get('email')?.errors?.['email']).toBeTruthy();
   });
 
   it('is invalid with a non-UTFPR email domain', () => {
     const form = buildForm();
-    form.patchValue({ email: 'joao@gmail.com', nome: 'João', role: 'ROLE_STUDENT' });
+    form.patchValue({
+      email: 'joao@gmail.com',
+      nome: 'João',
+      role: 'ROLE_STUDENT',
+    });
     expect(form.invalid).toBeTrue();
     expect(form.get('email')?.errors?.['utfprEmail']).toBeTrue();
   });
 
   it('is valid with a utfpr.edu.br email', () => {
     const form = buildForm();
-    form.patchValue({ email: 'joao@utfpr.edu.br', nome: 'João', role: 'ROLE_STUDENT' });
+    form.patchValue({
+      email: 'joao@utfpr.edu.br',
+      nome: 'João',
+      role: 'ROLE_STUDENT',
+    });
     expect(form.valid).toBeTrue();
   });
 
   it('is valid with an alunos.utfpr.edu.br email', () => {
     const form = buildForm();
-    form.patchValue({ email: 'a2023@alunos.utfpr.edu.br', nome: 'João', role: 'ROLE_STUDENT' });
+    form.patchValue({
+      email: 'a2023@alunos.utfpr.edu.br',
+      nome: 'João',
+      role: 'ROLE_STUDENT',
+    });
     expect(form.valid).toBeTrue();
   });
 
   it('is valid with a professores.utfpr.edu.br email', () => {
     const form = buildForm();
-    form.patchValue({ email: 'prof@professores.utfpr.edu.br', nome: 'Prof', role: 'ROLE_PROFESSOR' });
+    form.patchValue({
+      email: 'prof@professores.utfpr.edu.br',
+      nome: 'Prof',
+      role: 'ROLE_PROFESSOR',
+    });
     expect(form.valid).toBeTrue();
   });
 
@@ -89,41 +122,71 @@ describe('UserComponent form', () => {
 
   it('is valid when password is null (password is optional)', () => {
     const form = buildForm();
-    form.patchValue({ email: 'joao@utfpr.edu.br', nome: 'João', role: 'ROLE_STUDENT', password: null });
+    form.patchValue({
+      email: 'joao@utfpr.edu.br',
+      nome: 'João',
+      role: 'ROLE_STUDENT',
+      password: null,
+    });
     expect(form.valid).toBeTrue();
   });
 
   it('is invalid when password is shorter than 6 characters', () => {
     const form = buildForm();
-    form.patchValue({ email: 'joao@utfpr.edu.br', nome: 'João', role: 'ROLE_STUDENT', password: 'Ab1' });
+    form.patchValue({
+      email: 'joao@utfpr.edu.br',
+      nome: 'João',
+      role: 'ROLE_STUDENT',
+      password: 'Ab1',
+    });
     expect(form.invalid).toBeTrue();
     expect(form.get('password')?.errors?.['minlength']).toBeTruthy();
   });
 
   it('is invalid when password lacks uppercase letter', () => {
     const form = buildForm();
-    form.patchValue({ email: 'joao@utfpr.edu.br', nome: 'João', role: 'ROLE_STUDENT', password: 'abcdef1' });
+    form.patchValue({
+      email: 'joao@utfpr.edu.br',
+      nome: 'João',
+      role: 'ROLE_STUDENT',
+      password: 'abcdef1',
+    });
     expect(form.invalid).toBeTrue();
     expect(form.get('password')?.errors?.['passwordStrength']).toBeTrue();
   });
 
   it('is invalid when password lacks lowercase letter', () => {
     const form = buildForm();
-    form.patchValue({ email: 'joao@utfpr.edu.br', nome: 'João', role: 'ROLE_STUDENT', password: 'ABCDEF1' });
+    form.patchValue({
+      email: 'joao@utfpr.edu.br',
+      nome: 'João',
+      role: 'ROLE_STUDENT',
+      password: 'ABCDEF1',
+    });
     expect(form.invalid).toBeTrue();
     expect(form.get('password')?.errors?.['passwordStrength']).toBeTrue();
   });
 
   it('is invalid when password lacks a digit', () => {
     const form = buildForm();
-    form.patchValue({ email: 'joao@utfpr.edu.br', nome: 'João', role: 'ROLE_STUDENT', password: 'AbcdefG' });
+    form.patchValue({
+      email: 'joao@utfpr.edu.br',
+      nome: 'João',
+      role: 'ROLE_STUDENT',
+      password: 'AbcdefG',
+    });
     expect(form.invalid).toBeTrue();
     expect(form.get('password')?.errors?.['passwordStrength']).toBeTrue();
   });
 
   it('is valid when password meets all requirements', () => {
     const form = buildForm();
-    form.patchValue({ email: 'joao@utfpr.edu.br', nome: 'João', role: 'ROLE_STUDENT', password: 'Senha123' });
+    form.patchValue({
+      email: 'joao@utfpr.edu.br',
+      nome: 'João',
+      role: 'ROLE_STUDENT',
+      password: 'Senha123',
+    });
     expect(form.valid).toBeTrue();
   });
 
@@ -131,7 +194,11 @@ describe('UserComponent form', () => {
 
   it('telefone and documento are optional', () => {
     const form = buildForm();
-    form.patchValue({ email: 'joao@utfpr.edu.br', nome: 'João', role: 'ROLE_STUDENT' });
+    form.patchValue({
+      email: 'joao@utfpr.edu.br',
+      nome: 'João',
+      role: 'ROLE_STUDENT',
+    });
     expect(form.get('telefone')?.value).toBeNull();
     expect(form.get('documento')?.value).toBeNull();
     expect(form.valid).toBeTrue();

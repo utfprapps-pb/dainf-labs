@@ -94,9 +94,7 @@ export class PhotoAttachmentComponent implements ControlValueAccessor {
   }
 
   removeImage(event: any, item: Image, removeFileCallback: any) {
-    const image = this.value().findIndex(
-      (img) => this.isSameImage(img, item)
-    );
+    const image = this.value().findIndex((img) => this.isSameImage(img, item));
     if (image === -1) return;
     this.value.update((v) => v.filter((i) => !this.isSameImage(i, item)));
     this.onChange(this.value());

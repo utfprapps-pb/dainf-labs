@@ -8,7 +8,10 @@ import {
 import { map } from 'rxjs';
 import { MenuService } from './../../../shared/services/menu.service';
 
-export const RoleGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
+export const RoleGuard: CanActivateFn = (
+  route: ActivatedRouteSnapshot,
+  state: RouterStateSnapshot,
+) => {
   const menuService = inject(MenuService);
   const router = inject(Router);
 
@@ -16,10 +19,10 @@ export const RoleGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: R
   const currentPath = route.routeConfig?.path ?? '';
 
   return menuService.getMenu().pipe(
-    map(menuItems => {
+    map((menuItems) => {
       const flatMenu = flattenMenu(menuItems.items);
 
-      const allowed = flatMenu.some(item => {
+      const allowed = flatMenu.some((item) => {
         if (!item.routerLink) return false;
         const link = item.routerLink.replace(/^\//, '');
         return link === currentPath;
@@ -40,8 +43,8 @@ export const RoleGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: R
  */
 function flattenMenu(items: any[]): any[] {
   if (!Array.isArray(items)) return [];
-  return items.flatMap(item => [
+  return items.flatMap((item) => [
     item,
-    ...(item.items ? flattenMenu(item.items) : [])
+    ...(item.items ? flattenMenu(item.items) : []),
   ]);
 }

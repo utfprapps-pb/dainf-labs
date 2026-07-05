@@ -88,7 +88,9 @@ export class CategorySelectComponent implements OnInit, ControlValueAccessor {
 
   writeValue(value: Category | null): void {
     this.value = value;
-    this.selectedNodeKey = value ? this.categoryTreeNodePipe.transform([value]) : undefined;
+    this.selectedNodeKey = value
+      ? this.categoryTreeNodePipe.transform([value])
+      : undefined;
   }
 
   registerOnChange(fn: (value: Category | null) => void): void {

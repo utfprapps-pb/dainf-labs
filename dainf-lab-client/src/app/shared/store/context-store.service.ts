@@ -8,7 +8,7 @@ export class ContextStore {
   readonly contexts = this._contexts.asReadonly();
 
   set(key: string, data: any) {
-    this._contexts.update(ctx => ({ ...ctx, [key]: data }));
+    this._contexts.update((ctx) => ({ ...ctx, [key]: data }));
   }
 
   consume<T = any>(key: string): T | null {

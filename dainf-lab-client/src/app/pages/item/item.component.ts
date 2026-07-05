@@ -55,7 +55,7 @@ import { MessageService } from 'primeng/api';
     PhotoAttachmentComponent,
     ButtonModule,
     TooltipModule,
-    TableModule
+    TableModule,
   ],
   providers: [
     ItemService,
@@ -82,7 +82,10 @@ export class ItemComponent implements OnInit {
 
   dialogRef: DynamicDialogRef | undefined;
 
-  userHasAdvancedPrivileges = toSignal(this.userService.hasAdvancedPrivileges(), { initialValue: false });
+  userHasAdvancedPrivileges = toSignal(
+    this.userService.hasAdvancedPrivileges(),
+    { initialValue: false },
+  );
 
   storageService = new StorageImplService(
     `${this.itemService._url}/storage`,
@@ -122,20 +125,14 @@ export class ItemComponent implements OnInit {
           return { invalidQuantity: true };
         }
         return null;
-      }
+      },
     ],
   });
 
   assetForm: FormGroup = this.formBuilder.group({
     id: [null],
-    location: [
-      null,
-      Validators.compose([Validators.maxLength(255)]),
-    ],
-    serialNumber: [
-      null,
-      Validators.compose([Validators.maxLength(255)]),
-    ],
+    location: [null, Validators.compose([Validators.maxLength(255)])],
+    serialNumber: [null, Validators.compose([Validators.maxLength(255)])],
   });
 
   itemTypeOptions: LabelValue<ItemType>[] = [
@@ -153,8 +150,15 @@ export class ItemComponent implements OnInit {
       header: 'Localização',
       transform: (item: Item) =>
         item.type === 'CONSUMABLE'
-          ? item.location
-          : item.assets?.map((asset) => asset?.location).filter(loc => loc && String(loc).trim() !== '').join(', '),
+          ? item.location?.toUpperCase()
+          : Array.from(
+              new Set(
+                item.assets
+                  ?.map((asset) => asset?.location)
+                  .filter((loc) => loc && String(loc).trim() !== '')
+                  .map((loc) => String(loc).trim().toUpperCase())
+              )
+            ).join(', '),
     },
   ];
 
@@ -163,86 +167,28 @@ export class ItemComponent implements OnInit {
     { field: 'location', header: 'Localização' },
   ];
 
-  ngOnInit() {
-    this.form.get('quantity')?.disable();
-    this.form.get('minimumStock')?.disable();
+  ngOnInit() {}
 
-    const syncAssetsToQuantity = () => {
-      const type = this.form.get('type')?.value;
-      const qtyControl = this.form.get('minimumStock');
-      const qty = qtyControl?.value;
+  onEntityLoad(item: Item) {
+    if (item && item.assets) {
+      // Sort assets by location (alphabetically/numerically), then empty locations to the end.
+      const sortedAssets = [...item.assets].sort((a, b) => {
+        const locA = (a.location || '').trim();
+        const locB = (b.location || '').trim();
+        
+        if (!locA && locB) return 1;
+        if (locA && !locB) return -1;
+        
+        const locCmp = locA.localeCompare(locB, 'pt-BR', { numeric: true, sensitivity: 'base' });
+        if (locCmp !== 0) return locCmp;
+        
+        const serA = (a.serialNumber || '').trim();
+        const serB = (b.serialNumber || '').trim();
+        return serA.localeCompare(serB, 'pt-BR', { numeric: true, sensitivity: 'base' });
+      });
       
-      if (type === 'DURABLE' && qty != null && qty >= 0) {
-        const currentAssets = this.form.get('assets')?.value || [];
-        if (currentAssets.length !== qty) {
-          if (qty < currentAssets.length) {
-            const filledAssetsCount = currentAssets.filter((a: any) => 
-               (a.serialNumber && String(a.serialNumber).trim() !== '') || 
-               (a.location && String(a.location).trim() !== '')
-            ).length;
-            
-            if (qty < filledAssetsCount) {
-              this.messageService.add({
-                severity: 'error',
-                summary: 'Ação Inválida',
-                detail: 'Não é possível diminuir a quantidade abaixo dos itens já preenchidos. Remova itens pela lixeira primeiro.'
-              });
-              qtyControl?.setValue(currentAssets.length, { emitEvent: false });
-              return;
-            }
-
-            const amountToRemove = currentAssets.length - qty;
-            let removedCount = 0;
-            const newAssets = currentAssets.filter((a: any) => {
-              const isEmpty = (!a.serialNumber || String(a.serialNumber).trim() === '') && (!a.location || String(a.location).trim() === '');
-              if (removedCount < amountToRemove && isEmpty) {
-                removedCount++;
-                return false;
-              }
-              return true;
-            });
-            this.form.get('assets')?.setValue(newAssets, { emitEvent: false });
-            return;
-          }
-
-          const newAssets = [...currentAssets];
-          for (let i = currentAssets.length; i < qty; i++) {
-            newAssets.push({ _isNew: true, _needsEdit: true });
-          }
-          this.form.get('assets')?.setValue(newAssets, { emitEvent: false });
-          
-          setTimeout(() => {
-             const updated = this.form.get('assets')?.value || [];
-             updated.forEach((a: any) => delete a._isNew);
-             this.form.get('assets')?.setValue([...updated], { emitEvent: false });
-          }, 2000);
-        }
-      }
-    };
-
-    this.form.get('minimumStock')?.valueChanges.pipe(
-      debounceTime(800),
-      distinctUntilChanged()
-    ).subscribe(() => syncAssetsToQuantity());
-
-    this.form.get('quantity')?.valueChanges.pipe(
-      debounceTime(800),
-      distinctUntilChanged()
-    ).subscribe(() => {
-      this.form.get('minimumStock')?.updateValueAndValidity({ emitEvent: false });
-    });
-
-    this.form.get('type')?.valueChanges.subscribe(() => syncAssetsToQuantity());
-
-    this.form.get('assets')?.valueChanges.subscribe((assets: any[]) => {
-      const type = this.form.get('type')?.value;
-      if (type === 'DURABLE') {
-        const qty = this.form.get('minimumStock')?.value;
-        if (assets && assets.length !== qty) {
-          this.form.get('minimumStock')?.setValue(assets.length, { emitEvent: false });
-        }
-      }
-    });
+      this.form.patchValue({ assets: sortedAssets });
+    }
   }
 
   get hasUneditedNewAssets(): boolean {
@@ -296,7 +242,8 @@ export class ItemComponent implements OnInit {
       });
     if (this.locationFilter())
       filters.push({
-        field: this.typeFilter() === 'CONSUMABLE' ? 'location' : 'assets.location',
+        field:
+          this.typeFilter() === 'CONSUMABLE' ? 'location' : 'assets.location',
         value: this.locationFilter(),
         type: 'ILIKE',
       });
@@ -347,13 +294,5 @@ export class ItemComponent implements OnInit {
         },
       });
     });
-  }
-
-  clearFilters() {
-    this.nameFilter.set(undefined);
-    this.typeFilter.set(undefined);
-    this.categoryFilter.set(undefined);
-    this.siorgFilter.set(undefined);
-    this.locationFilter.set(undefined);
   }
 }

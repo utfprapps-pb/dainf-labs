@@ -5,7 +5,17 @@ import { CrudTableComponent } from '@/shared/crud/table/crud-table.component';
 import { Page } from '@/shared/models/search';
 import { extractErrorMessage } from '@/shared/utils/error.utils';
 import { CommonModule, DatePipe } from '@angular/common';
-import { AfterViewInit, Component, computed, inject, model, OnInit, signal, TemplateRef, viewChild } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  computed,
+  inject,
+  model,
+  OnInit,
+  signal,
+  TemplateRef,
+  viewChild,
+} from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -16,11 +26,24 @@ import { DialogModule } from 'primeng/dialog';
 import { Select } from 'primeng/select';
 import { ToolbarModule } from 'primeng/toolbar';
 import { TooltipModule } from 'primeng/tooltip';
-import { catchError, debounceTime, finalize, skip, take, tap, throwError } from 'rxjs';
+import {
+  catchError,
+  debounceTime,
+  finalize,
+  skip,
+  take,
+  tap,
+  throwError,
+} from 'rxjs';
 import { AuditedEntityLink, auditedEntityLink } from '../audited-entity-routes';
 import { User } from '../user/user';
 import { UserService } from '../user/user.service';
-import { AuditEntityOption, AuditEntry, AuditFieldChange, AuditSearchRequest } from './audit';
+import {
+  AuditEntityOption,
+  AuditEntry,
+  AuditFieldChange,
+  AuditSearchRequest,
+} from './audit';
 import { AuditService } from './audit.service';
 
 @Component({
@@ -49,7 +72,9 @@ export class AuditComponent implements OnInit, AfterViewInit {
   messageService = inject(MessageService);
   datePipe = inject(DatePipe);
 
-  descriptionTemplate = viewChild('descriptionTemplate', { read: TemplateRef<any> });
+  descriptionTemplate = viewChild('descriptionTemplate', {
+    read: TemplateRef<any>,
+  });
   changesTemplate = viewChild('changesTemplate', { read: TemplateRef<any> });
 
   templateMap: Map<keyof AuditEntry | string, TemplateRef<any>> | undefined;
@@ -68,7 +93,8 @@ export class AuditComponent implements OnInit, AfterViewInit {
     {
       field: 'revisionDate',
       header: 'Data/Hora',
-      transform: (row) => this.datePipe.transform(row.revisionDate, 'dd/MM/yyyy HH:mm:ss') || '',
+      transform: (row) =>
+        this.datePipe.transform(row.revisionDate, 'dd/MM/yyyy HH:mm:ss') || '',
     },
     { field: 'username', header: 'Usuário' },
     { field: 'entityName', header: 'Entidade' },
@@ -136,7 +162,10 @@ export class AuditComponent implements OnInit, AfterViewInit {
     ]);
   }
 
-  entityLink(entityKey: string, entityId: number): AuditedEntityLink | undefined {
+  entityLink(
+    entityKey: string,
+    entityId: number,
+  ): AuditedEntityLink | undefined {
     return auditedEntityLink(entityKey, entityId);
   }
 
@@ -192,7 +221,10 @@ export class AuditComponent implements OnInit, AfterViewInit {
   }
 
   private revisionTypeLabel(type: string): string {
-    return this.revisionTypeOptions.find((option) => option.value === type)?.label ?? type;
+    return (
+      this.revisionTypeOptions.find((option) => option.value === type)?.label ??
+      type
+    );
   }
 
   private toIsoStartOfDay(date?: Date): string | undefined {

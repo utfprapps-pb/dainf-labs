@@ -1,5 +1,14 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, computed, inject, model, OnDestroy, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  computed,
+  inject,
+  model,
+  OnDestroy,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -31,17 +40,18 @@ import { ItemService } from './item.service';
   ],
   providers: [ItemService],
   templateUrl: './item-catalog.component.html',
-  styles: [`
-    :host {
-      display: block;
-    }
-    .product-image {
-      width: 100%;
-      height: 180px;
-      object-fit: contain;
-      border-radius: 8px;
-    }
-    .image-container {
+  styles: [
+    `
+      :host {
+        display: block;
+      }
+      .product-image {
+        width: 100%;
+        height: 180px;
+        object-fit: contain;
+        border-radius: 8px;
+      }
+      .image-container {
         height: 200px;
         display: flex;
         align-items: center;
@@ -49,13 +59,13 @@ import { ItemService } from './item.service';
         background-color: var(--surface-ground);
         border-radius: 8px;
         margin-bottom: 1rem;
-    }
-    .empty-state {
+      }
+      .empty-state {
         text-align: center;
         padding: 3rem;
         color: var(--text-color-secondary);
-    }
-    .debug-bar {
+      }
+      .debug-bar {
         background: var(--surface-card);
         color: var(--text-color);
         padding: 0.5rem;
@@ -63,8 +73,9 @@ import { ItemService } from './item.service';
         margin-bottom: 1rem;
         border-radius: 4px;
         border: 1px solid var(--surface-border);
-    }
-  `]
+      }
+    `,
+  ],
 })
 export class ItemCatalogComponent implements OnInit, OnDestroy {
   itemService = inject(ItemService);
@@ -123,11 +134,13 @@ export class ItemCatalogComponent implements OnInit, OnDestroy {
     this.itemService.search(this.searchRequest()).subscribe({
       next: (page) => {
         if (page && page.content) {
-            this.items.set(page.content);
-            this.totalRecords.set(page.page?.totalElements || page.content.length);
-            page.content.forEach((item) => this.prefetchImageForItem(item));
+          this.items.set(page.content);
+          this.totalRecords.set(
+            page.page?.totalElements || page.content.length,
+          );
+          page.content.forEach((item) => this.prefetchImageForItem(item));
         } else {
-            this.items.set([]);
+          this.items.set([]);
         }
 
         this.loading.set(false);
@@ -184,7 +197,10 @@ export class ItemCatalogComponent implements OnInit, OnDestroy {
 
   onImageError(item: Item) {
     const key = String(item.id);
-    this.imageUrls.update((urls) => ({ ...urls, [key]: this.placeholderImage }));
+    this.imageUrls.update((urls) => ({
+      ...urls,
+      [key]: this.placeholderImage,
+    }));
   }
 
   private prefetchImageForItem(item: Item) {
@@ -199,8 +215,7 @@ export class ItemCatalogComponent implements OnInit, OnDestroy {
     }
 
     this.storageService.getSignedUrl(imagePath, 'GET').subscribe({
-      next: (url) =>
-        this.imageUrls.update((urls) => ({ ...urls, [key]: url })),
+      next: (url) => this.imageUrls.update((urls) => ({ ...urls, [key]: url })),
       error: (err) =>
         console.error('Erro ao carregar imagem do item', {
           id: item.id,

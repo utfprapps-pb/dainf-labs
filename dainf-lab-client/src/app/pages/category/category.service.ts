@@ -4,7 +4,7 @@ import { Category } from './category';
 
 @Injectable()
 export class CategoryService extends CrudService<Category> {
-    constructor() {
-        super('categories');
-    }
+  constructor() {
+    super('categories');
+  }
 }

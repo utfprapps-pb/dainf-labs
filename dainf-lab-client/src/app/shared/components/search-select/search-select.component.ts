@@ -73,7 +73,9 @@ export class SearchSelectComponent<T extends Identifiable>
   disabled = false;
   suggestions = signal<any[]>([]);
 
-  resolvedOptionLabel = computed(() => this.itemLabel() ? '_customLabel' : this.optionLabel());
+  resolvedOptionLabel = computed(() =>
+    this.itemLabel() ? '_customLabel' : this.optionLabel(),
+  );
 
   private _currentPage = 0;
   private _hasMore = true;
@@ -150,7 +152,7 @@ export class SearchSelectComponent<T extends Identifiable>
             });
           }
           if (append) {
-            this.suggestions.update(prev => [...prev, ...content]);
+            this.suggestions.update((prev) => [...prev, ...content]);
           } else {
             this.suggestions.set(content);
           }
@@ -162,7 +164,10 @@ export class SearchSelectComponent<T extends Identifiable>
       .subscribe();
   }
 
-  private _search(filters: SearchFilter[], page: number = 0): Observable<Page<T>> {
+  private _search(
+    filters: SearchFilter[],
+    page: number = 0,
+  ): Observable<Page<T>> {
     return this.service()!.search({
       page,
       rows: 10,
@@ -173,9 +178,6 @@ export class SearchSelectComponent<T extends Identifiable>
   private _mapFilters(query: string): SearchFilter[] {
     const field = this.searchField() ?? this.optionLabel();
     const type = field?.includes('id') ? 'IS_NOT_NULL' : 'ILIKE';
-    return [
-      ...(this.filters() ?? []),
-      { field, type, value: query },
-    ];
+    return [...(this.filters() ?? []), { field, type, value: query }];
   }
 }

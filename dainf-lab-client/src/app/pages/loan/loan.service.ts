@@ -20,32 +20,35 @@ export class LoanService extends CrudService<Loan> {
         if (!page.content || page.content.length === 0) {
           return of(page);
         }
-        
-        const completedLoans = page.content.filter((l: Loan) => l.status === 'COMPLETED');
+
+        const completedLoans = page.content.filter(
+          (l: Loan) => l.status === 'COMPLETED',
+        );
         if (completedLoans.length === 0) {
           return of(page);
         }
 
-        const requests = completedLoans.map((loan: Loan) => 
-          this.returnService.search({
-            filters: [{ field: 'loan.id', value: loan.id, type: 'EQUALS' }],
-            page: 0,
-            rows: 1,
-            sort: { field: 'returnDate', type: 'DESC' }
-          }).pipe(
-            map((returnPage: Page<any>) => {
-              if (returnPage.content && returnPage.content.length > 0) {
-                (loan as any).actualReturnDate = returnPage.content[0].returnDate;
-              }
-              return loan;
+        const requests = completedLoans.map((loan: Loan) =>
+          this.returnService
+            .search({
+              filters: [{ field: 'loan.id', value: loan.id, type: 'EQUALS' }],
+              page: 0,
+              rows: 1,
+              sort: { field: 'returnDate', type: 'DESC' },
             })
-          )
+            .pipe(
+              map((returnPage: Page<any>) => {
+                if (returnPage.content && returnPage.content.length > 0) {
+                  (loan as any).actualReturnDate =
+                    returnPage.content[0].returnDate;
+                }
+                return loan;
+              }),
+            ),
         );
 
-        return forkJoin(requests).pipe(
-          map(() => page)
-        );
-      })
+        return forkJoin(requests).pipe(map(() => page));
+      }),
     );
   }
 

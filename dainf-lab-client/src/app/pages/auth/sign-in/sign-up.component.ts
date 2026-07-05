@@ -38,7 +38,7 @@ import { extractErrorMessage } from '@/shared/utils/error.utils';
     AppFloatingConfigurator,
     InputNumberModule,
     InputMaskModule,
-    KeyFilterModule
+    KeyFilterModule,
   ],
   templateUrl: './sign-up.component.html',
 })
@@ -50,14 +50,42 @@ export class SignUpComponent {
 
   form: FormGroup = this._fb.group(
     {
-      nome: [null, Validators.compose([Validators.required, nameValidator(), Validators.minLength(5), Validators.maxLength(100)])],
-      documento: [null, Validators.compose([Validators.required, Validators.pattern(/^\d{7,16}$/)])],
+      nome: [
+        null,
+        Validators.compose([
+          Validators.required,
+          nameValidator(),
+          Validators.minLength(5),
+          Validators.maxLength(100),
+        ]),
+      ],
+      documento: [
+        null,
+        Validators.compose([
+          Validators.required,
+          Validators.pattern(/^\d{7,16}$/),
+        ]),
+      ],
       email: [
         null,
-        Validators.compose([Validators.required, Validators.email, Validators.maxLength(100)]),
+        Validators.compose([
+          Validators.required,
+          Validators.email,
+          Validators.maxLength(100),
+        ]),
       ],
-      telefone: [null, Validators.compose([Validators.required, phoneValidator()])],
-      password: [null, Validators.compose([Validators.required, Validators.minLength(6), passwordStrengthValidator()])],
+      telefone: [
+        null,
+        Validators.compose([Validators.required, phoneValidator()]),
+      ],
+      password: [
+        null,
+        Validators.compose([
+          Validators.required,
+          Validators.minLength(6),
+          passwordStrengthValidator(),
+        ]),
+      ],
       confirmPassword: [null, Validators.required],
     },
     { validators: this.passwordMatchValidator },
@@ -66,12 +94,22 @@ export class SignUpComponent {
   passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
     const password = group.get('password');
     const confirmPassword = group.get('confirmPassword');
-    if (password && confirmPassword && password.value !== confirmPassword.value) {
-      confirmPassword.setErrors({ ...confirmPassword.errors, passwordMismatch: true });
+    if (
+      password &&
+      confirmPassword &&
+      password.value !== confirmPassword.value
+    ) {
+      confirmPassword.setErrors({
+        ...confirmPassword.errors,
+        passwordMismatch: true,
+      });
       return { passwordMismatch: true };
     }
     if (confirmPassword?.errors?.['passwordMismatch']) {
-      const { passwordMismatch, ...rest } = confirmPassword.errors as Record<string, unknown>;
+      const { passwordMismatch, ...rest } = confirmPassword.errors as Record<
+        string,
+        unknown
+      >;
       confirmPassword.setErrors(Object.keys(rest).length ? rest : null);
     }
     return null;
@@ -107,7 +145,10 @@ export class SignUpComponent {
         this._messageService.add({
           severity: 'warn',
           summary: 'Falha ao realizar cadastro',
-          detail: extractErrorMessage(err, 'Verifique os dados e tente novamente'),
+          detail: extractErrorMessage(
+            err,
+            'Verifique os dados e tente novamente',
+          ),
         });
         console.error('Falha no registro', err);
       },

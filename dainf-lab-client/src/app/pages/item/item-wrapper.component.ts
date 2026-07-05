@@ -20,24 +20,20 @@ import { ItemCatalogComponent } from './item-catalog.component';
     -->
     @if (isStudent() && !hasAdvancedPrivileges()) {
       <app-item-catalog></app-item-catalog>
-    } 
-    @else {
+    } @else {
       <app-item></app-item>
     }
-  `
+  `,
 })
 export class ItemWrapperComponent {
   userService = inject(UserService);
 
   isStudent = toSignal(
-    this.userService.getRole().pipe(
-      map(role => role === 'ROLE_STUDENT')
-    ), 
-    { initialValue: false }
+    this.userService.getRole().pipe(map((role) => role === 'ROLE_STUDENT')),
+    { initialValue: false },
   );
-  
-  hasAdvancedPrivileges = toSignal(
-    this.userService.hasAdvancedPrivileges(), 
-    { initialValue: false }
-  );
+
+  hasAdvancedPrivileges = toSignal(this.userService.hasAdvancedPrivileges(), {
+    initialValue: false,
+  });
 }

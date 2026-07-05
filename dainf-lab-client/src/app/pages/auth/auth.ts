@@ -1,7 +1,7 @@
 export interface AuthRequest {
   email: string;
   password: string;
-  rememberMe?: boolean
+  rememberMe?: boolean;
 }
 
 export interface RecoveryRequest {
@@ -13,6 +13,4 @@ export interface ResetPasswordRequest {
   newPassword: string;
 }
 
-export interface SignUpRequest {
-
-}
+export interface SignUpRequest {}

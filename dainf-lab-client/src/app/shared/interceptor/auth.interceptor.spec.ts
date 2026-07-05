@@ -65,7 +65,9 @@ describe('authInterceptor', () => {
     http.get(`${API_URL}/items`).subscribe();
 
     const req = controller.expectOne(`${API_URL}/items`);
-    expect(req.request.headers.get('Authorization')).toBe('Bearer my-access-token');
+    expect(req.request.headers.get('Authorization')).toBe(
+      'Bearer my-access-token',
+    );
     req.flush({});
   });
 
@@ -109,7 +111,7 @@ describe('authInterceptor', () => {
   it('on 401 calls refresh and retries the original request with new token', () => {
     tokenService.setToken('expired-token');
     mockAuthService.refresh.and.returnValue(
-      of({ token: 'new-token', expiresIn: 3600 } as AuthResponse)
+      of({ token: 'new-token', expiresIn: 3600 } as AuthResponse),
     );
 
     let responseBody: any;
@@ -130,14 +132,14 @@ describe('authInterceptor', () => {
   it('stores the new token after a successful refresh', () => {
     tokenService.setToken('expired-token');
     mockAuthService.refresh.and.returnValue(
-      of({ token: 'refreshed-token', expiresIn: 3600 } as AuthResponse)
+      of({ token: 'refreshed-token', expiresIn: 3600 } as AuthResponse),
     );
 
     http.get(`${API_URL}/items`).subscribe();
 
-    controller.expectOne(`${API_URL}/items`).flush(
-      'Unauthorized', { status: 401, statusText: 'Unauthorized' }
-    );
+    controller
+      .expectOne(`${API_URL}/items`)
+      .flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
     controller.expectOne(`${API_URL}/items`).flush({});
 
     expect(tokenService.getToken()).toBe('refreshed-token');
@@ -153,9 +155,9 @@ describe('authInterceptor', () => {
 
     http.post(`${API_URL}/auth/refresh`, {}).subscribe({ error: () => {} });
 
-    controller.expectOne(`${API_URL}/auth/refresh`).flush(
-      'Unauthorized', { status: 401, statusText: 'Unauthorized' }
-    );
+    controller
+      .expectOne(`${API_URL}/auth/refresh`)
+      .flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
 
     expect(tokenService.getToken()).toBeNull();
     expect(router.navigate).toHaveBeenCalledWith(['/login']);
@@ -167,9 +169,9 @@ describe('authInterceptor', () => {
 
     http.post(`${API_URL}/auth/login`, {}).subscribe({ error: () => {} });
 
-    controller.expectOne(`${API_URL}/auth/login`).flush(
-      'Unauthorized', { status: 401, statusText: 'Unauthorized' }
-    );
+    controller
+      .expectOne(`${API_URL}/auth/login`)
+      .flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
 
     expect(tokenService.getToken()).toBeNull();
     expect(router.navigate).toHaveBeenCalledWith(['/login']);
@@ -179,14 +181,14 @@ describe('authInterceptor', () => {
     spyOn(router, 'navigate');
     tokenService.setToken('expired-token');
     mockAuthService.refresh.and.returnValue(
-      throwError(() => new HttpErrorResponse({ status: 401 }))
+      throwError(() => new HttpErrorResponse({ status: 401 })),
     );
 
     http.get(`${API_URL}/items`).subscribe({ error: () => {} });
 
-    controller.expectOne(`${API_URL}/items`).flush(
-      'Unauthorized', { status: 401, statusText: 'Unauthorized' }
-    );
+    controller
+      .expectOne(`${API_URL}/items`)
+      .flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
 
     expect(tokenService.getToken()).toBeNull();
     expect(router.navigate).toHaveBeenCalledWith(['/login']);
@@ -198,11 +200,16 @@ describe('authInterceptor', () => {
 
   it('passes non-401 errors through without attempting refresh', () => {
     let capturedError: HttpErrorResponse | undefined;
-    http.get(`${API_URL}/items`).subscribe({ error: (e) => (capturedError = e) });
+    http
+      .get(`${API_URL}/items`)
+      .subscribe({ error: (e) => (capturedError = e) });
 
-    controller.expectOne(`${API_URL}/items`).flush(
-      'Server Error', { status: 500, statusText: 'Internal Server Error' }
-    );
+    controller
+      .expectOne(`${API_URL}/items`)
+      .flush('Server Error', {
+        status: 500,
+        statusText: 'Internal Server Error',
+      });
 
     expect(mockAuthService.refresh).not.toHaveBeenCalled();
     expect(capturedError?.status).toBe(500);
@@ -210,11 +217,13 @@ describe('authInterceptor', () => {
 
   it('passes 403 errors through without attempting refresh', () => {
     let capturedError: HttpErrorResponse | undefined;
-    http.get(`${API_URL}/items`).subscribe({ error: (e) => (capturedError = e) });
+    http
+      .get(`${API_URL}/items`)
+      .subscribe({ error: (e) => (capturedError = e) });
 
-    controller.expectOne(`${API_URL}/items`).flush(
-      'Forbidden', { status: 403, statusText: 'Forbidden' }
-    );
+    controller
+      .expectOne(`${API_URL}/items`)
+      .flush('Forbidden', { status: 403, statusText: 'Forbidden' });
 
     expect(mockAuthService.refresh).not.toHaveBeenCalled();
     expect(capturedError?.status).toBe(403);

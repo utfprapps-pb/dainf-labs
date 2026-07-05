@@ -24,8 +24,14 @@ describe('PurchaseComponent forms', () => {
     return fb.group({
       id: [null as any],
       item: [null as any, Validators.required],
-      quantity: [null as number | null, [Validators.required, Validators.min(1)]],
-      price: [null as number | null, [Validators.required, Validators.min(0.01)]],
+      quantity: [
+        null as number | null,
+        [Validators.required, Validators.min(1)],
+      ],
+      price: [
+        null as number | null,
+        [Validators.required, Validators.min(0.01)],
+      ],
     });
   }
 

@@ -1,15 +1,12 @@
 import { Component } from '@angular/core';
-import {
-  FormsModule,
-  ReactiveFormsModule
-} from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { InputContainerComponent } from '@/shared/components/input-container/input-container.component';
 import { CrudComponent } from '@/shared/crud/crud.component';
 import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 
-import { EstadoSelectComponent } from "@/shared/components/estado-select/estado-select.component";
+import { EstadoSelectComponent } from '@/shared/components/estado-select/estado-select.component';
 import { SelectModule } from 'primeng/select';
 
 @Component({
@@ -22,10 +19,9 @@ import { SelectModule } from 'primeng/select';
     InputTextModule,
     TextareaModule,
     SelectModule,
-    EstadoSelectComponent
-],
+    EstadoSelectComponent,
+  ],
   selector: 'app-fornecedor',
   templateUrl: './fornecedor.component.html',
 })
-export class CidadeComponent {
-}
+export class CidadeComponent {}

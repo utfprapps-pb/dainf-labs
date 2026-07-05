@@ -22,21 +22,26 @@ import { EnvironmentService } from '@/shared/services/config.service';
     RippleModule,
     MessageModule,
     AppFloatingConfigurator,
-    LogoComponent
+    LogoComponent,
   ],
-  templateUrl: './clearance-validation.component.html'
+  templateUrl: './clearance-validation.component.html',
 })
 export class ClearanceValidationComponent {
   status: 'idle' | 'loading' | 'success' | 'error' = 'idle';
   errorMessage = '';
-  result: { nomeAluno: string; matricula: string; dataEmissao: string; codigoValidacao: string } | null = null;
+  result: {
+    nomeAluno: string;
+    matricula: string;
+    dataEmissao: string;
+    codigoValidacao: string;
+  } | null = null;
 
   private readonly _route = inject(ActivatedRoute);
   private readonly _http = inject(HttpClient);
   private readonly _env = inject(EnvironmentService);
 
   constructor() {
-    this._route.queryParamMap.subscribe(params => {
+    this._route.queryParamMap.subscribe((params) => {
       const code = params.get('code');
       if (code) {
         this.validate(code);
@@ -50,22 +55,26 @@ export class ClearanceValidationComponent {
   validate(code: string) {
     this.status = 'loading';
     this.errorMessage = '';
-    this._http.get<Record<string, any>>(`${this._env.apiUrl}/clearance/validate`, { params: { code } })
+    this._http
+      .get<
+        Record<string, any>
+      >(`${this._env.apiUrl}/clearance/validate`, { params: { code } })
       .subscribe({
         next: (res) => {
           this.result = {
             nomeAluno: res['nomeAluno'],
             matricula: res['matricula'],
             dataEmissao: res['dataEmissao'],
-            codigoValidacao: res['codigoValidacao']
+            codigoValidacao: res['codigoValidacao'],
           };
           this.status = 'success';
         },
         error: (err) => {
-          this.errorMessage = err?.error?.message || 'Código inválido ou não encontrado.';
+          this.errorMessage =
+            err?.error?.message || 'Código inválido ou não encontrado.';
           this.status = 'error';
           console.error('Clearance validation failed', err);
-        }
+        },
       });
   }
 }

@@ -1,6 +1,6 @@
 import { InputContainerComponent } from '@/shared/components/input-container/input-container.component';
 import { SearchSelectComponent } from '@/shared/components/search-select/search-select.component';
-import { StaticSelectComponent } from "@/shared/components/static-select/static-select.component";
+import { StaticSelectComponent } from '@/shared/components/static-select/static-select.component';
 import { SubItemFormComponent } from '@/shared/components/subitem-form/subitem-form.component';
 import { Column, CrudConfig } from '@/shared/crud/crud';
 import { CrudComponent } from '@/shared/crud/crud.component';
@@ -88,8 +88,8 @@ const STATUS_ICON: Record<LoanStatus, string> = {
     BarcodeScannerComponent,
     TagModule,
     PaginatorModule,
-    TreeSelectModule
-],
+    TreeSelectModule,
+  ],
   providers: [
     LoanService,
     ReturnService,
@@ -99,14 +99,20 @@ const STATUS_ICON: Record<LoanStatus, string> = {
     UserService,
     DialogService,
     DatePipe,
-    CategoryTreeNodePipe
+    CategoryTreeNodePipe,
   ],
   selector: 'app-loan',
   templateUrl: 'loan.component.html',
-  styles: [`
-    :host ::ng-deep .hide-crud-list app-crud-table { display: none !important; }
-    :host ::ng-deep p-toolbar { display: none !important; }
-  `]
+  styles: [
+    `
+      :host ::ng-deep .hide-crud-list app-crud-table {
+        display: none !important;
+      }
+      :host ::ng-deep p-toolbar {
+        display: none !important;
+      }
+    `,
+  ],
 })
 export class LoanComponent implements OnInit, AfterViewInit {
   statusTemplate = viewChild('statusTemplate', { read: TemplateRef<any> });
@@ -135,7 +141,7 @@ export class LoanComponent implements OnInit, AfterViewInit {
     { label: 'Em aberto', value: 'ONGOING' },
     { label: 'Atrasado', value: 'OVERDUE' },
     { label: 'Finalizado', value: 'COMPLETED' },
-  ]
+  ];
 
   disabled = signal(false);
   viewMode = signal<'list' | 'cards'>('cards');
@@ -152,21 +158,27 @@ export class LoanComponent implements OnInit, AfterViewInit {
   activeBorrowerService = {
     search: (req: SearchRequest) => {
       const newFilters = req.filters ? [...req.filters] : [];
-      newFilters.push({ field: 'status', value: ['ONGOING', 'OVERDUE'], type: 'IN' });
-      const nameFilter = newFilters.find(f => f.field === 'nome');
+      newFilters.push({
+        field: 'status',
+        value: ['ONGOING', 'OVERDUE'],
+        type: 'IN',
+      });
+      const nameFilter = newFilters.find((f) => f.field === 'nome');
       if (nameFilter) nameFilter.field = 'borrower.nome';
-      
+
       return this.loanService.search({ ...req, filters: newFilters }).pipe(
-        map(loanPage => {
-          const users = loanPage.content.map(l => l.borrower);
-          const uniqueUsers = Array.from(new Map(users.map(u => [u.id, u])).values());
+        map((loanPage) => {
+          const users = loanPage.content.map((l) => l.borrower);
+          const uniqueUsers = Array.from(
+            new Map(users.map((u) => [u.id, u])).values(),
+          );
           return {
             content: uniqueUsers,
-            page: loanPage.page
+            page: loanPage.page,
           } as Page<User>;
-        })
+        }),
       );
-    }
+    },
   } as any;
 
   config: CrudConfig<Loan> = {
@@ -193,21 +205,31 @@ export class LoanComponent implements OnInit, AfterViewInit {
   cols: Column<Loan>[] = [
     { field: 'id', header: 'Código' },
     { field: 'borrower.nome', header: 'Mutuário' },
-    { field: 'loanDate', header: 'Data do empréstimo', transform: (row) => this.datePipe.transform(row.loanDate, 'dd/MM/yyyy') || '' },
-    { 
-      field: 'deadline', 
-      header: 'Prazo / Devolução', 
+    {
+      field: 'loanDate',
+      header: 'Data do empréstimo',
+      transform: (row) =>
+        this.datePipe.transform(row.loanDate, 'dd/MM/yyyy') || '',
+    },
+    {
+      field: 'deadline',
+      header: 'Prazo / Devolução',
       transform: (row) => {
         if (row.status === 'COMPLETED' && (row as any).actualReturnDate) {
-          return this.datePipe.transform((row as any).actualReturnDate, 'dd/MM/yyyy') || '';
+          return (
+            this.datePipe.transform(
+              (row as any).actualReturnDate,
+              'dd/MM/yyyy',
+            ) || ''
+          );
         }
         return this.datePipe.transform(row.deadline, 'dd/MM/yyyy') || '';
-      }
+      },
     },
     {
       field: 'status',
       header: 'Status',
-      transform: (row) => this.labelValue.transform(row.status, this.status)
+      transform: (row) => this.labelValue.transform(row.status, this.status),
     },
   ];
 
@@ -225,7 +247,8 @@ export class LoanComponent implements OnInit, AfterViewInit {
 
     if (this.loanDateFilter()) {
       const dateValue = this.loanDateFilter();
-      const date = dateValue instanceof Date ? dateValue : new Date(dateValue as string);
+      const date =
+        dateValue instanceof Date ? dateValue : new Date(dateValue as string);
       const startOfDay = new Date(date);
       startOfDay.setHours(0, 0, 0, 0);
       const endOfDay = new Date(date);
@@ -269,36 +292,52 @@ export class LoanComponent implements OnInit, AfterViewInit {
   categoryService = inject(CategoryService);
 
   ngOnInit(): void {
-    this.categoryService.search({ page: 0, rows: 1000, filters: [{ field: 'parent', type: 'IS_NULL' }] }).subscribe((page: any) => {
-      const categoryNodes = this.categoryTreeNodePipe.transform(page.content);
-      
-      const mapNode = (node: TreeNode<any>): TreeNode => {
-        return {
-           label: node.label,
-           key: 'CAT:' + node.data!.id,
-           data: 'CAT:' + node.data!.id,
-           children: node.children?.map(c => mapNode(c)),
-           leaf: node.leaf,
-           icon: node.icon
+    this.categoryService
+      .search({
+        page: 0,
+        rows: 1000,
+        filters: [{ field: 'parent', type: 'IS_NULL' }],
+      })
+      .subscribe((page: any) => {
+        const categoryNodes = this.categoryTreeNodePipe.transform(page.content);
+
+        const mapNode = (node: TreeNode<any>): TreeNode => {
+          return {
+            label: node.label,
+            key: 'CAT:' + node.data!.id,
+            data: 'CAT:' + node.data!.id,
+            children: node.children?.map((c) => mapNode(c)),
+            leaf: node.leaf,
+            icon: node.icon,
+          };
         };
-      };
-      
-      const categoryChildren = categoryNodes.map(n => mapNode(n));
-      const allNode: TreeNode = { label: 'Todos os itens', data: 'ALL', key: 'ALL', icon: 'pi pi-list' };
-      
-      this.filterNodes.set([
-        allNode,
-        { label: 'Consumíveis', data: 'TYPE:CONSUMABLE', key: 'TYPE:CONSUMABLE', icon: 'pi pi-box' },
-        { 
-          label: 'Duráveis', 
-          data: 'TYPE:DURABLE', 
-          key: 'TYPE:DURABLE',
-          icon: 'pi pi-server',
-          children: categoryChildren
-        }
-      ]);
-      this.selectedFilterNode.set(allNode);
-    });
+
+        const categoryChildren = categoryNodes.map((n) => mapNode(n));
+        const allNode: TreeNode = {
+          label: 'Todos os itens',
+          data: 'ALL',
+          key: 'ALL',
+          icon: 'pi pi-list',
+        };
+
+        this.filterNodes.set([
+          allNode,
+          {
+            label: 'Consumíveis',
+            data: 'TYPE:CONSUMABLE',
+            key: 'TYPE:CONSUMABLE',
+            icon: 'pi pi-box',
+          },
+          {
+            label: 'Duráveis',
+            data: 'TYPE:DURABLE',
+            key: 'TYPE:DURABLE',
+            icon: 'pi pi-server',
+            children: categoryChildren,
+          },
+        ]);
+        this.selectedFilterNode.set(allNode);
+      });
 
     const data = this.context.consume('reservation');
     if (data) {
@@ -308,19 +347,19 @@ export class LoanComponent implements OnInit, AfterViewInit {
       });
     }
 
-    this.form.get('borrower')?.valueChanges.subscribe(user => {
+    this.form.get('borrower')?.valueChanges.subscribe((user) => {
       // Only do this if we are not already editing an existing loan (id is null)
       if (user && user.id && !this.form.get('id')?.value && !this.disabled()) {
         const req: SearchRequest = {
           filters: [
             { field: 'borrower.id', value: user.id, type: 'EQUALS' },
-            { field: 'status', value: ['ONGOING', 'OVERDUE'], type: 'IN' }
+            { field: 'status', value: ['ONGOING', 'OVERDUE'], type: 'IN' },
           ],
           sort: { field: 'id', type: 'ASC' },
           page: 0,
-          rows: 1
+          rows: 1,
         };
-        this.loanService.search(req).subscribe(page => {
+        this.loanService.search(req).subscribe((page) => {
           if (page.content.length > 0) {
             const activeLoan = page.content[0];
             this.form.patchValue({
@@ -328,18 +367,23 @@ export class LoanComponent implements OnInit, AfterViewInit {
               loanDate: new Date(activeLoan.loanDate),
               deadline: new Date(activeLoan.deadline),
               observation: activeLoan.observation,
-              items: activeLoan.items
+              items: activeLoan.items,
             });
             const messageService = this.crud()?.messageService;
             if (messageService) {
-              messageService.add({severity:'info', summary:'Aviso', detail:'Mutuário com empréstimo ativo! Os dados foram carregados para que novos itens sejam adicionados à mesma ficha.'});
+              messageService.add({
+                severity: 'info',
+                summary: 'Aviso',
+                detail:
+                  'Mutuário com empréstimo ativo! Os dados foram carregados para que novos itens sejam adicionados à mesma ficha.',
+              });
             }
           }
         });
       }
     });
 
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.subscribe((params) => {
       if (params['id']) {
         const id = +params['id'];
         this.loanService.get(id).subscribe({
@@ -348,7 +392,8 @@ export class LoanComponent implements OnInit, AfterViewInit {
               this.openEdit(res);
             }
           },
-          error: (err) => console.error('Erro ao buscar empréstimo da URL', err)
+          error: (err) =>
+            console.error('Erro ao buscar empréstimo da URL', err),
         });
       }
     });
@@ -400,7 +445,9 @@ export class LoanComponent implements OnInit, AfterViewInit {
 
   onItemScanned(item: any) {
     const currentItems = this.form.get('items')?.value || [];
-    const existingIndex = currentItems.findIndex((i: any) => i.item.id === item.id);
+    const existingIndex = currentItems.findIndex(
+      (i: any) => i.item.id === item.id,
+    );
     if (existingIndex > -1) {
       currentItems[existingIndex].quantity += 1;
     } else {
@@ -427,7 +474,7 @@ export class LoanComponent implements OnInit, AfterViewInit {
       modal: true,
       dismissableMask: true,
       data: { loan },
-      styleClass: 'return-ficha-modal'
+      styleClass: 'return-ficha-modal',
     });
 
     ref.onClose.subscribe((result: any) => {
@@ -445,7 +492,7 @@ export class LoanComponent implements OnInit, AfterViewInit {
       modal: true,
       dismissableMask: true,
       data: { loan, showHistory: true },
-      styleClass: 'return-ficha-modal'
+      styleClass: 'return-ficha-modal',
     });
 
     ref.onClose.subscribe((updatedLoan: Loan) => {
@@ -456,7 +503,7 @@ export class LoanComponent implements OnInit, AfterViewInit {
   }
 
   toggleView() {
-    this.viewMode.update(v => v === 'list' ? 'cards' : 'list');
+    this.viewMode.update((v) => (v === 'list' ? 'cards' : 'list'));
   }
 
   getFilteredItems(items: any[]) {
@@ -465,11 +512,11 @@ export class LoanComponent implements OnInit, AfterViewInit {
     if (filter === 'ALL') return items;
     if (filter.startsWith('TYPE:')) {
       const type = filter.split(':')[1];
-      return items.filter(i => i.item?.type === type);
+      return items.filter((i) => i.item?.type === type);
     }
     if (filter.startsWith('CAT:')) {
       const catId = Number(filter.split(':')[1]);
-      return items.filter(i => i.item?.category?.id === catId);
+      return items.filter((i) => i.item?.category?.id === catId);
     }
     return items;
   }
@@ -477,16 +524,21 @@ export class LoanComponent implements OnInit, AfterViewInit {
   get groupedUserLoans(): any[] {
     const content = this.crud()?.items()?.content;
     if (!content) return [];
-    
+
     const userMap = new Map<number, any>();
     for (const loanItem of content) {
       const loan = loanItem as any;
       const borrowerId = loan.borrower.id;
       if (!userMap.has(borrowerId)) {
-        userMap.set(borrowerId, { ...loan, allLoans: [loan] });
+        userMap.set(borrowerId, {
+          ...loan,
+          allLoans: [loan],
+          allItems: [...loan.items],
+        });
       } else {
         const existing = userMap.get(borrowerId);
         existing.allLoans.push(loan);
+        existing.allItems.push(...loan.items);
       }
     }
     return Array.from(userMap.values());

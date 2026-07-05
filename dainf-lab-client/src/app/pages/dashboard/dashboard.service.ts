@@ -36,7 +36,6 @@ export interface TopItem {
   totalQuantity: number;
 }
 
-
 @Injectable({ providedIn: 'root' })
 export class DashboardService extends BaseService {
   private datePipe = new DatePipe('en-US');
@@ -97,7 +96,8 @@ export class DashboardService extends BaseService {
     return (items ?? []).map((item: any) => {
       const quantity = Number(item.quantity ?? 0);
       const minimum = Number(item.minimumStock ?? 0);
-      const percentage = minimum > 0 ? Math.min((quantity / minimum) * 100, 100) : 0;
+      const percentage =
+        minimum > 0 ? Math.min((quantity / minimum) * 100, 100) : 0;
 
       return {
         itemId: item.itemId,
@@ -118,22 +118,22 @@ export class DashboardService extends BaseService {
         {
           data: [rate.onTimeCount || 0, rate.overdueCount || 0],
           backgroundColor: ['#10b981', '#ef4444'],
-          hoverBackgroundColor: ['#059669', '#dc2626']
-        }
-      ]
+          hoverBackgroundColor: ['#059669', '#dc2626'],
+        },
+      ],
     };
   }
 
   mapTopBorrowedItems(items: any[]) {
     if (!items || items.length === 0) return { labels: [], datasets: [] };
     return {
-      labels: items.map(item => item.itemName),
+      labels: items.map((item) => item.itemName),
       datasets: [
         {
           label: 'Quantidade Emprestada',
-          data: items.map(item => item.totalQuantity)
-        }
-      ]
+          data: items.map((item) => item.totalQuantity),
+        },
+      ],
     };
   }
 
@@ -171,7 +171,9 @@ export class DashboardService extends BaseService {
     }
   }
 
-  private getOperationSeverity(type: InventoryOperationType): InventoryOperation['severity'] {
+  private getOperationSeverity(
+    type: InventoryOperationType,
+  ): InventoryOperation['severity'] {
     switch (type) {
       case 'PURCHASE':
         return 'success';

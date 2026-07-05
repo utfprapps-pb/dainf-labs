@@ -59,18 +59,20 @@ export class LoanReturnDialog implements OnInit {
 
   ngOnInit(): void {
     this.loan = this.config.data?.loan;
-    this.items = this.loan.items.map(item => ({
+    this.items = this.loan.items.map((item) => ({
       ...item,
-      tempReturnQty: 0
+      tempReturnQty: 0,
     }));
-    
+
     this._searchReturnByLoan(this.loan).subscribe((res) => {
       this.savedReturn = res;
       if (this.savedReturn && this.loan.status === 'COMPLETED') {
         const returnDate = this.savedReturn.returnDate;
         this.form.patchValue({
-          returnDate: returnDate ? new Date(returnDate).toISOString().split('T')[0] : '',
-          observation: this.savedReturn.observation || ''
+          returnDate: returnDate
+            ? new Date(returnDate).toISOString().split('T')[0]
+            : '',
+          observation: this.savedReturn.observation || '',
         });
         this.form.get('returnDate')?.disable();
         this.form.get('observation')?.disable();
@@ -95,9 +97,10 @@ export class LoanReturnDialog implements OnInit {
   getGroupedItems() {
     const groups: { [key: string]: any[] } = {};
     if (this.items && this.items.length > 0) {
-      this.items.forEach(item => {
+      this.items.forEach((item) => {
         let groupName = item.item?.category?.description || 'Outros';
-        if (groupName.toLowerCase().includes('ferramenta')) groupName = 'Ferramentas emprestadas';
+        if (groupName.toLowerCase().includes('ferramenta'))
+          groupName = 'Ferramentas emprestadas';
         else groupName = 'Componentes emprestados';
 
         if (!groups[groupName]) groups[groupName] = [];
@@ -121,7 +124,7 @@ export class LoanReturnDialog implements OnInit {
   }
 
   markAllReturned() {
-    this.items.forEach(item => {
+    this.items.forEach((item) => {
       item.tempReturnQty = item.quantity - (item.returnedQuantity || 0);
     });
   }
@@ -132,7 +135,7 @@ export class LoanReturnDialog implements OnInit {
 
     const returnDate = new Date(returnDateStr.replace(/-/g, '\/'));
     const loanDate = new Date(this.loan.loanDate);
-    
+
     // Reset time components for accurate date-only comparison
     returnDate.setHours(0, 0, 0, 0);
     loanDate.setHours(0, 0, 0, 0);
@@ -142,9 +145,11 @@ export class LoanReturnDialog implements OnInit {
 
   isValidReturn(): boolean {
     if (this.loan.status === 'COMPLETED') return false;
-    
+
     // Check if at least one item has tempReturnQty > 0
-    const hasItemsToReturn = this.items.some(item => (item.tempReturnQty || 0) > 0);
+    const hasItemsToReturn = this.items.some(
+      (item) => (item.tempReturnQty || 0) > 0,
+    );
     if (!hasItemsToReturn) return false;
 
     // Check if returnDate is >= loanDate
@@ -153,7 +158,7 @@ export class LoanReturnDialog implements OnInit {
 
     const returnDate = new Date(returnDateStr.replace(/-/g, '\/'));
     const loanDate = new Date(this.loan.loanDate);
-    
+
     // Reset time components for accurate date-only comparison
     returnDate.setHours(0, 0, 0, 0);
     loanDate.setHours(0, 0, 0, 0);
@@ -164,13 +169,24 @@ export class LoanReturnDialog implements OnInit {
   save() {
     if (!this.isValidReturn()) {
       if (this.isReturnDateInvalid()) {
-        this.messageService.add({ severity: 'warn', summary: 'Atenção', detail: 'A data de devolução não pode ser anterior à data do empréstimo.' });
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Atenção',
+          detail:
+            'A data de devolução não pode ser anterior à data do empréstimo.',
+        });
         return;
       }
-      
-      const hasItemsToReturn = this.items.some(item => (item.tempReturnQty || 0) > 0);
+
+      const hasItemsToReturn = this.items.some(
+        (item) => (item.tempReturnQty || 0) > 0,
+      );
       if (!hasItemsToReturn) {
-        this.messageService.add({ severity: 'warn', summary: 'Atenção', detail: 'Selecione ao menos um item para devolver.' });
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Atenção',
+          detail: 'Selecione ao menos um item para devolver.',
+        });
         return;
       }
       return;
@@ -215,7 +231,9 @@ export class LoanReturnDialog implements OnInit {
     return {
       id: this.savedReturn?.id,
       loan: this.loan,
-      returnDate: formValue.returnDate ? new Date(formValue.returnDate.replace(/-/g, '\/')).toISOString() : new Date().toISOString(),
+      returnDate: formValue.returnDate
+        ? new Date(formValue.returnDate.replace(/-/g, '\/')).toISOString()
+        : new Date().toISOString(),
       observation: formValue.observation,
       items: this._createItemsPayload(),
     } as Return;
@@ -226,7 +244,8 @@ export class LoanReturnDialog implements OnInit {
       return {
         item: item.item,
         quantityIssued: item.quantityIssued || 0,
-        quantityReturned: (item.returnedQuantity || 0) + (item.tempReturnQty || 0),
+        quantityReturned:
+          (item.returnedQuantity || 0) + (item.tempReturnQty || 0),
       } as ReturnItem;
     });
   }

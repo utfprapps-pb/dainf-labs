@@ -56,9 +56,9 @@ import { catchError, of } from 'rxjs';
 export class UserDropdownComponent {
   private readonly userService = inject(UserService);
 
-  user = toSignal(this.userService.getCurrentUser().pipe(
-    catchError(() => of(null))
-  ));
+  user = toSignal(
+    this.userService.getCurrentUser().pipe(catchError(() => of(null))),
+  );
 
   userInitials = computed(() => {
     const name = this.user()?.nome?.trim();

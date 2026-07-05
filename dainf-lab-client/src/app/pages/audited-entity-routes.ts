@@ -36,13 +36,17 @@ export function auditedEntityRoute(entityKey: string): string | undefined {
  * pick up the `openId` query param automatically and open that record's edit dialog —
  * see `CrudComponent.OPEN_ID_QUERY_PARAM`.
  */
-export function auditedEntityLink(entityKey: string, entityId?: number | null): AuditedEntityLink | undefined {
+export function auditedEntityLink(
+  entityKey: string,
+  entityId?: number | null,
+): AuditedEntityLink | undefined {
   const route = auditedEntityRoute(entityKey);
   if (!route) {
     return undefined;
   }
   return {
     route,
-    queryParams: entityId != null ? { [CrudComponent.OPEN_ID_QUERY_PARAM]: entityId } : {},
+    queryParams:
+      entityId != null ? { [CrudComponent.OPEN_ID_QUERY_PARAM]: entityId } : {},
   };
 }
