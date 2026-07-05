@@ -348,12 +348,4 @@ export class ItemComponent implements OnInit {
       });
     });
   }
-
-  clearFilters() {
-    this.nameFilter.set(undefined);
-    this.typeFilter.set(undefined);
-    this.categoryFilter.set(undefined);
-    this.siorgFilter.set(undefined);
-    this.locationFilter.set(undefined);
-  }
 }
