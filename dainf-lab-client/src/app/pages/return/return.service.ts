@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { Loan } from '../loan/loan';
 import { Return } from './return';
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class ReturnService extends CrudService<Return> {
   constructor() {
     super('returns');

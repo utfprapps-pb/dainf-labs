@@ -1,12 +1,14 @@
 import { Category } from '@/pages/category/category';
-import { Pipe, PipeTransform } from '@angular/core';
+import { Pipe, PipeTransform, Injectable } from '@angular/core';
 import { TreeNode } from 'primeng/api';
 
+@Injectable({ providedIn: 'root' })
 @Pipe({
   name: 'categoryTreeNode',
 })
 export class CategoryTreeNodePipe implements PipeTransform {
   transform(categories: Category[] | Category): TreeNode<Category>[] {
+    if (!categories) return [];
     if (Array.isArray(categories)) {
       return categories.map((category) => this._map(category));
     }
