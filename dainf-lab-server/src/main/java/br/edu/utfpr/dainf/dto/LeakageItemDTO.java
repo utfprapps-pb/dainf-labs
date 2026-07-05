@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class PurchaseItemDTO implements Identifiable<Long> {
+public class LeakageItemDTO implements Identifiable<Long> {
     private Long id;
 
     @NotNull(message = "O campo 'Item' é obrigatório.")
@@ -21,8 +21,4 @@ public class PurchaseItemDTO implements Identifiable<Long> {
     @NotNull(message = "O campo 'Quantidade' é obrigatório.")
     @DecimalMin(value = "1", message = "A quantidade deve ser maior ou igual a 1.")
     private BigDecimal quantity;
-
-    @NotNull(message = "O campo 'Preço' é obrigatório.")
-    @DecimalMin(value = "0.00", message = "O preço deve ser maior ou igual a zero.")
-    private BigDecimal price;
 }

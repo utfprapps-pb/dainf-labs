@@ -1,0 +1,42 @@
+<app-crud
+  #crud
+  [columns]="cols"
+  [service]="itemService"
+  [config]="config"
+  [allowCreation]="false"
+  [actionsTemplate]="customActions"
+  [filtersTemplate]="filters"
+  [searchRequest]="searchRequest()"
+></app-crud>
+
+<ng-template #filters>
+  <div class="flex justify-between items-center mb-2 col-span-12">
+    <span class="font-bold"></span>
+    <p-button label="Limpar Filtros" icon="pi pi-filter-slash" severity="secondary" size="small" (click)="clearFilters()"></p-button>
+  </div>
+  <app-input-container label="Nome" class="col-span-12">
+    <input type="text" pInputText id="name" [(ngModel)]="nameFilter" fluid />
+  </app-input-container>
+  <app-input-container label="Tipo" class="col-span-12">
+    <app-static-select [options]="itemTypeOptions" [(ngModel)]="typeFilter"></app-static-select>
+  </app-input-container>
+  <app-input-container label="Categoria" class="col-span-12" [class.hidden]="!isDurableType">
+    <app-category-select [(ngModel)]="categoryFilter"></app-category-select>
+  </app-input-container>
+  <app-input-container label="Siorg" class="col-span-12">
+    <input type="text" pInputText id="siorg" [(ngModel)]="siorgFilter" fluid />
+  </app-input-container>
+  <app-input-container label="Localização" class="col-span-12">
+    <input type="text" pInputText id="location" [(ngModel)]="locationFilter" />
+  </app-input-container>
+</ng-template>
+
+<ng-template #customActions let-row>
+  <p-button
+    icon="pi pi-exclamation-triangle"
+    styleClass="p-button-warning mr-2"
+    pTooltip="Registrar Perda / Extravio"
+    tooltipPosition="left"
+    (click)="openLeakageDialog(row)"
+  ></p-button>
+</ng-template>

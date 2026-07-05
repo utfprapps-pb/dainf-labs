@@ -4,5 +4,6 @@ public enum InventoryTransactionType {
     PURCHASE,
     LOAN,
     ISSUE,
-    RETURN
+    RETURN,
+    LEAKAGE
 }

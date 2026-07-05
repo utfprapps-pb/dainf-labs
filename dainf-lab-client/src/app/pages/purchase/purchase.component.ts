@@ -85,7 +85,7 @@ export class PurchaseComponent implements OnInit {
     id: [null],
     item: [null, Validators.required],
     quantity: [null, [Validators.required, Validators.min(1)]],
-    price: [null, [Validators.required, Validators.min(0.01)]],
+    price: [null, [Validators.required, Validators.min(0)]],
   });
 
   minItemsValidator(control: AbstractControl): ValidationErrors | null {

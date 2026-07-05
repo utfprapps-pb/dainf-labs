@@ -13,7 +13,7 @@ public class TransactionFactory {
     public static Transaction create(InventoryTransactionType type) {
         return switch (type) {
             case PURCHASE, RETURN -> new SumQuantityTransaction();
-            case ISSUE, LOAN -> new SubtractQuantityTransaction();
+            case ISSUE, LOAN, LEAKAGE -> new SubtractQuantityTransaction();
         };
     }
 
@@ -24,7 +24,7 @@ public class TransactionFactory {
     public static TransactionValidator createValidators(InventoryTransactionType type, boolean useMinimumStockValidator) {
         return switch (type) {
             case PURCHASE, RETURN -> new CompositeValidator(List.of(new PositiveQuantityValidator()));
-            case ISSUE, LOAN -> {
+            case ISSUE, LOAN, LEAKAGE -> {
                 List<TransactionValidator> validators = new java.util.ArrayList<>(List.of(
                         new PositiveQuantityValidator(),
                         new PositiveInventoryValidator()
@@ -40,7 +40,7 @@ public class TransactionFactory {
     public static InventoryTransactionType reverseType(InventoryTransactionType type) {
         return switch (type) {
             case PURCHASE, RETURN -> InventoryTransactionType.ISSUE;
-            case ISSUE, LOAN -> InventoryTransactionType.RETURN;
+            case ISSUE, LOAN, LEAKAGE -> InventoryTransactionType.RETURN;
         };
     }
 }

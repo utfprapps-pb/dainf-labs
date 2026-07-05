@@ -28,6 +28,12 @@ public interface LoanRepository extends CrudRepository<Long, Loan>, LoanSpecExec
             @Param("itemId") Long itemId
     );
 
+    @Query("SELECT COALESCE(SUM(li.quantity), 0) FROM LoanItem li " +
+            "JOIN li.loan l " +
+            "WHERE li.item.id = :itemId " +
+            "AND l.status IN (br.edu.utfpr.dainf.enums.LoanStatus.ONGOING, br.edu.utfpr.dainf.enums.LoanStatus.OVERDUE)")
+    BigDecimal sumActiveLoanQuantityByItem(@Param("itemId") Long itemId);
+
     @Query("SELECT li FROM LoanItem li " +
             "JOIN FETCH li.loan l " +
             "JOIN FETCH l.borrower " +

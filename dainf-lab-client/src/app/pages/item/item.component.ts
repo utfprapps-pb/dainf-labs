@@ -109,11 +109,11 @@ export class ItemComponent implements OnInit {
     location: [null, Validators.compose([Validators.maxLength(255)])],
     type: [null, Validators.required],
     quantity: [
-      null,
+      { value: null, disabled: true },
       Validators.compose([Validators.required]),
     ],
     minimumStock: [
-      null,
+      { value: null, disabled: true },
       (control: any) => {
         if (!this.form) return null;
         const qty = this.form.get('quantity')?.value;
@@ -164,6 +164,9 @@ export class ItemComponent implements OnInit {
   ];
 
   ngOnInit() {
+    this.form.get('quantity')?.disable();
+    this.form.get('minimumStock')?.disable();
+
     const syncAssetsToQuantity = () => {
       const type = this.form.get('type')?.value;
       const qtyControl = this.form.get('minimumStock');
@@ -266,6 +269,11 @@ export class ItemComponent implements OnInit {
     this.categoryFilter.set(undefined);
     this.siorgFilter.set(undefined);
     this.locationFilter.set(undefined);
+  }
+
+  get isDurableType(): boolean {
+    const val: any = this.typeFilter();
+    return val === 'DURABLE' || val?.value === 'DURABLE';
   }
 
   searchRequest = computed<SearchRequest>(() => {

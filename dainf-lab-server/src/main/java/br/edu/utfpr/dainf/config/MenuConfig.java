@@ -65,6 +65,14 @@ public class MenuConfig {
                     ))
                     .build()),
 
+            Map.entry("leakage", MenuItemDTO.builder()
+                    .label("Registrar perda/extravio").icon("pi pi-exclamation-triangle").routerLink("leakage")
+                    .allowedRoles(Set.of(
+                            UserRole.ROLE_ADMIN,
+                            UserRole.ROLE_LAB_TECHNICIAN
+                    ))
+                    .build()),
+
             Map.entry("item", MenuItemDTO.builder()
                     .label("Itens").icon("pi pi-box").routerLink("item")
                     .allowedRoles(Set.of(
@@ -135,6 +143,7 @@ public class MenuConfig {
                         .label("Cadastros")
                         .items(List.of(
                                 baseItems.get("item"),
+                                baseItems.get("leakage"),
                                 baseItems.get("category"),
                                 baseItems.get("supplier"),
                                 baseItems.get("user")
