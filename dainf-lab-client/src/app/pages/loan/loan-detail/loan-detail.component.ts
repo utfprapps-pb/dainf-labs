@@ -306,10 +306,8 @@ export class LoanDetailDialog implements OnInit {
         rows: 50,
       })
       .subscribe((page: any) => {
-        // Mostrar apenas empréstimos já finalizados no histórico, excluindo o atual
-        const history = page.content.filter(
-          (l: any) => l.status === 'COMPLETED' && l.id !== this.loan.id
-        );
+        // Mostrar apenas empréstimos já finalizados no histórico
+        const history = page.content.filter((l: any) => l.status === 'COMPLETED');
 
         // Ensure strictly sorted by date locally just in case
         history.sort(
