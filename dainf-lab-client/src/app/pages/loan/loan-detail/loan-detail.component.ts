@@ -41,8 +41,6 @@ export class LoanDetailDialog implements OnInit {
   itemService = inject(ItemService);
   messageService = inject(MessageService);
   returnService = inject(ReturnService);
-  itemQuantity = model(1);
-
   itemFilters = [
     { field: 'quantity', type: 'GREATER', value: '0' } as any
   ];
