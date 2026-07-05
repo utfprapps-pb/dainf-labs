@@ -20,6 +20,7 @@ import { InputNumber } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { TextareaModule } from 'primeng/textarea';
+import { MessageService } from 'primeng/api';
 import { Observable } from 'rxjs';
 import { Loan } from '../loan';
 import { LoanService } from '../loan.service';
@@ -49,6 +50,7 @@ export class LoanReturnDialog implements OnInit {
   loanService = inject(LoanService);
   userService = inject(UserService);
   returnService = inject(ReturnService);
+  messageService = inject(MessageService);
 
   form!: FormGroup;
   loan!: Loan;
@@ -124,7 +126,56 @@ export class LoanReturnDialog implements OnInit {
     });
   }
 
+  isReturnDateInvalid(): boolean {
+    const returnDateStr = this.form.get('returnDate')?.value;
+    if (!returnDateStr) return false; // Let the form validators handle required if any
+
+    const returnDate = new Date(returnDateStr.replace(/-/g, '\/'));
+    const loanDate = new Date(this.loan.loanDate);
+    
+    // Reset time components for accurate date-only comparison
+    returnDate.setHours(0, 0, 0, 0);
+    loanDate.setHours(0, 0, 0, 0);
+
+    return returnDate < loanDate;
+  }
+
+  isValidReturn(): boolean {
+    if (this.loan.status === 'COMPLETED') return false;
+    
+    // Check if at least one item has tempReturnQty > 0
+    const hasItemsToReturn = this.items.some(item => (item.tempReturnQty || 0) > 0);
+    if (!hasItemsToReturn) return false;
+
+    // Check if returnDate is >= loanDate
+    const returnDateStr = this.form.get('returnDate')?.value;
+    if (!returnDateStr) return false;
+
+    const returnDate = new Date(returnDateStr.replace(/-/g, '\/'));
+    const loanDate = new Date(this.loan.loanDate);
+    
+    // Reset time components for accurate date-only comparison
+    returnDate.setHours(0, 0, 0, 0);
+    loanDate.setHours(0, 0, 0, 0);
+
+    return returnDate >= loanDate;
+  }
+
   save() {
+    if (!this.isValidReturn()) {
+      if (this.isReturnDateInvalid()) {
+        this.messageService.add({ severity: 'warn', summary: 'Atenção', detail: 'A data de devolução não pode ser anterior à data do empréstimo.' });
+        return;
+      }
+      
+      const hasItemsToReturn = this.items.some(item => (item.tempReturnQty || 0) > 0);
+      if (!hasItemsToReturn) {
+        this.messageService.add({ severity: 'warn', summary: 'Atenção', detail: 'Selecione ao menos um item para devolver.' });
+        return;
+      }
+      return;
+    }
+
     const payload = this._createPayload();
     this._save(payload as Return).subscribe((res) => {
       this.ref.close({ success: true, data: res });

@@ -48,6 +48,8 @@ export class LoanDetailDialog implements OnInit {
   selectedItem: any = null;
   itemQuantity: number = 1;
 
+  userLoans = signal<any[]>([]);
+
   editLoanDate: string = '';
   editDeadline: string = '';
   editObservation: string = '';
@@ -58,9 +60,13 @@ export class LoanDetailDialog implements OnInit {
     this.editDeadline = this.loan.deadline ? new Date(this.loan.deadline).toISOString().split('T')[0] : '';
     this.editObservation = this.loan.observation || '';
 
+    if (this.config.data?.showHistory) {
+      this.fetchUserLoans();
+    }
+
     this.userService.hasAdvancedPrivileges().subscribe({
       next: (hasPrivileges) => {
-        this.isReadOnly.set(!hasPrivileges);
+        this.isReadOnly.set(!hasPrivileges || this.loan.status === 'COMPLETED');
       },
       error: () => {
         this.isReadOnly.set(true);
@@ -68,12 +74,22 @@ export class LoanDetailDialog implements OnInit {
     });
 
     this.returnService.findByLoan(this.loan).subscribe({
-      next: (ret) => {
-        if (ret && ret.items) {
-          this.loan.items.forEach((item: any) => {
-            const retItem = ret.items!.find((r: any) => r.item?.id === item.item?.id);
-            item.returnedQuantity = retItem ? retItem.quantityReturned : 0;
-          });
+      next: (ret: any) => {
+        if (ret) {
+          if (ret.items) {
+            this.loan.items.forEach((item: any) => {
+              const retItem = ret.items!.find((r: any) => r.item?.id === item.item?.id);
+              item.returnedQuantity = retItem ? retItem.quantityReturned : 0;
+            });
+          }
+          if (this.loan.status === 'COMPLETED') {
+            if (ret.returnDate) {
+              this.editDeadline = new Date(ret.returnDate).toISOString().split('T')[0];
+            }
+            if (ret.observation) {
+              this.editObservation = (this.loan.observation ? this.loan.observation + '\n\n---\n\n' : '') + 'Observação da Devolução:\n' + ret.observation;
+            }
+          }
         }
       },
       error: () => {}
@@ -216,6 +232,28 @@ export class LoanDetailDialog implements OnInit {
       }
     });
   }
+
+  fetchUserLoans() {
+      // Busca os últimos empréstimos desse mutuário
+      this.loanService.search({
+        filters: [
+          { field: 'borrower.id', value: this.loan.borrower.id, type: 'EQUALS' }
+        ],
+        sort: { field: 'loanDate', type: 'DESC' },
+        page: 0,
+        rows: 50
+      }).subscribe((page: any) => {
+        // Mostrar todos menos o atual no histórico se ativo, mostrar todos se completado
+        const history = this.loan.status === 'COMPLETED' 
+          ? page.content 
+          : page.content.filter((l: any) => l.id !== this.loan.id);
+        
+        // Ensure strictly sorted by date locally just in case
+        history.sort((a: any, b: any) => new Date(b.loanDate).getTime() - new Date(a.loanDate).getTime());
+        
+        this.userLoans.set(history);
+      });
+    }
 
   close() {
     this.ref.close(this.loan);

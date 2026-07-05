@@ -49,6 +49,7 @@ import { User } from '../user/user';
 import { UserService } from '../user/user.service';
 import { Loan, LoanItem, LoanStatus } from './loan';
 import { LoanService } from './loan.service';
+import { ReturnService } from '../return/return.service';
 import { LoanReturnDialog } from './return-dialog/return-dialog';
 import { LoanDetailDialog } from './loan-detail/loan-detail.component';
 import { BarcodeScannerComponent } from '@/shared/components/barcode-scanner/barcode-scanner.component';
@@ -91,6 +92,7 @@ const STATUS_ICON: Record<LoanStatus, string> = {
 ],
   providers: [
     LoanService,
+    ReturnService,
     CategoryService,
     LabelValuePipe,
     ItemService,
@@ -192,7 +194,16 @@ export class LoanComponent implements OnInit, AfterViewInit {
     { field: 'id', header: 'Código' },
     { field: 'borrower.nome', header: 'Mutuário' },
     { field: 'loanDate', header: 'Data do empréstimo', transform: (row) => this.datePipe.transform(row.loanDate, 'dd/MM/yyyy') || '' },
-    { field: 'deadline', header: 'Prazo de devolução', transform: (row) => this.datePipe.transform(row.deadline, 'dd/MM/yyyy') || '' },
+    { 
+      field: 'deadline', 
+      header: 'Prazo / Devolução', 
+      transform: (row) => {
+        if (row.status === 'COMPLETED' && (row as any).actualReturnDate) {
+          return this.datePipe.transform((row as any).actualReturnDate, 'dd/MM/yyyy') || '';
+        }
+        return this.datePipe.transform(row.deadline, 'dd/MM/yyyy') || '';
+      }
+    },
     {
       field: 'status',
       header: 'Status',
@@ -411,7 +422,8 @@ export class LoanComponent implements OnInit, AfterViewInit {
   openReturnDialog(loan: Loan) {
     const ref = this.dialogService.open(LoanReturnDialog, {
       header: `Devolução de empréstimo`,
-      width: '60%',
+      width: '90vw',
+      style: { maxWidth: '1200px' },
       modal: true,
       dismissableMask: true,
       data: { loan },
@@ -428,10 +440,11 @@ export class LoanComponent implements OnInit, AfterViewInit {
   openEdit(loan: Loan) {
     const ref = this.dialogService.open(LoanDetailDialog, {
       header: 'Ficha de Empréstimo',
-      width: '80vw',
+      width: '90vw',
+      style: { maxWidth: '1200px' },
       modal: true,
       dismissableMask: true,
-      data: { loan },
+      data: { loan, showHistory: true },
       styleClass: 'return-ficha-modal'
     });
 
@@ -459,5 +472,23 @@ export class LoanComponent implements OnInit, AfterViewInit {
       return items.filter(i => i.item?.category?.id === catId);
     }
     return items;
+  }
+
+  get groupedUserLoans(): any[] {
+    const content = this.crud()?.items()?.content;
+    if (!content) return [];
+    
+    const userMap = new Map<number, any>();
+    for (const loanItem of content) {
+      const loan = loanItem as any;
+      const borrowerId = loan.borrower.id;
+      if (!userMap.has(borrowerId)) {
+        userMap.set(borrowerId, { ...loan, allLoans: [loan] });
+      } else {
+        const existing = userMap.get(borrowerId);
+        existing.allLoans.push(loan);
+      }
+    }
+    return Array.from(userMap.values());
   }
 }

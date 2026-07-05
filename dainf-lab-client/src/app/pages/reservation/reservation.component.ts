@@ -47,7 +47,7 @@ import { CategoryTreeNodePipe } from '@/shared/pipes/category-tree-node.pipe';
     PaginatorModule,
     TreeSelectModule
   ],
-  providers: [ReservationService, UserService, ItemService, DatePipe, LoanService, CategoryService, CategoryTreeNodePipe],
+  providers: [ReservationService, UserService, ItemService, DatePipe, LoanService, CategoryService],
   selector: 'app-reservation',
   templateUrl: 'reservation.component.html',
   styles: [`
@@ -66,7 +66,8 @@ export class ReservationComponent implements OnInit, OnDestroy {
   formBuilder = inject(FormBuilder);
   cartService = inject(CartService);
   categoryService = inject(CategoryService);
-  categoryTreeNodePipe = inject(CategoryTreeNodePipe);
+  
+  categoryTreeNodePipe = new CategoryTreeNodePipe();
   crud = viewChild(CrudComponent);
 
   categories = signal<any[]>([]);
@@ -185,6 +186,15 @@ export class ReservationComponent implements OnInit, OnDestroy {
   // Modal Controlled States
   isModalOpen = false;
   selectedReservation: Reservation | null = null;
+
+  clearFilters() {
+    this.filterName = '';
+    this.filterRA = '';
+    this.filterStatus = '';
+    this.applyFilters();
+    this.crud()?.drawerVisible.set(false);
+  }
+
   modalStatus: string = 'Pendente';
   modalDatePickup: string = '';
   modalDateReturn: string = '';

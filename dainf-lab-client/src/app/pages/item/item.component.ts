@@ -260,6 +260,14 @@ export class ItemComponent implements OnInit {
   siorgFilter = model<string | undefined>();
   locationFilter = model<string | undefined>();
 
+  clearFilters() {
+    this.nameFilter.set(undefined);
+    this.typeFilter.set(undefined);
+    this.categoryFilter.set(undefined);
+    this.siorgFilter.set(undefined);
+    this.locationFilter.set(undefined);
+  }
+
   searchRequest = computed<SearchRequest>(() => {
     const filters: SearchFilter[] = [];
     if (this.nameFilter())
