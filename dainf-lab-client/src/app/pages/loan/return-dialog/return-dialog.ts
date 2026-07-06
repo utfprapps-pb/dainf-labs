@@ -168,24 +168,35 @@ export class LoanReturnDialog implements OnInit {
 
   save() {
     if (!this.isValidReturn()) {
-      if (this.isReturnDateInvalid()) {
+      const hasItemsToReturn = this.items.some(
+        (item) => (item.tempReturnQty || 0) > 0,
+      );
+      const isDateInvalid = this.isReturnDateInvalid();
+
+      if (!hasItemsToReturn && isDateInvalid) {
         this.messageService.add({
           severity: 'warn',
           summary: 'Atenção',
-          detail:
-            'A data de devolução não pode ser anterior à data do empréstimo.',
+          detail: 'Não é possível confirmar a devolução. Selecione ao menos um item e informe uma data válida.',
         });
         return;
       }
 
-      const hasItemsToReturn = this.items.some(
-        (item) => (item.tempReturnQty || 0) > 0,
-      );
+      if (isDateInvalid) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Atenção',
+          detail:
+            'Não é possível confirmar a devolução. A data não pode ser anterior ao empréstimo.',
+        });
+        return;
+      }
+
       if (!hasItemsToReturn) {
         this.messageService.add({
           severity: 'warn',
           summary: 'Atenção',
-          detail: 'Selecione ao menos um item para devolver.',
+          detail: 'Não é possível confirmar a devolução. Selecione ao menos um item.',
         });
         return;
       }

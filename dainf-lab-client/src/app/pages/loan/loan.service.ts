@@ -21,19 +21,19 @@ export class LoanService extends CrudService<Loan> {
           return of(page);
         }
 
-        const completedLoans = page.content.filter(
-          (l: Loan) => l.status === 'COMPLETED',
+        const loansWithReturns = page.content.filter(
+          (l: Loan) => l.status === 'COMPLETED' || (l.items && l.items.some(i => (i.returnedQuantity || 0) > 0))
         );
-        if (completedLoans.length === 0) {
+        if (loansWithReturns.length === 0) {
           return of(page);
         }
 
-        const requests = completedLoans.map((loan: Loan) =>
+        const requests = loansWithReturns.map((loan: Loan) =>
           this.returnService
             .search({
               filters: [{ field: 'loan.id', value: loan.id, type: 'EQUALS' }],
               page: 0,
-              rows: 1,
+              rows: 100,
               sort: { field: 'returnDate', type: 'DESC' },
             })
             .pipe(
@@ -41,6 +41,19 @@ export class LoanService extends CrudService<Loan> {
                 if (returnPage.content && returnPage.content.length > 0) {
                   (loan as any).actualReturnDate =
                     returnPage.content[0].returnDate;
+                    
+                  if (loan.items) {
+                    loan.items.forEach((loanItem: any) => {
+                      if ((loanItem.returnedQuantity || 0) > 0) {
+                        const matchingReturn = returnPage.content.find(r => 
+                          r.items && r.items.some((ri: any) => ri.item && ri.item.id === loanItem.item.id)
+                        );
+                        if (matchingReturn) {
+                          loanItem.actualReturnDate = matchingReturn.returnDate;
+                        }
+                      }
+                    });
+                  }
                 }
                 return loan;
               }),
