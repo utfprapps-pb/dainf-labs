@@ -24,23 +24,38 @@ public class RevInfoSchemaInitializer {
             stmt.execute("""
                     DO $$
                     BEGIN
-                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'revinfo' AND column_name = 'rev')
-                           AND NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'revinfo' AND column_name = 'id') THEN
-                            ALTER TABLE revinfo RENAME COLUMN rev TO id;
+                        -- Rename legacy "rev" PK column to "id" (Envers 5.x → 6.x)
+                        IF EXISTS (SELECT 1 FROM information_schema.columns
+                                   WHERE table_schema = 'public' AND table_name = 'revinfo' AND column_name = 'rev')
+                           AND NOT EXISTS (SELECT 1 FROM information_schema.columns
+                                          WHERE table_schema = 'public' AND table_name = 'revinfo' AND column_name = 'id') THEN
+                            ALTER TABLE public.revinfo RENAME COLUMN rev TO id;
                         END IF;
 
-                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'revinfo' AND column_name = 'revtstmp')
-                           AND NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'revinfo' AND column_name = 'timestamp') THEN
-                            ALTER TABLE revinfo RENAME COLUMN revtstmp TO timestamp;
+                        -- Rename "revtstmp" to "timestamp" only when "timestamp" does not yet exist
+                        IF EXISTS (SELECT 1 FROM information_schema.columns
+                                   WHERE table_schema = 'public' AND table_name = 'revinfo' AND column_name = 'revtstmp')
+                           AND NOT EXISTS (SELECT 1 FROM information_schema.columns
+                                          WHERE table_schema = 'public' AND table_name = 'revinfo' AND column_name = 'timestamp') THEN
+                            ALTER TABLE public.revinfo RENAME COLUMN revtstmp TO timestamp;
+                        END IF;
+
+                        -- Migrate data and drop orphaned "revtstmp" when "timestamp" already exists (half-migrated table)
+                        IF EXISTS (SELECT 1 FROM information_schema.columns
+                                   WHERE table_schema = 'public' AND table_name = 'revinfo' AND column_name = 'revtstmp')
+                           AND EXISTS (SELECT 1 FROM information_schema.columns
+                                       WHERE table_schema = 'public' AND table_name = 'revinfo' AND column_name = 'timestamp') THEN
+                            UPDATE public.revinfo SET "timestamp" = revtstmp WHERE revtstmp IS NOT NULL AND revtstmp > 0;
+                            ALTER TABLE public.revinfo DROP COLUMN revtstmp;
                         END IF;
                     END $$;
                     """);
             stmt.execute("""
-                    ALTER TABLE revinfo
-                    ADD COLUMN IF NOT EXISTS timestamp BIGINT DEFAULT 0 NOT NULL
+                    ALTER TABLE public.revinfo
+                    ADD COLUMN IF NOT EXISTS "timestamp" BIGINT DEFAULT 0 NOT NULL
                     """);
             stmt.execute("""
-                    ALTER TABLE revinfo
+                    ALTER TABLE public.revinfo
                     ADD COLUMN IF NOT EXISTS username VARCHAR(255)
                     """);
             log.debug("revinfo schema ensured (id, timestamp, username)");
