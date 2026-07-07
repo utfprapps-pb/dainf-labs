@@ -18,7 +18,7 @@ import {
   FileUploadModule,
 } from 'primeng/fileupload';
 import { ImageModule } from 'primeng/image';
-import { concatMap, from, tap, toArray } from 'rxjs';
+import { catchError, concatMap, from, map, of, tap, toArray } from 'rxjs';
 
 @Component({
   standalone: true,
@@ -54,15 +54,19 @@ export class PhotoAttachmentComponent implements ControlValueAccessor {
     this.value.set(value ?? []);
     from(this.value())
       .pipe(
-        concatMap((file) => this.service().get(file.name)),
+        concatMap((file) =>
+          this.service()
+            .get(file.name)
+            .pipe(
+              map((blob) => new File([blob], file.name, { type: 'image/png' })),
+              catchError(() => of(null)),
+            ),
+        ),
         toArray(),
-        tap((blobs) => {
-          const files: File[] = blobs.map((blob, index) => {
-            return new File([blob], this.value()[index].name, {
-              type: 'image/png',
-            });
-          });
-          this.fileUpload()!.files = [...files];
+        tap((files) => {
+          this.fileUpload()!.files = files.filter(
+            (file): file is File => file !== null,
+          );
           this.fileUpload()!.cd.markForCheck();
         }),
       )
