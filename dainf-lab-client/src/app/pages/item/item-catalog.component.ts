@@ -188,40 +188,46 @@ export class ItemCatalogComponent implements OnInit, OnDestroy {
   }
 
   private prefetchImageForItem(item: Item) {
-    const imagePath = this.extractImagePath(item.images);
     const key = String(item.id);
+    if (this.imageUrls()[key]) return;
 
-    if (!imagePath || this.imageUrls()[key]) return;
+    const paths = this.extractImagePaths(item.images);
+    this.tryImagePaths(paths, 0, key);
+  }
 
-    if (imagePath.startsWith('http')) {
-      this.imageUrls.update((urls) => ({ ...urls, [key]: imagePath }));
+  private tryImagePaths(paths: string[], index: number, key: string) {
+    if (index >= paths.length) return;
+
+    const path = paths[index];
+
+    if (path.startsWith('http')) {
+      this.imageUrls.update((urls) => ({ ...urls, [key]: path }));
       return;
     }
 
-    this.storageService.getSignedUrl(imagePath, 'GET').subscribe({
-      next: (url) =>
-        this.imageUrls.update((urls) => ({ ...urls, [key]: url })),
-      error: (err) =>
-        console.error('Erro ao carregar imagem do item', {
-          id: item.id,
-          error: err,
-        }),
+    this.storageService.getSignedUrl(path, 'GET').subscribe({
+      next: (url) => this.imageUrls.update((urls) => ({ ...urls, [key]: url })),
+      error: () => this.tryImagePaths(paths, index + 1, key),
     });
   }
 
-  private extractImagePath(images: any): string | undefined {
-    if (!images) return undefined;
+  private extractImagePaths(images: any): string[] {
+    if (!images) return [];
 
     if (Array.isArray(images)) {
-      const [first] = images;
-      if (!first) return undefined;
-      if (typeof first === 'string') return first;
-      if (typeof first === 'object' && first.name) return first.name;
+      return images
+        .filter(Boolean)
+        .map((img) => {
+          if (typeof img === 'string') return img;
+          if (typeof img === 'object' && img.name) return img.name;
+          return null;
+        })
+        .filter((p): p is string => p !== null);
     }
 
-    if (typeof images === 'string') return images;
-    if (typeof images === 'object' && images.name) return images.name;
+    if (typeof images === 'string') return [images];
+    if (typeof images === 'object' && images.name) return [images.name];
 
-    return undefined;
+    return [];
   }
 }
