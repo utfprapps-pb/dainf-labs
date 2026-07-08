@@ -46,6 +46,7 @@ import { User } from '../user/user';
 import { UserService } from '../user/user.service';
 import { Loan, LoanItem, LoanStatus } from './loan';
 import { LoanService } from './loan.service';
+import { PendingItemsDialog } from './pending-items-dialog/pending-items-dialog';
 import { LoanReturnDialog } from './return-dialog/return-dialog';
 
 const STATUS_SEVERITY: Record<LoanStatus, 'success' | 'danger' | 'info'> = {
@@ -298,5 +299,15 @@ export class LoanComponent implements OnInit, AfterViewInit {
 
   openEdit(row: Loan) {
     this.crud()?.edit(row);
+  }
+
+  openPendingItemsDialog() {
+    this.dialogService.open(PendingItemsDialog, {
+      header: 'Pendências por usuário',
+      width: '60%',
+      contentStyle: { 'max-height': '600px', overflow: 'auto' },
+      modal: true,
+      baseZIndex: 10000,
+    });
   }
 }

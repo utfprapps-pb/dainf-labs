@@ -5,6 +5,7 @@ import br.edu.utfpr.dainf.enums.InventoryTransactionType;
 import br.edu.utfpr.dainf.enums.LoanStatus;
 import br.edu.utfpr.dainf.enums.UserRole;
 import br.edu.utfpr.dainf.exception.WarnException;
+import br.edu.utfpr.dainf.dto.PendingItemDTO;
 import br.edu.utfpr.dainf.model.Loan;
 import br.edu.utfpr.dainf.model.LoanItem;
 import br.edu.utfpr.dainf.model.Solicitation;
@@ -132,6 +133,14 @@ public class LoanService extends CrudService<Long, Loan, LoanRepository> {
 
     public List<LoanItem> getHistoryForItem(Long itemId) {
         return repository.findHistoryByItem(itemId);
+    }
+
+    public List<PendingItemDTO> getPendingItemsForBorrower(Long borrowerId) {
+        User currentUser = userService.getCurrentUser();
+        if (!Objects.equals(currentUser.getId(), borrowerId) && !userService.hasPrivilegedAcess()) {
+            throw new AccessDeniedException("Você não tem acesso para este registro");
+        }
+        return repository.findPendingItemsByBorrower(borrowerId);
     }
 
     public Loan refreshStatus(Loan loan) {

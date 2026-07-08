@@ -67,6 +67,7 @@ export class CrudComponent<T extends Identifiable> implements OnInit {
     new Map(),
   );
   filtersTemplate = input<TemplateRef<any> | undefined>(undefined);
+  toolbarExtraTemplate = input<TemplateRef<any> | undefined>(undefined);
 
   actionsTemplate = input<TemplateRef<any>>();
   formTemplate = input<TemplateRef<any>>();

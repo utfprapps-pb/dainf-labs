@@ -12,7 +12,19 @@
   [actionsTemplate]="actions"
   [allowCreation]="hasAdvancedPrivileges()"
   [templateMap]="templateMap"
+  [toolbarExtraTemplate]="pendingItemsButton"
 ></app-crud>
+
+<ng-template #pendingItemsButton>
+  @if (hasAdvancedPrivileges()) {
+    <p-button
+      label="Pendências"
+      icon="pi pi-list"
+      severity="warn"
+      (onClick)="openPendingItemsDialog()"
+    />
+  }
+</ng-template>
 
 <ng-template #statusTemplate let-row>
   <p-tag
