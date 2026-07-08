@@ -15,17 +15,26 @@
         <tr>
           <th>Item</th>
           <th>Quantidade Pendente</th>
+          <th>Ações</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-pendingItem>
         <tr>
           <td>{{ pendingItem.itemName }}</td>
           <td>{{ pendingItem.pendingQuantity }}</td>
+          <td>
+            <p-button
+              label="Ver empréstimos"
+              icon="pi pi-list"
+              severity="secondary"
+              (click)="showItemLoans(pendingItem)"
+            ></p-button>
+          </td>
         </tr>
       </ng-template>
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="2">Nenhuma pendência encontrada para este usuário.</td>
+          <td colspan="3">Nenhuma pendência encontrada para este usuário.</td>
         </tr>
       </ng-template>
     </p-table>

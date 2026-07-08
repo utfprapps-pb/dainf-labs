@@ -302,12 +302,20 @@ export class LoanComponent implements OnInit, AfterViewInit {
   }
 
   openPendingItemsDialog() {
-    this.dialogService.open(PendingItemsDialog, {
+    const ref = this.dialogService.open(PendingItemsDialog, {
       header: 'Pendências por usuário',
       width: '60%',
       contentStyle: { 'max-height': '600px', overflow: 'auto' },
       modal: true,
       baseZIndex: 10000,
+    });
+
+    ref.onClose.subscribe((result: any) => {
+      if (result?.action === 'edit') {
+        this.crud()?.edit({ id: result.loanId } as Loan);
+      } else if (result?.action === 'return') {
+        this.loanService.get(result.loanId).subscribe((loan) => this.openReturnDialog(loan));
+      }
     });
   }
 }
