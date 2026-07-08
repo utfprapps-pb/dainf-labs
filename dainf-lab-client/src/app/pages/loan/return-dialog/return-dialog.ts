@@ -59,23 +59,40 @@ export class LoanReturnDialog implements OnInit {
   form!: FormGroup;
   loan!: Loan;
   savedReturn: Return | null = null;
+  loadError = false;
 
   ngOnInit(): void {
     this.loan = this.config.data?.loan;
-    this._searchReturnByLoan(this.loan).subscribe((res) => {
-      this.savedReturn = res;
-      if (this.savedReturn) {
-        this.savedReturn.items?.forEach((item: any) => {
-          item.quantity = this.loan.items.find(
-            (loanItem: any) => loanItem.item.id === item.item.id,
-          )?.quantity;
-        });
-      }
-    });
+    this._searchReturnByLoan(this.loan)
+      .pipe(
+        tap((res) => {
+          this.savedReturn = res;
+          if (this.savedReturn) {
+            this.savedReturn.items?.forEach((item: any) => {
+              item.quantity = this.loan.items.find(
+                (loanItem: any) => loanItem.item.id === item.item.id,
+              )?.quantity;
+            });
+          }
+        }),
+        catchError((error) => {
+          this.loadError = true;
+          this._showWarn(`Falha ao carregar o registro: ${extractErrorMessage(error)}`);
+          return throwError(() => error);
+        }),
+        take(1),
+      )
+      .subscribe();
     this._initForm();
   }
 
   save() {
+    if (this.loadError) {
+      this._showWarn(
+        'Não foi possível verificar se já existe uma devolução para este empréstimo. Feche e reabra o formulário para tentar novamente.',
+      );
+      return;
+    }
     if (this.form.invalid) {
       this._showWarn('Por favor, verifique os campos do formulário.');
       this.form.markAllAsTouched();

@@ -121,7 +121,12 @@
         severity="secondary"
         (onClick)="cancel()"
       ></p-button>
-      <p-button label="Salvar" severity="success" (onClick)="save()"></p-button>
+      <p-button
+        label="Salvar"
+        severity="success"
+        [disabled]="loadError"
+        (onClick)="save()"
+      ></p-button>
     </div>
   </form>
 </div>
