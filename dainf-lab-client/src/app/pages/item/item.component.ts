@@ -97,7 +97,7 @@ export class ItemComponent {
       Validators.compose([Validators.required, Validators.maxLength(50)]),
     ],
     description: [null],
-    price: [null],
+    price: [null, Validators.min(0)],
     category: [null, Validators.required],
     assets: [null],
     images: [null],

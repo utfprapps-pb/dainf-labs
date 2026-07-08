@@ -169,8 +169,8 @@ export class PurchaseComponent implements OnInit {
   });
 
   ngOnInit() {
-    this.form.get('items')?.valueChanges.subscribe((items: PurchaseItem[]) => {
-      const total = items.reduce(
+    this.form.get('items')?.valueChanges.subscribe((items: PurchaseItem[] | null) => {
+      const total = (items ?? []).reduce(
         (acc, item) => acc + item.quantity * item.price,
         0,
       );

@@ -34,19 +34,25 @@ export class InputContainerComponent {
   ngControl = contentChild(NgControl, { read: NgControl });
 
   control = computed(() => this.ngControl()?.control);
-  required = computed(() => {
+
+  // Plain methods, not computed(): control.errors is a mutable property on the
+  // FormControl, not a signal, so a computed() here would cache its result after
+  // the first read and never notice later setErrors() calls (e.g. from cross-field
+  // validators). Template method calls are re-evaluated on every change detection
+  // cycle instead, so they stay in sync.
+  required(): boolean {
     const control = this.control();
     if (!control) return false;
     return control.errors?.['required'] === true;
-  });
+  }
 
-  errorMessages = computed(() => {
+  errorMessages(): string[] {
     const control = this.control();
     if (!control || !control.errors) return [];
     return Object.entries(control.errors)
       .filter(([key]) => key in errorMap)
       .map(([key, error]) => errorMap[key](error));
-  });
+  }
 }
 
 const errorMap: Record<string, (error: any) => string> = {
@@ -60,4 +66,7 @@ const errorMap: Record<string, (error: any) => string> = {
   invalidPhone: () => 'Telefone inválido.',
   passwordStrength: () => 'A senha deve conter ao menos uma letra maiúscula, uma minúscula e um número.',
   passwordMismatch: () => 'As senhas não coincidem.',
+  dateBeforeStart: () => 'A data não pode ser anterior à data inicial.',
+  min: (e) => `Valor mínimo: ${e.min}.`,
+  max: (e) => `Valor máximo: ${e.max}.`,
 };

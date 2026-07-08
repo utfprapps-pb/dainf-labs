@@ -15,6 +15,7 @@ import { SubItemFormComponent } from '@/shared/components/subitem-form/subitem-f
 import { Column, CrudConfig } from '@/shared/crud/crud';
 import { CrudComponent } from '@/shared/crud/crud.component';
 import { SearchRequest, SearchFilter } from '@/shared/models/search';
+import { dateOrderValidator } from '@/shared/validator/date-order.validator';
 import { ButtonModule } from 'primeng/button';
 import { DatePickerModule } from 'primeng/datepicker';
 import { FieldsetModule } from 'primeng/fieldset';
@@ -71,15 +72,18 @@ export class ReservationComponent implements OnInit {
 
   crud = viewChild(CrudComponent);
 
-  form: FormGroup = this.formBuilder.group({
-    id: [{ value: null, disabled: true }],
-    description: [''],
-    observation: [''],
-    reservationDate: [null, Validators.required],
-    withdrawalDate: [null, Validators.required],
-    user: [null],
-    items: [[], [Validators.required, Validators.minLength(1)]],
-  });
+  form: FormGroup = this.formBuilder.group(
+    {
+      id: [{ value: null, disabled: true }],
+      description: [''],
+      observation: [''],
+      reservationDate: [null, Validators.required],
+      withdrawalDate: [null, Validators.required],
+      user: [null],
+      items: [[], [Validators.required, Validators.minLength(1)]],
+    },
+    { validators: dateOrderValidator('reservationDate', 'withdrawalDate') },
+  );
 
   reservationItemForm: FormGroup = this.formBuilder.group({
     id: [null],

@@ -2,6 +2,7 @@ package br.edu.utfpr.dainf.service;
 
 import br.edu.utfpr.dainf.enums.InventoryTransactionType;
 import br.edu.utfpr.dainf.enums.LoanStatus;
+import br.edu.utfpr.dainf.exception.WarnException;
 import br.edu.utfpr.dainf.model.Item;
 import br.edu.utfpr.dainf.model.Loan;
 import br.edu.utfpr.dainf.model.LoanItem;
@@ -20,10 +21,13 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -111,6 +115,46 @@ class LoanServiceTest {
         loanService.save(entity);
 
         verify(inventoryDiffService).applyDiff(any(), any(), eq(List.of()), eq(InventoryTransactionType.LOAN));
+    }
+
+    // --- deadline vs loanDate ordering ---
+
+    @Test
+    void save_deadlineBeforeLoanDate_throwsWarnException() {
+        Loan entity = new Loan();
+        entity.setLoanDate(Instant.now());
+        entity.setDeadline(Instant.now().minus(1, ChronoUnit.DAYS));
+        entity.setItems(List.of());
+
+        assertThrows(WarnException.class, () -> loanService.save(entity));
+
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void save_deadlineEqualsLoanDate_doesNotThrow() {
+        Instant now = Instant.now();
+        Loan entity = new Loan();
+        entity.setLoanDate(now);
+        entity.setDeadline(now);
+        entity.setItems(List.of());
+
+        when(repository.save(any())).thenReturn(entity);
+
+        assertDoesNotThrow(() -> loanService.save(entity));
+    }
+
+    @Test
+    void save_deadlineAfterLoanDate_doesNotThrow() {
+        Instant now = Instant.now();
+        Loan entity = new Loan();
+        entity.setLoanDate(now);
+        entity.setDeadline(now.plus(7, ChronoUnit.DAYS));
+        entity.setItems(List.of());
+
+        when(repository.save(any())).thenReturn(entity);
+
+        assertDoesNotThrow(() -> loanService.save(entity));
     }
 
     // --- refreshStatus / deadline status resolution ---

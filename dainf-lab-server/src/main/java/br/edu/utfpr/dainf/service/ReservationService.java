@@ -1,6 +1,7 @@
 package br.edu.utfpr.dainf.service;
 
 import br.edu.utfpr.dainf.enums.UserRole;
+import br.edu.utfpr.dainf.exception.WarnException;
 import br.edu.utfpr.dainf.model.Loan;
 import br.edu.utfpr.dainf.model.Purchase;
 import br.edu.utfpr.dainf.model.Reservation;
@@ -45,6 +46,10 @@ public class ReservationService extends CrudService<Long, Reservation, Reservati
     @Override
     public Reservation save(Reservation entity) {
         validateAccess(entity);
+        if (entity.getReservationDate() != null && entity.getWithdrawalDate() != null
+                && entity.getWithdrawalDate().isBefore(entity.getReservationDate())) {
+            throw new WarnException("A data de retirada não pode ser anterior à data da reserva.");
+        }
         if (entity.getId() == null) {
             entity.setUser(userService.getCurrentUser());
         }

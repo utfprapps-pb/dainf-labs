@@ -98,6 +98,16 @@ export class LoanReturnDialog implements OnInit {
       this.form.markAllAsTouched();
       return;
     }
+    const overReturnedItem = this._displayItems().find(
+      (item: any) =>
+        item.quantity - (item.quantityReturned || 0) - (item.quantityIssued || 0) < 0,
+    );
+    if (overReturnedItem) {
+      this._showWarn(
+        `A quantidade devolvida/emitida do item "${overReturnedItem.item.name}" excede a quantidade pendente.`,
+      );
+      return;
+    }
     const payload = this._createPayload();
     this._save(payload as Return)
       .pipe(
@@ -136,6 +146,10 @@ export class LoanReturnDialog implements OnInit {
       returnDate: [new Date(), Validators.required],
       observation: [null],
     });
+  }
+
+  private _displayItems(): any[] {
+    return this.savedReturn?.items || this.loan.items;
   }
 
   private _searchReturnByLoan(loan: Loan): Observable<Return | null> {

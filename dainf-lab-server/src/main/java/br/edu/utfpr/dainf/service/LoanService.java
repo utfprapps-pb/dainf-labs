@@ -4,6 +4,7 @@ import br.edu.utfpr.dainf.annotation.TransactsInventory;
 import br.edu.utfpr.dainf.enums.InventoryTransactionType;
 import br.edu.utfpr.dainf.enums.LoanStatus;
 import br.edu.utfpr.dainf.enums.UserRole;
+import br.edu.utfpr.dainf.exception.WarnException;
 import br.edu.utfpr.dainf.model.Loan;
 import br.edu.utfpr.dainf.model.LoanItem;
 import br.edu.utfpr.dainf.model.Solicitation;
@@ -77,6 +78,9 @@ public class LoanService extends CrudService<Long, Loan, LoanRepository> {
         boolean isNew = entity.getId() == null;
         if (entity.getLoanDate() == null) {
             entity.setLoanDate(Instant.now());
+        }
+        if (entity.getDeadline() != null && entity.getDeadline().isBefore(entity.getLoanDate())) {
+            throw new WarnException("O prazo de devolução não pode ser anterior à data do empréstimo.");
         }
         if (entity.getId() != null && entity.getStatus() == null) {
             repository.findById(entity.getId()).ifPresent(dbLoan -> entity.setStatus(dbLoan.getStatus()));

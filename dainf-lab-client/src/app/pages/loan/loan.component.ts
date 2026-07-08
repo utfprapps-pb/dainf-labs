@@ -7,6 +7,7 @@ import { CrudComponent } from '@/shared/crud/crud.component';
 import { SearchFilter, SearchRequest } from '@/shared/models/search';
 import { LabelValuePipe } from '@/shared/pipes/label-value.pipe';
 import { ContextStore } from '@/shared/store/context-store.service';
+import { dateOrderValidator } from '@/shared/validator/date-order.validator';
 import { CommonModule, DatePipe } from '@angular/common';
 import {
   AfterViewInit,
@@ -129,14 +130,17 @@ export class LoanComponent implements OnInit, AfterViewInit {
     dialogWidth: '80vw',
   };
 
-  form: FormGroup = this.formBuilder.group({
-    id: [{ value: null, disabled: true }],
-    borrower: [null, Validators.required],
-    loanDate: [new Date(), Validators.required],
-    deadline: [null, Validators.required],
-    observation: [null],
-    items: [[], [Validators.required, Validators.minLength(1)]],
-  });
+  form: FormGroup = this.formBuilder.group(
+    {
+      id: [{ value: null, disabled: true }],
+      borrower: [null, Validators.required],
+      loanDate: [new Date(), Validators.required],
+      deadline: [null, Validators.required],
+      observation: [null],
+      items: [[], [Validators.required, Validators.minLength(1)]],
+    },
+    { validators: dateOrderValidator('loanDate', 'deadline') },
+  );
 
   loanItensForm: FormGroup = this.formBuilder.group({
     id: [null],
