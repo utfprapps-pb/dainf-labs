@@ -1,5 +1,6 @@
 package br.edu.utfpr.dainf.service;
 
+import br.edu.utfpr.dainf.enums.InventoryTransactionType;
 import br.edu.utfpr.dainf.exception.InvalidTransactionException;
 import br.edu.utfpr.dainf.exception.WarnException;
 import br.edu.utfpr.dainf.inventory.auditor.TransactionAuditor;
@@ -19,7 +20,7 @@ import java.time.Instant;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
@@ -36,6 +37,7 @@ class IssueServiceInventoryTest {
     @Mock UserService userService;
 
     InventoryService inventoryService;
+    InventoryDiffService inventoryDiffService;
     IssueService issueService;
 
     final Map<Long, Inventory> store = new HashMap<>();
@@ -49,7 +51,9 @@ class IssueServiceInventoryTest {
         inventoryService = new InventoryService(auditor, configurationService);
         ReflectionTestUtils.setField(inventoryService, "repository", inventoryRepository);
 
-        issueService = new IssueService(inventoryService, userService);
+        inventoryDiffService = new InventoryDiffService(inventoryService);
+
+        issueService = new IssueService(inventoryDiffService, userService);
         ReflectionTestUtils.setField(issueService, "repository", issueRepository);
 
         lenient().when(inventoryRepository.findByItem(any())).thenAnswer(inv -> {
@@ -452,6 +456,74 @@ class IssueServiceInventoryTest {
             // undo 30 → 80; apply 40 → 40; issue B's 20 already applied
             // Net: 100 - 40 (A corrected) - 20 (B unchanged) = 40
             assertEquals(bd("40"), stockOf(item));
+        }
+    }
+
+    // =========================================================================
+    // referenceId — transactions link back to the saved issue's ID
+    // =========================================================================
+
+    @Nested
+    class ReferenceIdTracking {
+
+        @BeforeEach
+        void setUpIdAssignment() {
+            // Simulate DB ID assignment: new issues get id=100L, existing keep their id
+            lenient().when(issueRepository.save(any())).thenAnswer(inv -> {
+                Issue issue = inv.getArgument(0);
+                if (issue.getId() == null) {
+                    issue.setId(100L);
+                }
+                return issue;
+            });
+        }
+
+        @Test
+        void newIssue_transactionsAuditedWithAssignedIssueId() {
+            Item item = item();
+            givenStock(item, "50");
+
+            issueService.save(newIssue(ii(item, "10")));
+
+            verify(auditor).audit(any(), eq(bd("10")), any(), eq(InventoryTransactionType.ISSUE), eq(100L));
+        }
+
+        @Test
+        void existingIssue_transactionsAuditedWithExistingIssueId() {
+            Item item = item();
+            givenStock(item, "40");
+            Issue existing = existingIssue(1L, ii(item, "10"));
+            when(issueRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+            issueService.save(existingIssue(1L, ii(item, "15")));
+
+            verify(auditor).audit(any(), eq(bd("15")), any(), eq(InventoryTransactionType.ISSUE), eq(1L));
+        }
+
+        @Test
+        void newIssueWithMultipleItems_allTransactionsShareSameReferenceId() {
+            Item a = item(), b = item();
+            givenStock(a, "50");
+            givenStock(b, "50");
+
+            issueService.save(newIssue(ii(a, "10"), ii(b, "5")));
+
+            verify(auditor, times(2)).audit(
+                    any(), any(BigDecimal.class), any(), eq(InventoryTransactionType.ISSUE), eq(100L));
+        }
+
+        @Test
+        void existingIssue_newItemAdded_newTransactionUsesExistingId() {
+            Item a = item(), b = item();
+            givenStock(a, "40");
+            givenStock(b, "30");
+            Issue existing = existingIssue(1L, ii(a, "10"));
+            when(issueRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+            issueService.save(existingIssue(1L, ii(a, "10"), ii(b, "8")));
+
+            // b is new (old qty=0, new qty=8): audit should reference issue id=1L
+            verify(auditor).audit(any(), eq(bd("8")), any(), eq(InventoryTransactionType.ISSUE), eq(1L));
         }
     }
 }

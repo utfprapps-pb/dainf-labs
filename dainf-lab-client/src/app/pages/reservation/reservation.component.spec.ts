@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { dateOrderValidator } from '@/shared/validator/date-order.validator';
 
 describe('ReservationComponent forms', () => {
   let fb: FormBuilder;
@@ -10,15 +11,18 @@ describe('ReservationComponent forms', () => {
   });
 
   function buildForm() {
-    return fb.group({
-      id: [{ value: null as any, disabled: true }],
-      description: ['' as string],
-      observation: ['' as string],
-      reservationDate: [null as Date | null, Validators.required],
-      withdrawalDate: [null as Date | null, Validators.required],
-      user: [null as any],
-      items: [[] as any[], [Validators.required, Validators.minLength(1)]],
-    });
+    return fb.group(
+      {
+        id: [{ value: null as any, disabled: true }],
+        description: ['' as string],
+        observation: ['' as string],
+        reservationDate: [null as Date | null, Validators.required],
+        withdrawalDate: [null as Date | null, Validators.required],
+        user: [null as any],
+        items: [[] as any[], [Validators.required, Validators.minLength(1)]],
+      },
+      { validators: dateOrderValidator('reservationDate', 'withdrawalDate') },
+    );
   }
 
   function buildSubForm() {
@@ -80,6 +84,37 @@ describe('ReservationComponent forms', () => {
     const form = buildForm();
     form.patchValue({ reservationDate: new Date(), withdrawalDate: new Date() });
     form.get('items')?.setValue([mockItem] as any);
+    expect(form.valid).toBeTrue();
+  });
+
+  // --- withdrawalDate cannot be before reservationDate ---
+
+  it('is invalid when withdrawalDate is before reservationDate', () => {
+    const form = buildForm();
+    form.get('items')?.setValue([mockItem] as any);
+    form.patchValue({
+      reservationDate: new Date('2026-07-08'),
+      withdrawalDate: new Date('2026-07-01'),
+    });
+    expect(form.invalid).toBeTrue();
+    expect(form.get('withdrawalDate')?.errors?.['dateBeforeStart']).toBeTrue();
+  });
+
+  it('is valid when withdrawalDate equals reservationDate', () => {
+    const form = buildForm();
+    form.get('items')?.setValue([mockItem] as any);
+    const sameDay = new Date('2026-07-08');
+    form.patchValue({ reservationDate: sameDay, withdrawalDate: new Date(sameDay) });
+    expect(form.valid).toBeTrue();
+  });
+
+  it('is valid when withdrawalDate is after reservationDate', () => {
+    const form = buildForm();
+    form.get('items')?.setValue([mockItem] as any);
+    form.patchValue({
+      reservationDate: new Date('2026-07-01'),
+      withdrawalDate: new Date('2026-07-08'),
+    });
     expect(form.valid).toBeTrue();
   });
 

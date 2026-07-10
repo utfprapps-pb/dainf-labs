@@ -31,6 +31,26 @@
           </div>
           <p-button label="Entrar" styleClass="w-full" (onClick)="loginClick()"></p-button>
 
+          @if (emailNotConfirmed()) {
+            <div class="mt-6 p-4 rounded-lg border border-orange-300 dark:border-orange-700 bg-orange-50 dark:bg-orange-950 flex gap-3">
+              <i class="pi pi-envelope text-orange-500 text-xl mt-0.5 shrink-0"></i>
+              <div>
+                <p class="font-semibold text-orange-800 dark:text-orange-200 m-0 mb-1">E-mail não confirmado</p>
+                <p class="text-sm text-orange-700 dark:text-orange-300 m-0 mb-3">
+                  Confirme seu e-mail antes de acessar o sistema. Verifique sua caixa de entrada.
+                </p>
+                <p-button
+                  label="Reenviar e-mail de confirmação"
+                  icon="pi pi-refresh"
+                  [link]="true"
+                  [loading]="resending()"
+                  (onClick)="resendConfirmation()"
+                  styleClass="p-0 text-orange-600 dark:text-orange-400 hover:text-orange-800"
+                />
+              </div>
+            </div>
+          }
+
           <div class="text-center mt-8">
             <span>Não possui cadastro? <a routerLink="/sign-up" class="text-primary">Cadastre-se</a></span>
           </div>

@@ -8,7 +8,21 @@
   [filtersTemplate]="filters"
   [searchRequest]="searchRequest()"
   [actionsTemplate]="customActions"
+  [templateMap]="templateMap"
+  (entityLoad)="onEntityLoad($event)"
+  (cancelClick)="onCancel()"
 ></app-crud>
+
+<ng-template #roleTemplate let-row>
+  <p-tag [value]="roleLabel(row.role)" [severity]="roleSeverity(row.role)" />
+</ng-template>
+
+<ng-template #enabledTemplate let-row>
+  <p-tag
+    [value]="row.enabled ? 'Ativo' : 'Inativo'"
+    [severity]="row.enabled ? 'success' : 'danger'"
+  />
+</ng-template>
 
 <ng-template #crudForm>
   <div class="p-fluid p-4">
@@ -17,6 +31,15 @@
         Preencha os dados para registrar um novo usuário.
       </p>
     </div>
+
+    @if (emailNaoVerificado()) {
+      <div class="mb-6 p-4 rounded-lg border border-orange-300 dark:border-orange-700 bg-orange-50 dark:bg-orange-950 flex gap-3">
+        <i class="pi pi-exclamation-triangle text-orange-500 text-lg mt-0.5 shrink-0"></i>
+        <p class="text-sm text-orange-700 dark:text-orange-300 m-0">
+          O e-mail deste usuário <strong>ainda não foi confirmado</strong>. Ele não conseguirá acessar o sistema enquanto o e-mail não for verificado.
+        </p>
+      </div>
+    }
 
     <form [formGroup]="form" class="grid grid-cols-12 gap-4">
       <app-input-container label="Nome" class="col-span-12 md:col-span-8">
@@ -71,6 +94,9 @@
 
 <ng-template #filters>
   <div class="grid grid-cols-12 gap-4">
+    <app-input-container label="Código" class="col-span-12">
+      <input type="text" pInputText [(ngModel)]="idFilter" [ngModelOptions]="{ standalone: true }" />
+    </app-input-container>
     <app-input-container label="Nome" class="col-span-12">
       <input
         type="text"
@@ -88,6 +114,28 @@
         id="filtroDocumento"
         [(ngModel)]="filtroDocumento"
         [ngModelOptions]="{ standalone: true }"
+      />
+    </app-input-container>
+
+    <app-input-container label="Perfil" class="col-span-12">
+      <p-select
+        [options]="roleOptions"
+        [(ngModel)]="filtroRole"
+        [ngModelOptions]="{ standalone: true }"
+        placeholder="Todos"
+        [showClear]="true"
+        appendTo="body"
+      />
+    </app-input-container>
+
+    <app-input-container label="Status" class="col-span-12">
+      <p-select
+        [options]="enabledOptions"
+        [(ngModel)]="filtroEnabled"
+        [ngModelOptions]="{ standalone: true }"
+        placeholder="Todos"
+        [showClear]="true"
+        appendTo="body"
       />
     </app-input-container>
   </div>

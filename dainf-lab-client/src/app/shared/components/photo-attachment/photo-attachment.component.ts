@@ -18,7 +18,7 @@ import {
   FileUploadModule,
 } from 'primeng/fileupload';
 import { ImageModule } from 'primeng/image';
-import { concatMap, from, tap, toArray } from 'rxjs';
+import { catchError, from, map, mergeMap, of, tap, toArray } from 'rxjs';
 
 @Component({
   standalone: true,
@@ -54,19 +54,23 @@ export class PhotoAttachmentComponent implements ControlValueAccessor {
     this.value.set(value ?? []);
     from(this.value())
       .pipe(
-        concatMap((file) => this.service().get(file.name)),
+        mergeMap((file: Image) =>
+          this.service()
+            .get(file.name)
+            .pipe(
+              map((blob) => new File([blob], file.name, { type: blob.type || 'image/jpeg' })),
+              catchError(() => of(null)),
+            ),
+        ),
         toArray(),
-        tap((blobs) => {
-          const files: File[] = blobs.map((blob, index) => {
-            return new File([blob], this.value()[index].name, {
-              type: 'image/png',
-            });
-          });
-          this.fileUpload()!.files = [...files];
-          this.fileUpload()!.cd.markForCheck();
+        tap((files) => {
+          const fu = this.fileUpload();
+          if (!fu) return;
+          fu.files = files.filter((file): file is File => file !== null);
+          fu.cd.markForCheck();
         }),
       )
-      .subscribe();
+      .subscribe({ error: () => {} });
   }
   registerOnChange(fn: any): void {
     this.onChange = fn;
@@ -82,7 +86,7 @@ export class PhotoAttachmentComponent implements ControlValueAccessor {
     const files: File[] = event.files;
     from(files)
       .pipe(
-        concatMap((file) => this.service().upload(file)),
+        mergeMap((file: File) => this.service().upload(file)),
         tap((img) => {
           if (this.value().some((i) => this.isSameImage(i, img))) return;
           const newVal = [...this.value(), img];

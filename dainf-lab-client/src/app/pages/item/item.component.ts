@@ -97,7 +97,7 @@ export class ItemComponent {
       Validators.compose([Validators.required, Validators.maxLength(50)]),
     ],
     description: [null],
-    price: [null],
+    price: [null, Validators.min(0)],
     category: [null, Validators.required],
     assets: [null],
     images: [null],
@@ -153,9 +153,12 @@ export class ItemComponent {
   categoryFilter = model<Category | undefined>();
   siorgFilter = model<string | undefined>();
   locationFilter = model<string | undefined>();
+  idFilter = model<string | undefined>();
 
   searchRequest = computed<SearchRequest>(() => {
     const filters: SearchFilter[] = [];
+    if (this.idFilter())
+      filters.push({ field: 'id', value: this.idFilter(), type: 'EQUALS' });
     if (this.nameFilter())
       filters.push({ field: 'name', value: this.nameFilter(), type: 'ILIKE' });
     if (this.typeFilter())

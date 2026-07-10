@@ -2,6 +2,7 @@ package br.edu.utfpr.dainf.controller;
 
 import br.edu.utfpr.dainf.dto.LoanDTO;
 import br.edu.utfpr.dainf.dto.LoanItemTrackingDTO;
+import br.edu.utfpr.dainf.dto.PendingItemDTO;
 import br.edu.utfpr.dainf.enums.UserRole;
 import br.edu.utfpr.dainf.model.Loan;
 import br.edu.utfpr.dainf.model.LoanItem;
@@ -59,5 +60,11 @@ public class LoanController extends CrudController<Long, Loan, LoanDTO, LoanRepo
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(dtos);
+    }
+
+    @GetMapping("/borrower/{borrowerId}/pending")
+    @RolesAllowed({UserRole.ADMIN, UserRole.LAB_TECHNICIAN, UserRole.STUDENT, UserRole.PROFESSOR})
+    public ResponseEntity<List<PendingItemDTO>> getPendingItemsForBorrower(@PathVariable Long borrowerId) {
+        return ResponseEntity.ok(service.getPendingItemsForBorrower(borrowerId));
     }
 }

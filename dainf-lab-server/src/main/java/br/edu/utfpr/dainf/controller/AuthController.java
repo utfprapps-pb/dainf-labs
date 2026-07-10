@@ -2,6 +2,7 @@ package br.edu.utfpr.dainf.controller;
 
 import br.edu.utfpr.dainf.dto.AuthResponse;
 import br.edu.utfpr.dainf.dto.UserSignupDTO;
+import br.edu.utfpr.dainf.exception.WarnMessage;
 import br.edu.utfpr.dainf.security.JwtService;
 import br.edu.utfpr.dainf.service.AuthService;
 import br.edu.utfpr.dainf.service.UserService;
@@ -13,6 +14,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -33,7 +35,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request, HttpServletResponse response) {
+    public ResponseEntity<?> login(@RequestBody AuthRequest request, HttpServletResponse response) {
         try {
             AuthResponse authResponse = authService.login(request.email(), request.password());
             String refreshToken = jwtService.generateRefreshToken(request.email());
@@ -43,6 +45,16 @@ public class AuthController {
 
             response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
             return ResponseEntity.ok(authResponse);
+        } catch (DisabledException e) {
+            if (!userService.isPasswordValid(request.email(), request.password())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new WarnMessage(
+                HttpStatus.FORBIDDEN.value(),
+                "E-mail não confirmado. Verifique sua caixa de entrada ou solicite um novo link de confirmação.",
+                "/auth/login",
+                null
+            ));
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }

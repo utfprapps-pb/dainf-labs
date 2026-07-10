@@ -4,6 +4,7 @@ import br.edu.utfpr.dainf.enums.ItemType;
 import br.edu.utfpr.dainf.model.ItemImage;
 import br.edu.utfpr.dainf.shared.Identifiable;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -28,6 +29,8 @@ public class ItemDTO implements Identifiable<Long> {
     private String name;
 
     private String description;
+
+    @DecimalMin(value = "0", message = "O campo 'Preço' não pode ser negativo")
     private BigDecimal price;
 
     @NotNull(message = "O campo 'Categoria' é obrigatório")

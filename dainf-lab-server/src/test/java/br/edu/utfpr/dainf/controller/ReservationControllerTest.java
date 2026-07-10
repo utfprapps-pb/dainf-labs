@@ -15,6 +15,7 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -124,6 +125,16 @@ class ReservationControllerTest extends CrudControllerTest<ReservationDTO> {
                 .reservationDate(Instant.now())
                 .withdrawalDate(Instant.now())
                 .items(List.of(invalidItem))
+                .build();
+        performCreate(dto).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createWithWithdrawalDateBeforeReservationDate_returns400() throws Exception {
+        ReservationDTO dto = ReservationDTO.builder()
+                .reservationDate(Instant.now())
+                .withdrawalDate(Instant.now().minus(1, ChronoUnit.DAYS))
+                .items(List.of())
                 .build();
         performCreate(dto).andExpect(status().isBadRequest());
     }

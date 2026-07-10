@@ -193,4 +193,14 @@ class LoanControllerTest extends CrudControllerTest<LoanDTO> {
         dto.setItems(List.of(invalidItem));
         performCreate(dto).andExpect(status().isBadRequest());
     }
+
+    @Test
+    void createWithDeadlineBeforeLoanDate_returns400() throws Exception {
+        LoanDTO dto = new LoanDTO();
+        dto.setBorrower(borrower);
+        dto.setLoanDate(Instant.now());
+        dto.setDeadline(Instant.now().minus(1, ChronoUnit.DAYS));
+        dto.setItems(List.of(new LoanItemDTO(null, item, true, BigDecimal.ONE)));
+        performCreate(dto).andExpect(status().isBadRequest());
+    }
 }

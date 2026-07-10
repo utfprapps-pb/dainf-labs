@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { dateOrderValidator } from '@/shared/validator/date-order.validator';
 
 describe('LoanComponent forms', () => {
   let fb: FormBuilder;
@@ -10,14 +11,17 @@ describe('LoanComponent forms', () => {
   });
 
   function buildForm() {
-    return fb.group({
-      id: [{ value: null as any, disabled: true }],
-      borrower: [null as any, Validators.required],
-      loanDate: [new Date() as Date | null, Validators.required],
-      deadline: [null as Date | null, Validators.required],
-      observation: [null as string | null],
-      items: [[] as any[], [Validators.required, Validators.minLength(1)]],
-    });
+    return fb.group(
+      {
+        id: [{ value: null as any, disabled: true }],
+        borrower: [null as any, Validators.required],
+        loanDate: [new Date() as Date | null, Validators.required],
+        deadline: [null as Date | null, Validators.required],
+        observation: [null as string | null],
+        items: [[] as any[], [Validators.required, Validators.minLength(1)]],
+      },
+      { validators: dateOrderValidator('loanDate', 'deadline') },
+    );
   }
 
   function buildSubForm() {
@@ -96,6 +100,40 @@ describe('LoanComponent forms', () => {
     form.patchValue({ deadline: new Date() });
     form.get('items')?.setValue([mockItem] as any);
     expect(form.get('observation')?.value).toBeNull();
+    expect(form.valid).toBeTrue();
+  });
+
+  // --- deadline cannot be before loanDate ---
+
+  it('is invalid when deadline is before loanDate', () => {
+    const form = buildForm();
+    form.get('borrower')?.setValue(mockBorrower);
+    form.get('items')?.setValue([mockItem] as any);
+    form.patchValue({
+      loanDate: new Date('2026-07-08'),
+      deadline: new Date('2026-07-01'),
+    });
+    expect(form.invalid).toBeTrue();
+    expect(form.get('deadline')?.errors?.['dateBeforeStart']).toBeTrue();
+  });
+
+  it('is valid when deadline equals loanDate', () => {
+    const form = buildForm();
+    form.get('borrower')?.setValue(mockBorrower);
+    form.get('items')?.setValue([mockItem] as any);
+    const sameDay = new Date('2026-07-08');
+    form.patchValue({ loanDate: sameDay, deadline: new Date(sameDay) });
+    expect(form.valid).toBeTrue();
+  });
+
+  it('is valid when deadline is after loanDate', () => {
+    const form = buildForm();
+    form.get('borrower')?.setValue(mockBorrower);
+    form.get('items')?.setValue([mockItem] as any);
+    form.patchValue({
+      loanDate: new Date('2026-07-01'),
+      deadline: new Date('2026-07-08'),
+    });
     expect(form.valid).toBeTrue();
   });
 

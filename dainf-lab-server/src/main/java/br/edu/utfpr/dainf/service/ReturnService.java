@@ -1,5 +1,6 @@
 package br.edu.utfpr.dainf.service;
 
+import br.edu.utfpr.dainf.annotation.TransactsInventory;
 import br.edu.utfpr.dainf.enums.InventoryTransactionType;
 import br.edu.utfpr.dainf.exception.WarnException;
 import br.edu.utfpr.dainf.model.*;
@@ -14,20 +15,19 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 @Service
 public class ReturnService extends CrudService<Long, Return, ReturnRepository> {
 
-    private final InventoryService inventoryService;
+    private final InventoryDiffService inventoryDiffService;
     private final IssueRepository issueRepository;
     private final IssueService issueService;
     private final UserService userService;
     private final LoanService loanService;
 
-    public ReturnService(InventoryService inventoryService, IssueRepository issueRepository, IssueService issueService, UserService userService, LoanService loanService) {
-        this.inventoryService = inventoryService;
+    public ReturnService(InventoryDiffService inventoryDiffService, IssueRepository issueRepository, IssueService issueService, UserService userService, LoanService loanService) {
+        this.inventoryDiffService = inventoryDiffService;
         this.issueRepository = issueRepository;
         this.issueService = issueService;
         this.userService = userService;
@@ -40,43 +40,34 @@ public class ReturnService extends CrudService<Long, Return, ReturnRepository> {
     }
 
     @Override
+    @TransactsInventory(type = InventoryTransactionType.RETURN)
     public Return save(Return entity) {
         ItemListValidator.validateNoDuplicates(entity.getItems(), i -> i.getItem().getId());
-        // Fetch old entity if updating (to revert previous inventory operations)
+
         Return existing = entity.getId() != null ? repository.findById(entity.getId()).orElse(null) : null;
+        List<ReturnItem> oldItems = existing != null ? new ArrayList<>(existing.getItems()) : List.of();
 
         Loan loan = resolveLoan(entity);
         entity.setLoan(loan);
+        validateReturnQuantities(entity, loan);
 
         if (entity.getItems() != null) {
             for (ReturnItem item : entity.getItems()) {
                 item.setAReturn(entity);
-
-                ReturnItem oldItem = findOldItem(existing, item);
-
-                inventoryService.updateTransaction(
-                        item.getItem(),
-                        oldItem != null ? oldItem.getQuantityReturned() : BigDecimal.ZERO,
-                        InventoryTransactionType.RETURN,
-                        item.getQuantityReturned()
-                );
             }
-            createIssue(entity);
         }
 
         Return saved = super.save(entity);
+
+        if (saved.getItems() != null) {
+            inventoryDiffService.applyDiff(saved.getId(), oldItems, saved.getItems(), InventoryTransactionType.RETURN);
+            createIssue(saved);
+        }
+
         if (saved.getLoan() != null) {
             loanService.refreshStatus(saved.getLoan());
         }
         return saved;
-    }
-
-    private ReturnItem findOldItem(Return existing, ReturnItem current) {
-        if (existing == null || existing.getItems() == null) return null;
-        return existing.getItems().stream()
-                .filter(i -> Objects.equals(i.getItem().getId(), current.getItem().getId()))
-                .findFirst()
-                .orElse(null);
     }
 
     public Return findByLoanId(Long loanId) {
@@ -116,6 +107,30 @@ public class ReturnService extends CrudService<Long, Return, ReturnRepository> {
         return Optional.ofNullable(entity.getLoan())
                 .flatMap(issueRepository::findByLoan)
                 .orElse(new Issue());
+    }
+
+    private void validateReturnQuantities(Return entity, Loan loan) {
+        if (entity.getItems() == null || loan.getItems() == null) return;
+
+        for (ReturnItem returnItem : entity.getItems()) {
+            if (returnItem.getItem() == null) continue;
+
+            LoanItem loanItem = loan.getItems().stream()
+                    .filter(li -> li.getItem() != null && li.getItem().getId().equals(returnItem.getItem().getId()))
+                    .findFirst()
+                    .orElse(null);
+            if (loanItem == null) continue;
+
+            BigDecimal returned = returnItem.getQuantityReturned() != null ? returnItem.getQuantityReturned() : BigDecimal.ZERO;
+            BigDecimal issued = returnItem.getQuantityIssued() != null ? returnItem.getQuantityIssued() : BigDecimal.ZERO;
+            BigDecimal total = returned.add(issued);
+
+            if (total.compareTo(loanItem.getQuantity()) > 0) {
+                throw new WarnException(String.format(
+                        "A quantidade devolvida/emitida do item '%s' excede a quantidade emprestada (%s).",
+                        loanItem.getItem().getName(), loanItem.getQuantity()));
+            }
+        }
     }
 
     private Loan resolveLoan(Return entity) {

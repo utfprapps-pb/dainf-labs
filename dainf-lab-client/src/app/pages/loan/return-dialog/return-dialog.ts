@@ -3,6 +3,7 @@ import { ReturnService } from '@/pages/return/return.service';
 import { UserService } from '@/pages/user/user.service';
 import { InputContainerComponent } from '@/shared/components/input-container/input-container.component';
 import { SearchSelectComponent } from '@/shared/components/search-select/search-select.component';
+import { extractErrorMessage } from '@/shared/utils/error.utils';
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import {
@@ -12,6 +13,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ChipModule } from 'primeng/chip';
 import { DatePickerModule } from 'primeng/datepicker';
@@ -20,7 +22,7 @@ import { InputNumber } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { TextareaModule } from 'primeng/textarea';
-import { Observable } from 'rxjs';
+import { catchError, Observable, take, tap, throwError } from 'rxjs';
 import { Loan } from '../loan';
 import { LoanService } from '../loan.service';
 
@@ -52,35 +54,74 @@ export class LoanReturnDialog implements OnInit {
   loanService = inject(LoanService);
   userService = inject(UserService);
   returnService = inject(ReturnService);
+  messageService = inject(MessageService);
 
   form!: FormGroup;
   loan!: Loan;
   savedReturn: Return | null = null;
+  loadError = false;
 
   ngOnInit(): void {
     this.loan = this.config.data?.loan;
-    this._searchReturnByLoan(this.loan).subscribe((res) => {
-      this.savedReturn = res;
-      if (this.savedReturn) {
-        this.savedReturn.items?.forEach((item: any) => {
-          item.quantity = this.loan.items.find(
-            (loanItem: any) => loanItem.item.id === item.item.id,
-          )?.quantity;
-        });
-      }
-    });
+    this._searchReturnByLoan(this.loan)
+      .pipe(
+        tap((res) => {
+          this.savedReturn = res;
+          if (this.savedReturn) {
+            this.savedReturn.items?.forEach((item: any) => {
+              item.quantity = this.loan.items.find(
+                (loanItem: any) => loanItem.item.id === item.item.id,
+              )?.quantity;
+            });
+          }
+        }),
+        catchError((error) => {
+          this.loadError = true;
+          this._showWarn(`Falha ao carregar o registro: ${extractErrorMessage(error)}`);
+          return throwError(() => error);
+        }),
+        take(1),
+      )
+      .subscribe();
     this._initForm();
   }
 
   save() {
+    if (this.loadError) {
+      this._showWarn(
+        'Não foi possível verificar se já existe uma devolução para este empréstimo. Feche e reabra o formulário para tentar novamente.',
+      );
+      return;
+    }
     if (this.form.invalid) {
+      this._showWarn('Por favor, verifique os campos do formulário.');
       this.form.markAllAsTouched();
       return;
     }
+    const overReturnedItem = this._displayItems().find(
+      (item: any) =>
+        item.quantity - (item.quantityReturned || 0) - (item.quantityIssued || 0) < 0,
+    );
+    if (overReturnedItem) {
+      this._showWarn(
+        `A quantidade devolvida/emitida do item "${overReturnedItem.item.name}" excede a quantidade pendente.`,
+      );
+      return;
+    }
     const payload = this._createPayload();
-    this._save(payload as Return).subscribe((res) => {
-      this.ref.close({ success: true, data: res });
-    });
+    this._save(payload as Return)
+      .pipe(
+        tap((res) => {
+          this._showSuccess('Registro salvo com sucesso.');
+          this.ref.close({ success: true, data: res });
+        }),
+        catchError((error) => {
+          this._showWarn(extractErrorMessage(error));
+          return throwError(() => error);
+        }),
+        take(1),
+      )
+      .subscribe();
   }
 
   cancel() {
@@ -105,6 +146,10 @@ export class LoanReturnDialog implements OnInit {
       returnDate: [new Date(), Validators.required],
       observation: [null],
     });
+  }
+
+  private _displayItems(): any[] {
+    return this.savedReturn?.items || this.loan.items;
   }
 
   private _searchReturnByLoan(loan: Loan): Observable<Return | null> {
@@ -132,6 +177,7 @@ export class LoanReturnDialog implements OnInit {
   private _createItemsFromReturn(obj: Return): ReturnItem[] {
     return obj.items!.map((item) => {
       return {
+        id: item.id,
         item: item.item,
         quantityIssued: item.quantityIssued || 0,
         quantityReturned: item.quantityReturned || 0,
@@ -154,5 +200,13 @@ export class LoanReturnDialog implements OnInit {
     return isUpdate
       ? this.returnService.update(item.id, item)
       : this.returnService.create(item);
+  }
+
+  private _showSuccess(detail: string) {
+    this.messageService.add({ severity: 'success', summary: 'Sucesso!', detail });
+  }
+
+  private _showWarn(detail: string) {
+    this.messageService.add({ severity: 'warn', summary: 'Atenção!', detail });
   }
 }

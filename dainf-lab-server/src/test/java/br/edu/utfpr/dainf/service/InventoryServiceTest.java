@@ -20,7 +20,7 @@ import java.math.BigDecimal;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
@@ -617,6 +617,91 @@ class InventoryServiceTest {
             inventoryService.updateTransaction(item, bd("5"), InventoryTransactionType.RETURN, bd("8"));
             // undo RETURN(5) → 14; apply RETURN(8) → 20
             assertEquals(bd("20"), currentStock());
+        }
+    }
+
+    // =========================================================================
+    // handleTransaction — referenceId overload
+    // =========================================================================
+
+    @Nested
+    class HandleTransactionWithReferenceId {
+
+        @Test
+        void purchase_auditorCalledWithProvidedReferenceId() {
+            inventoryService.handleTransaction(item, bd("50"), InventoryTransactionType.PURCHASE, 42L);
+            verify(auditor).audit(any(), eq(bd("50")), any(), eq(InventoryTransactionType.PURCHASE), eq(42L));
+        }
+
+        @Test
+        void issue_auditorCalledWithProvidedReferenceId() {
+            givenStock("100");
+            inventoryService.handleTransaction(item, bd("10"), InventoryTransactionType.ISSUE, 7L);
+            verify(auditor).audit(any(), eq(bd("10")), any(), eq(InventoryTransactionType.ISSUE), eq(7L));
+        }
+
+        @Test
+        void loan_auditorCalledWithNullWhenNullReferenceIdPassed() {
+            givenStock("50");
+            inventoryService.handleTransaction(item, bd("5"), InventoryTransactionType.LOAN, null);
+            verify(auditor).audit(any(), eq(bd("5")), any(), eq(InventoryTransactionType.LOAN), isNull());
+        }
+
+        @Test
+        void stockChangeStillAppliedWithReferenceId() {
+            inventoryService.handleTransaction(item, bd("30"), InventoryTransactionType.PURCHASE, 99L);
+            assertEquals(bd("30"), currentStock());
+        }
+
+        @Test
+        void differentReferenceIds_eachAuditedCorrectly() {
+            inventoryService.handleTransaction(item, bd("10"), InventoryTransactionType.PURCHASE, 1L);
+            givenStock("10");
+            inventoryService.handleTransaction(item, bd("3"), InventoryTransactionType.ISSUE, 2L);
+            verify(auditor).audit(any(), eq(bd("10")), any(), eq(InventoryTransactionType.PURCHASE), eq(1L));
+            verify(auditor).audit(any(), eq(bd("3")), any(), eq(InventoryTransactionType.ISSUE), eq(2L));
+        }
+    }
+
+    // =========================================================================
+    // updateTransaction — referenceId overload
+    // =========================================================================
+
+    @Nested
+    class UpdateTransactionWithReferenceId {
+
+        @Test
+        void case2_wasZero_nowPositive_auditCalledWithReferenceId() {
+            inventoryService.updateTransaction(item, BigDecimal.ZERO, InventoryTransactionType.PURCHASE, bd("15"), 5L);
+            verify(auditor).audit(any(), eq(bd("15")), any(), eq(InventoryTransactionType.PURCHASE), eq(5L));
+        }
+
+        @Test
+        void case3_qtyChanged_newApplyAuditedWithReferenceId() {
+            givenStock("30");
+            inventoryService.updateTransaction(item, bd("30"), InventoryTransactionType.PURCHASE, bd("50"), 3L);
+            // undo PURCHASE(30) → no referenceId; apply PURCHASE(50) → referenceId=3L
+            verify(auditor).audit(any(), eq(bd("50")), any(), eq(InventoryTransactionType.PURCHASE), eq(3L));
+        }
+
+        @Test
+        void case4_bothZero_noAuditCall() {
+            inventoryService.updateTransaction(item, BigDecimal.ZERO, InventoryTransactionType.LOAN, BigDecimal.ZERO, 99L);
+            verifyNoInteractions(auditor);
+        }
+
+        @Test
+        void stockStillCorrectWithReferenceId() {
+            inventoryService.updateTransaction(item, BigDecimal.ZERO, InventoryTransactionType.PURCHASE, bd("40"), 1L);
+            assertEquals(bd("40"), currentStock());
+        }
+
+        @Test
+        void case2_loanType_auditedWithReferenceId() {
+            givenStock("100");
+            inventoryService.updateTransaction(item, BigDecimal.ZERO, InventoryTransactionType.LOAN, bd("20"), 8L);
+            verify(auditor).audit(any(), eq(bd("20")), any(), eq(InventoryTransactionType.LOAN), eq(8L));
+            assertEquals(bd("80"), currentStock());
         }
     }
 }

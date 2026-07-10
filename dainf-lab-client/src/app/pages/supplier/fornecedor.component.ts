@@ -79,9 +79,12 @@ export class FornecedorComponent implements OnInit {
   filtroNomeFantasia = model<string | undefined>();
   filtroRazaoSocial = model<string | undefined>();
   filtroCnpj = model<string | undefined>();
+  idFilter = model<string | undefined>();
 
   searchRequest = computed<SearchRequest>(() => {
     const filters = [];
+    if (this.idFilter())
+      filters.push({ field: 'id', value: this.idFilter(), type: 'EQUALS' });
     if (this.filtroNomeFantasia())
       filters.push({
         field: 'nomeFantasia',

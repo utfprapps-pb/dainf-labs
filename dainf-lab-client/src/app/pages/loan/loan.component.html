@@ -12,7 +12,19 @@
   [actionsTemplate]="actions"
   [allowCreation]="hasAdvancedPrivileges()"
   [templateMap]="templateMap"
+  [toolbarExtraTemplate]="pendingItemsButton"
 ></app-crud>
+
+<ng-template #pendingItemsButton>
+  @if (hasAdvancedPrivileges()) {
+    <p-button
+      label="Pendências"
+      icon="pi pi-list"
+      severity="warn"
+      (onClick)="openPendingItemsDialog()"
+    />
+  }
+</ng-template>
 
 <ng-template #statusTemplate let-row>
   <p-tag
@@ -126,6 +138,9 @@
 
 <ng-template #filters>
   <div class="grid grid-cols-12 gap-4">
+    <app-input-container label="Código" class="col-span-12">
+      <input type="text" pInputText [(ngModel)]="idFilter" />
+    </app-input-container>
     <app-input-container label="Data do empréstimo" class="col-span-12">
       <p-datepicker dateFormat="dd/mm/yy" [(ngModel)]="loanDateFilter" />
     </app-input-container>

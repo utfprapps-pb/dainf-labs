@@ -13,8 +13,12 @@ public record TransactionProcessor(Transaction transaction,
                                    TransactionAuditor auditor) {
 
     public void process(Inventory inventory, BigDecimal quantity, InventoryTransactionType type) {
+        process(inventory, quantity, type, null);
+    }
+
+    public void process(Inventory inventory, BigDecimal quantity, InventoryTransactionType type, Long referenceId) {
         validator.validate(inventory, quantity, transaction);
         transaction.apply(inventory, quantity, type);
-        auditor.audit(inventory, quantity, transaction, type);
+        auditor.audit(inventory, quantity, transaction, type, referenceId);
     }
 }

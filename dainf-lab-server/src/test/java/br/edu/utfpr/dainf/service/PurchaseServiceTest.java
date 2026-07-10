@@ -19,14 +19,14 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class PurchaseServiceTest {
 
     @Mock PurchaseRepository repository;
-    @Mock InventoryService inventoryService;
+    @Mock InventoryDiffService inventoryDiffService;
     @Mock UserService userService;
     @InjectMocks PurchaseService purchaseService;
 
@@ -36,7 +36,7 @@ class PurchaseServiceTest {
     }
 
     @Test
-    void save_newPurchase_callsUpdateTransactionWithZeroOldQty() {
+    void save_newPurchase_callsApplyDiffWithNullEntityId() {
         Item item = item(1L);
         BigDecimal qty = new BigDecimal("10");
         Purchase entity = purchase(null, item, qty);
@@ -46,42 +46,39 @@ class PurchaseServiceTest {
 
         purchaseService.save(entity);
 
-        verify(inventoryService).updateTransaction(item, BigDecimal.ZERO, InventoryTransactionType.PURCHASE, qty);
+        verify(inventoryDiffService).applyDiff(isNull(), any(), any(), eq(InventoryTransactionType.PURCHASE));
     }
 
     @Test
-    void save_updatePurchase_callsUpdateTransactionWithOldQty() {
+    void save_updatePurchase_callsApplyDiffWithEntityId() {
         Item item = item(1L);
-        BigDecimal oldQty = new BigDecimal("10");
-        BigDecimal newQty = new BigDecimal("15");
-        Purchase existing = purchase(1L, item, oldQty);
-        Purchase entity = purchase(1L, item, newQty);
+        Purchase existing = purchase(1L, item, new BigDecimal("10"));
+        Purchase entity = purchase(1L, item, new BigDecimal("15"));
 
         when(repository.findById(1L)).thenReturn(Optional.of(existing));
         when(repository.save(any())).thenReturn(entity);
 
         purchaseService.save(entity);
 
-        verify(inventoryService).updateTransaction(item, oldQty, InventoryTransactionType.PURCHASE, newQty);
+        verify(inventoryDiffService).applyDiff(eq(1L), any(), any(), eq(InventoryTransactionType.PURCHASE));
     }
 
     @Test
-    void save_updatePurchase_itemNotInExisting_callsUpdateTransactionWithZeroOldQty() {
+    void save_updatePurchase_itemNotInExisting_callsApplyDiffWithEntityId() {
         Item newItem = item(2L);
-        BigDecimal qty = new BigDecimal("8");
         Purchase existing = purchase(1L, item(1L), new BigDecimal("10"));
-        Purchase entity = purchase(1L, newItem, qty);
+        Purchase entity = purchase(1L, newItem, new BigDecimal("8"));
 
         when(repository.findById(1L)).thenReturn(Optional.of(existing));
         when(repository.save(any())).thenReturn(entity);
 
         purchaseService.save(entity);
 
-        verify(inventoryService).updateTransaction(newItem, BigDecimal.ZERO, InventoryTransactionType.PURCHASE, qty);
+        verify(inventoryDiffService).applyDiff(eq(1L), any(), any(), eq(InventoryTransactionType.PURCHASE));
     }
 
     @Test
-    void save_noItems_noInventoryInteraction() {
+    void save_noItems_applyDiffCalledWithEmptyNewList() {
         Purchase entity = new Purchase();
         entity.setDate(Instant.now());
         entity.setItems(List.of());
@@ -91,7 +88,7 @@ class PurchaseServiceTest {
 
         purchaseService.save(entity);
 
-        verifyNoInteractions(inventoryService);
+        verify(inventoryDiffService).applyDiff(any(), any(), eq(List.of()), eq(InventoryTransactionType.PURCHASE));
     }
 
     // --- helpers ---

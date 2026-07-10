@@ -1,6 +1,7 @@
 package br.edu.utfpr.dainf.service;
 
 import br.edu.utfpr.dainf.enums.InventoryTransactionType;
+import br.edu.utfpr.dainf.exception.WarnException;
 import br.edu.utfpr.dainf.model.*;
 import br.edu.utfpr.dainf.repository.IssueRepository;
 import br.edu.utfpr.dainf.repository.ReturnRepository;
@@ -18,15 +19,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ReturnServiceTest {
 
     @Mock ReturnRepository repository;
-    @Mock InventoryService inventoryService;
+    @Mock InventoryDiffService inventoryDiffService;
     @Mock IssueRepository issueRepository;
     @Mock IssueService issueService;
     @Mock UserService userService;
@@ -38,13 +40,12 @@ class ReturnServiceTest {
         ReflectionTestUtils.setField(returnService, "repository", repository);
     }
 
-    // --- RETURN quantity ---
+    // --- RETURN quantity (tracked via InventoryDiffService) ---
 
     @Test
-    void save_newReturn_callsUpdateTransactionWithZeroOldQtyForReturned() {
+    void save_newReturn_callsApplyDiffWithReturnType() {
         Item item = item(1L);
-        BigDecimal qty = new BigDecimal("3");
-        Return entity = aReturn(null, item, qty, BigDecimal.ZERO);
+        Return entity = aReturn(null, item, new BigDecimal("3"), BigDecimal.ZERO);
 
         when(loanService.findById(any())).thenReturn(Optional.of(entity.getLoan()));
         when(issueRepository.findByLoan(any())).thenReturn(Optional.empty());
@@ -53,16 +54,14 @@ class ReturnServiceTest {
 
         returnService.save(entity);
 
-        verify(inventoryService).updateTransaction(item, BigDecimal.ZERO, InventoryTransactionType.RETURN, qty);
+        verify(inventoryDiffService).applyDiff(any(), any(), any(), eq(InventoryTransactionType.RETURN));
     }
 
     @Test
-    void save_updateReturn_callsUpdateTransactionWithOldQtyForReturned() {
+    void save_updateReturn_callsApplyDiffWithReturnType() {
         Item item = item(1L);
-        BigDecimal oldQty = new BigDecimal("2");
-        BigDecimal newQty = new BigDecimal("5");
-        Return existing = aReturn(1L, item, oldQty, BigDecimal.ZERO);
-        Return entity = aReturn(1L, item, newQty, BigDecimal.ZERO);
+        Return existing = aReturn(1L, item, new BigDecimal("2"), BigDecimal.ZERO);
+        Return entity = aReturn(1L, item, new BigDecimal("5"), BigDecimal.ZERO);
 
         when(repository.findById(1L)).thenReturn(Optional.of(existing));
         when(loanService.findById(any())).thenReturn(Optional.of(entity.getLoan()));
@@ -72,17 +71,15 @@ class ReturnServiceTest {
 
         returnService.save(entity);
 
-        verify(inventoryService).updateTransaction(item, oldQty, InventoryTransactionType.RETURN, newQty);
+        verify(inventoryDiffService).applyDiff(any(), any(), any(), eq(InventoryTransactionType.RETURN));
     }
 
     // --- Switching from returned to issued ---
 
     @Test
-    void save_updateReturn_switchReturnedToIssued_undoesReturnOnly() {
+    void save_updateReturn_switchReturnedToIssued_applyDiffWithReturnNotIssue() {
         Item item = item(1L);
-        // First save: returned=1, issued=0
         Return existing = aReturn(1L, item, new BigDecimal("1"), BigDecimal.ZERO);
-        // Update: returned=0, issued=1 (item was consumed, not returned)
         Return entity = aReturn(1L, item, BigDecimal.ZERO, new BigDecimal("1"));
 
         when(repository.findById(1L)).thenReturn(Optional.of(existing));
@@ -93,18 +90,15 @@ class ReturnServiceTest {
 
         returnService.save(entity);
 
-        // Old RETURN of 1 should be undone (stock back to loan-time level)
-        verify(inventoryService).updateTransaction(item, new BigDecimal("1"), InventoryTransactionType.RETURN, BigDecimal.ZERO);
-        // ISSUE must NOT touch inventory — LOAN already decremented stock
-        verify(inventoryService, never()).updateTransaction(any(), any(), eq(InventoryTransactionType.ISSUE), any());
+        // Only RETURN type goes through inventory diff — ISSUE is handled via Issue entity (no inventory)
+        verify(inventoryDiffService).applyDiff(any(), any(), any(), eq(InventoryTransactionType.RETURN));
+        verify(inventoryDiffService, never()).applyDiff(any(), any(), any(), eq(InventoryTransactionType.ISSUE));
     }
 
     @Test
-    void save_updateReturn_switchIssuedToReturned_appliesReturnOnly() {
+    void save_updateReturn_switchIssuedToReturned_applyDiffWithReturnNotIssue() {
         Item item = item(1L);
-        // First save: returned=0, issued=1
         Return existing = aReturn(1L, item, BigDecimal.ZERO, new BigDecimal("1"));
-        // Update: returned=1, issued=0 (item came back after all)
         Return entity = aReturn(1L, item, new BigDecimal("1"), BigDecimal.ZERO);
 
         when(repository.findById(1L)).thenReturn(Optional.of(existing));
@@ -115,10 +109,45 @@ class ReturnServiceTest {
 
         returnService.save(entity);
 
-        // New RETURN of 1 should be applied (item back in stock)
-        verify(inventoryService).updateTransaction(item, BigDecimal.ZERO, InventoryTransactionType.RETURN, new BigDecimal("1"));
-        // ISSUE must NOT touch inventory
-        verify(inventoryService, never()).updateTransaction(any(), any(), eq(InventoryTransactionType.ISSUE), any());
+        verify(inventoryDiffService).applyDiff(any(), any(), any(), eq(InventoryTransactionType.RETURN));
+        verify(inventoryDiffService, never()).applyDiff(any(), any(), any(), eq(InventoryTransactionType.ISSUE));
+    }
+
+    // --- returned/issued quantity cannot exceed what was loaned ---
+
+    @Test
+    void save_returnedPlusIssuedExceedsLoanedQuantity_throwsWarnException() {
+        Item item = item(1L);
+        Loan loan = loanWithItem(10L, item, new BigDecimal("5"));
+        Return entity = new Return();
+        entity.setReturnDate(Instant.now());
+        entity.setLoan(loan);
+        entity.setItems(new ArrayList<>(List.of(returnItem(item, new BigDecimal("3"), new BigDecimal("3")))));
+
+        when(loanService.findById(10L)).thenReturn(Optional.of(loan));
+
+        assertThrows(WarnException.class, () -> returnService.save(entity));
+
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void save_returnedPlusIssuedEqualsLoanedQuantity_doesNotThrow() {
+        Item item = item(1L);
+        Loan loan = loanWithItem(11L, item, new BigDecimal("5"));
+        Return entity = new Return();
+        entity.setReturnDate(Instant.now());
+        entity.setLoan(loan);
+        entity.setItems(new ArrayList<>(List.of(returnItem(item, new BigDecimal("2"), new BigDecimal("3")))));
+
+        when(loanService.findById(11L)).thenReturn(Optional.of(loan));
+        when(issueRepository.findByLoan(any())).thenReturn(Optional.empty());
+        when(userService.getCurrentUser()).thenReturn(new User());
+        when(repository.save(any())).thenReturn(entity);
+
+        assertDoesNotThrow(() -> returnService.save(entity));
+
+        verify(repository).save(any());
     }
 
     // --- helpers ---
@@ -132,6 +161,16 @@ class ReturnServiceTest {
     private Loan loan(Long id) {
         Loan loan = new Loan();
         loan.setId(id);
+        return loan;
+    }
+
+    private Loan loanWithItem(Long id, Item item, BigDecimal quantity) {
+        Loan loan = new Loan();
+        loan.setId(id);
+        LoanItem loanItem = new LoanItem();
+        loanItem.setItem(item);
+        loanItem.setQuantity(quantity);
+        loan.setItems(new ArrayList<>(List.of(loanItem)));
         return loan;
     }
 

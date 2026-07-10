@@ -15,8 +15,13 @@
         label="Filtrar"
         icon="pi pi-filter"
         severity="secondary"
+        class="mr-2"
         (onClick)="drawerVisible.set(true)"
       />
+    }
+
+    @if (toolbarExtraTemplate()) {
+      <ng-container *ngTemplateOutlet="toolbarExtraTemplate()"></ng-container>
     }
   </ng-template>
 

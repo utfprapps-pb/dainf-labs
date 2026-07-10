@@ -44,6 +44,7 @@ class ReturnServiceInventoryTest {
     @Mock LoanService loanService;
 
     InventoryService inventoryService;
+    InventoryDiffService inventoryDiffService;
     ReturnService returnService;
 
     final Map<Long, Inventory> store = new HashMap<>();
@@ -58,7 +59,9 @@ class ReturnServiceInventoryTest {
         inventoryService = new InventoryService(auditor, configurationService);
         ReflectionTestUtils.setField(inventoryService, "repository", inventoryRepository);
 
-        returnService = new ReturnService(inventoryService, issueRepository, issueService, userService, loanService);
+        inventoryDiffService = new InventoryDiffService(inventoryService);
+
+        returnService = new ReturnService(inventoryDiffService, issueRepository, issueService, userService, loanService);
         ReflectionTestUtils.setField(returnService, "repository", returnRepository);
 
         lenient().when(inventoryRepository.findByItem(any())).thenAnswer(inv -> {

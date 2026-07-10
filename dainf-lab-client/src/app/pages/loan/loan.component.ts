@@ -7,6 +7,7 @@ import { CrudComponent } from '@/shared/crud/crud.component';
 import { SearchFilter, SearchRequest } from '@/shared/models/search';
 import { LabelValuePipe } from '@/shared/pipes/label-value.pipe';
 import { ContextStore } from '@/shared/store/context-store.service';
+import { dateOrderValidator } from '@/shared/validator/date-order.validator';
 import { CommonModule, DatePipe } from '@angular/common';
 import {
   AfterViewInit,
@@ -27,6 +28,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { DatePickerModule } from 'primeng/datepicker';
 import { DialogService } from 'primeng/dynamicdialog';
@@ -39,10 +41,12 @@ import { TagModule } from 'primeng/tag';
 import { TextareaModule } from 'primeng/textarea';
 import { CategoryService } from '../category/category.service';
 import { ItemService } from '../item/item.service';
+import { ReturnService } from '../return/return.service';
 import { User } from '../user/user';
 import { UserService } from '../user/user.service';
 import { Loan, LoanItem, LoanStatus } from './loan';
 import { LoanService } from './loan.service';
+import { PendingItemsDialog } from './pending-items-dialog/pending-items-dialog';
 import { LoanReturnDialog } from './return-dialog/return-dialog';
 
 const STATUS_SEVERITY: Record<LoanStatus, 'success' | 'danger' | 'info'> = {
@@ -85,7 +89,8 @@ const STATUS_ICON: Record<LoanStatus, string> = {
     ItemService,
     UserService,
     DialogService,
-    DatePipe
+    DatePipe,
+    ReturnService,
   ],
   selector: 'app-loan',
   templateUrl: 'loan.component.html',
@@ -95,7 +100,9 @@ export class LoanComponent implements OnInit, AfterViewInit {
 
   templateMap: Map<keyof Loan | string, TemplateRef<any>> | undefined;
 
+  private route = inject(ActivatedRoute);
   loanService = inject(LoanService);
+  returnService = inject(ReturnService);
   dialogService = inject(DialogService);
   formBuilder = inject(FormBuilder);
   labelValue = inject(LabelValuePipe);
@@ -124,14 +131,17 @@ export class LoanComponent implements OnInit, AfterViewInit {
     dialogWidth: '80vw',
   };
 
-  form: FormGroup = this.formBuilder.group({
-    id: [{ value: null, disabled: true }],
-    borrower: [null, Validators.required],
-    loanDate: [new Date(), Validators.required],
-    deadline: [null, Validators.required],
-    observation: [null],
-    items: [[], [Validators.required, Validators.minLength(1)]],
-  });
+  form: FormGroup = this.formBuilder.group(
+    {
+      id: [{ value: null, disabled: true }],
+      borrower: [null, Validators.required],
+      loanDate: [new Date(), Validators.required],
+      deadline: [null, Validators.required],
+      observation: [null],
+      items: [[], [Validators.required, Validators.minLength(1)]],
+    },
+    { validators: dateOrderValidator('loanDate', 'deadline') },
+  );
 
   loanItensForm: FormGroup = this.formBuilder.group({
     id: [null],
@@ -161,8 +171,13 @@ export class LoanComponent implements OnInit, AfterViewInit {
   borrowerFilter = model<User | undefined>();
   raSiapeFilter = model<string | undefined>();
   statusFilter = model<string | undefined>();
+  idFilter = model<string | undefined>();
   searchRequest = computed<SearchRequest>(() => {
     const filters: SearchFilter[] = [];
+
+    if (this.idFilter()) {
+      filters.push({ field: 'id', value: this.idFilter(), type: 'EQUALS' });
+    }
 
     if (this.loanDateFilter()) {
       const dateValue = this.loanDateFilter();
@@ -207,6 +222,15 @@ export class LoanComponent implements OnInit, AfterViewInit {
       this.crud()?.openNew();
       this.form.patchValue({ items: data.items, borrower: data.borrower });
     }
+
+    const openReturnId = this.route.snapshot.queryParamMap.get('openReturnId');
+    if (openReturnId) {
+      this.returnService.get(Number(openReturnId)).subscribe((ret) => {
+        if (ret?.loan) {
+          this.openReturnDialog(ret.loan);
+        }
+      });
+    }
   }
 
   ngAfterViewInit(): void {
@@ -222,6 +246,7 @@ export class LoanComponent implements OnInit, AfterViewInit {
   }
 
   clearFilters() {
+    this.idFilter.set(undefined);
     this.loanDateFilter.set(undefined);
     this.borrowerFilter.set(undefined);
     this.raSiapeFilter.set(undefined);
@@ -274,5 +299,23 @@ export class LoanComponent implements OnInit, AfterViewInit {
 
   openEdit(row: Loan) {
     this.crud()?.edit(row);
+  }
+
+  openPendingItemsDialog() {
+    const ref = this.dialogService.open(PendingItemsDialog, {
+      header: 'Pendências por usuário',
+      width: '60%',
+      contentStyle: { 'max-height': '600px', overflow: 'auto' },
+      modal: true,
+      baseZIndex: 10000,
+    });
+
+    ref.onClose.subscribe((result: any) => {
+      if (result?.action === 'edit') {
+        this.crud()?.edit({ id: result.loanId } as Loan);
+      } else if (result?.action === 'return') {
+        this.loanService.get(result.loanId).subscribe((loan) => this.openReturnDialog(loan));
+      }
+    });
   }
 }

@@ -128,4 +128,26 @@ class ItemControllerTest extends CrudControllerTest<ItemDTO> {
                 .build();
         performCreate(dto).andExpect(status().isBadRequest());
     }
+
+    @Test
+    void createWithNegativePrice_returns400() throws Exception {
+        ItemDTO dto = ItemDTO.builder()
+                .name("Teste Preço Negativo")
+                .price(new BigDecimal("-50"))
+                .category(category)
+                .type(ItemType.CONSUMABLE)
+                .build();
+        performCreate(dto).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createWithZeroPrice_isAccepted() throws Exception {
+        ItemDTO dto = ItemDTO.builder()
+                .name("Teste Preço Zero")
+                .price(BigDecimal.ZERO)
+                .category(category)
+                .type(ItemType.CONSUMABLE)
+                .build();
+        performCreate(dto).andExpect(status().isCreated());
+    }
 }

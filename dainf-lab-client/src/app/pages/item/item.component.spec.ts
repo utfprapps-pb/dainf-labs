@@ -14,7 +14,7 @@ describe('ItemComponent forms', () => {
       id: [{ value: null as any, disabled: true }],
       name: [null as string | null, Validators.compose([Validators.required, Validators.maxLength(50)])],
       description: [null as string | null],
-      price: [null as number | null],
+      price: [null as number | null, Validators.min(0)],
       category: [null as any, Validators.required],
       assets: [null as any],
       images: [null as any],
@@ -90,6 +90,30 @@ describe('ItemComponent forms', () => {
   it('description, price, location, siorg are optional', () => {
     const form = buildForm();
     form.patchValue({ name: 'Teste', type: 'CONSUMABLE' });
+    form.get('category')?.setValue(mockCategory);
+    expect(form.valid).toBeTrue();
+  });
+
+  // --- price cannot be negative ---
+
+  it('is invalid when price is negative', () => {
+    const form = buildForm();
+    form.patchValue({ name: 'Teste', type: 'CONSUMABLE', price: -50 });
+    form.get('category')?.setValue(mockCategory);
+    expect(form.invalid).toBeTrue();
+    expect(form.get('price')?.errors?.['min']).toBeTruthy();
+  });
+
+  it('is valid when price is zero', () => {
+    const form = buildForm();
+    form.patchValue({ name: 'Teste', type: 'CONSUMABLE', price: 0 });
+    form.get('category')?.setValue(mockCategory);
+    expect(form.valid).toBeTrue();
+  });
+
+  it('is valid when price is positive', () => {
+    const form = buildForm();
+    form.patchValue({ name: 'Teste', type: 'CONSUMABLE', price: 199.9 });
     form.get('category')?.setValue(mockCategory);
     expect(form.valid).toBeTrue();
   });

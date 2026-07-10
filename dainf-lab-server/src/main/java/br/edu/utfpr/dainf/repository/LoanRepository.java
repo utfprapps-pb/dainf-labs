@@ -2,6 +2,7 @@ package br.edu.utfpr.dainf.repository;
 
 import br.edu.utfpr.dainf.dto.LoanCountByDay;
 import br.edu.utfpr.dainf.dto.LoanStatusSummary;
+import br.edu.utfpr.dainf.dto.PendingItemDTO;
 import br.edu.utfpr.dainf.enums.LoanStatus;
 import br.edu.utfpr.dainf.model.Loan;
 import br.edu.utfpr.dainf.model.LoanItem;
@@ -87,4 +88,22 @@ public interface LoanRepository extends CrudRepository<Long, Loan>, LoanSpecExec
 
     @Query("SELECT l FROM Loan l WHERE l.status <> br.edu.utfpr.dainf.enums.LoanStatus.COMPLETED AND l.deadline IS NOT NULL AND l.deadline < :now")
     List<Loan> findNonCompletedPastDeadline(@Param("now") Instant now);
+
+    @Query(value = """
+        SELECT
+          li.item_id AS item_id,
+          i.name AS item_name,
+          SUM(li.quantity) - SUM(COALESCE(ri.quantity_returned, 0) + COALESCE(ri.quantity_issued, 0)) AS pending_quantity
+        FROM loan_item li
+        JOIN loan l ON l.id = li.loan_id
+        JOIN item i ON i.id = li.item_id
+        LEFT JOIN return r ON r.loan_id = l.id
+        LEFT JOIN return_item ri ON ri.return_id = r.id AND ri.item_id = li.item_id
+        WHERE l.user_id = :borrowerId
+          AND l.status IN ('ONGOING', 'OVERDUE')
+        GROUP BY li.item_id, i.name
+        HAVING SUM(li.quantity) - SUM(COALESCE(ri.quantity_returned, 0) + COALESCE(ri.quantity_issued, 0)) > 0
+        ORDER BY i.name
+        """, nativeQuery = true)
+    List<PendingItemDTO> findPendingItemsByBorrower(@Param("borrowerId") Long borrowerId);
 }

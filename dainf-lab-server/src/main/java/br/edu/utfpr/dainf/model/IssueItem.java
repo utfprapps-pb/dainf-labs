@@ -1,5 +1,6 @@
 package br.edu.utfpr.dainf.model;
 
+import br.edu.utfpr.dainf.inventory.InventoryLineItem;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -17,7 +18,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "issue_item")
-public class IssueItem {
+public class IssueItem implements InventoryLineItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -34,4 +35,9 @@ public class IssueItem {
     @JoinColumn(name = "issue_id", referencedColumnName = "id")
     @JsonIgnore
     private Issue issue;
+
+    @Override
+    public BigDecimal inventoryQuantity() {
+        return quantity;
+    }
 }

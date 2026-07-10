@@ -37,6 +37,7 @@ class PurchaseServiceInventoryTest {
     @Mock UserService userService;
 
     InventoryService inventoryService;
+    InventoryDiffService inventoryDiffService;
     PurchaseService purchaseService;
 
     final Map<Long, Inventory> store = new HashMap<>();
@@ -50,7 +51,9 @@ class PurchaseServiceInventoryTest {
         inventoryService = new InventoryService(auditor, configurationService);
         ReflectionTestUtils.setField(inventoryService, "repository", inventoryRepository);
 
-        purchaseService = new PurchaseService(inventoryService, userService);
+        inventoryDiffService = new InventoryDiffService(inventoryService);
+
+        purchaseService = new PurchaseService(inventoryDiffService, userService);
         ReflectionTestUtils.setField(purchaseService, "repository", purchaseRepository);
 
         lenient().when(inventoryRepository.findByItem(any())).thenAnswer(inv -> {

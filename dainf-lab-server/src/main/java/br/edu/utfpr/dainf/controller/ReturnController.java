@@ -7,6 +7,8 @@ import br.edu.utfpr.dainf.repository.ReturnRepository;
 import br.edu.utfpr.dainf.service.ReturnService;
 import br.edu.utfpr.dainf.shared.CrudController;
 import jakarta.annotation.security.RolesAllowed;
+import org.modelmapper.ModelMapper;
+import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,8 +19,21 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("returns")
 @RolesAllowed({UserRole.ADMIN, UserRole.LAB_TECHNICIAN})
 public class ReturnController extends CrudController<Long, Return, ReturnDTO, ReturnRepository, ReturnService> {
+
+    // ReturnItem has getQuantityReturned() and getQuantityIssued() — both produce the
+    // "Quantity" token, which STANDARD matching ambiguously maps to ItemDTO.quantity.
+    // STRICT strategy requires exact full-name matches and avoids this.
+    private final ModelMapper strictMapper;
+
     public ReturnController() {
         super(Return.class, ReturnDTO.class);
+        this.strictMapper = new ModelMapper();
+        this.strictMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+    }
+
+    @Override
+    public ReturnDTO toDto(Return entity) {
+        return strictMapper.map(entity, ReturnDTO.class);
     }
 
     @GetMapping("by-loan/{loanId}")

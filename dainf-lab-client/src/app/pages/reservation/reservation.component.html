@@ -5,6 +5,8 @@
   [config]="config"
   [form]="form"
   [formTemplate]="crudForm"
+  [filtersTemplate]="filters"
+  [searchRequest]="searchRequest()"
   [actionsTemplate]="customActions"
   (saveClick)="onSave()"
   (entityLoad)="onEntityLoad($event)"
@@ -147,4 +149,13 @@
     pTooltip="Excluir"
     (click)="crud.deleteOne(row)"
   ></p-button> -->
+</ng-template>
+
+
+<ng-template #filters>
+  <div class="grid grid-cols-12 gap-4">
+    <app-input-container label="Código" class="col-span-12">
+      <input type="text" pInputText [(ngModel)]="idFilter" />
+    </app-input-container>
+  </div>
 </ng-template>

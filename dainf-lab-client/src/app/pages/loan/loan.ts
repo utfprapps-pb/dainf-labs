@@ -36,4 +36,10 @@ export interface LoanItemTracking extends Identifiable {
   borrowerEmail?: string;
 }
 
+export interface PendingItem {
+  itemId: number;
+  itemName: string;
+  pendingQuantity: number;
+}
+
 export type LoanStatus = 'ONGOING' | 'OVERDUE' | 'COMPLETED';

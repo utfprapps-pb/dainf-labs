@@ -24,5 +24,6 @@ public class InventoryTransactionDTO implements Identifiable<Long> {
     private BigDecimal quantity;
     private String userName;
     private Instant date;
-    private BigDecimal currentQuantity;
+    private BigDecimal quantityAfterTransaction;
+    private Long referenceId;
 }

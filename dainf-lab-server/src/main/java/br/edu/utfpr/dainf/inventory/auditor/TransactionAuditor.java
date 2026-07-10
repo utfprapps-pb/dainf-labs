@@ -8,4 +8,8 @@ import java.math.BigDecimal;
 
 public interface TransactionAuditor {
     void audit(Inventory inventory, BigDecimal quantity, Transaction transaction, InventoryTransactionType type);
+
+    default void audit(Inventory inventory, BigDecimal quantity, Transaction transaction, InventoryTransactionType type, Long referenceId) {
+        audit(inventory, quantity, transaction, type);
+    }
 }

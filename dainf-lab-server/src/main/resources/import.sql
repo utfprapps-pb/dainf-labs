@@ -384,9 +384,9 @@ INSERT INTO loan_item (quantity,"return",item_id,loan_id) values (10.00, true, 2
 -- reservation
 INSERT INTO reservation (id, description, reservation_date, withdrawal_date, user_id) VALUES (1, 'Reserva TCC', '2025-11-25 10:00:00-03', '2025-11-26 10:00:00-03', 7);
 INSERT INTO reservation (id, description, reservation_date, withdrawal_date, user_id) VALUES (2, 'Reserva Aula Robótica', '2025-11-26 11:00:00-03', '2025-11-28 08:00:00-03', 9);
-INSERT INTO reservation (id, description, reservation_date, user_id) VALUES (3, 'Reserva Lab Eletronica', '2025-11-27 14:00:00-03', 8);
+INSERT INTO reservation (id, description, reservation_date, withdrawal_date, user_id) VALUES (3, 'Reserva Lab Eletronica', '2025-11-27 14:00:00-03', '2025-11-27 18:00:00-03', 8);
 INSERT INTO reservation (id, description, reservation_date, withdrawal_date, user_id) VALUES (4, 'Reserva Impressora 3D', '2025-11-28 09:00:00-03', '2025-11-28 13:00:00-03', 3);
-INSERT INTO reservation (id, description, reservation_date, user_id) VALUES (5, 'Reserva materiais básicos', '2025-11-28 10:00:00-03', 7);
+INSERT INTO reservation (id, description, reservation_date, withdrawal_date, user_id) VALUES (5, 'Reserva materiais básicos', '2025-11-28 10:00:00-03', '2025-11-28 16:00:00-03', 7);
 
 -- reservation_item
 INSERT INTO reservation_item (quantity, item_id, reservation_id) VALUES (2.00, 8, 1);

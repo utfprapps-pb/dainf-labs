@@ -70,6 +70,12 @@ public class UserService extends CrudService<Long, User, UserRepository> impleme
         return repository.save(user);
     }
 
+    public boolean isPasswordValid(String email, String rawPassword) {
+        return repository.findByEmail(email)
+                .map(user -> passwordEncoder.matches(rawPassword, user.getPassword()))
+                .orElse(false);
+    }
+
     public User register(User user) {
         user.setEnabled(false);
         user.setEmailVerificado(false);

@@ -127,4 +127,44 @@ describe('PurchaseComponent forms', () => {
     expect(form.valid).toBeTrue();
     expect(sub.invalid).toBeTrue();
   });
+
+  // --- totalValue calculation: items.reduce must not throw when items is null ---
+  //
+  // Mirrors the guarded reduce in purchase.component.ts's `items` valueChanges
+  // subscription. FormGroup.reset() (called by the shared CrudComponent.cancel())
+  // sets array-typed controls back to `null`, not `[]`, which used to crash this
+  // subscription with "Cannot read properties of null (reading 'reduce')".
+  function computeTotal(items: { quantity: number; price: number }[] | null): number {
+    return (items ?? []).reduce((acc, item) => acc + item.quantity * item.price, 0);
+  }
+
+  it('computes the sum of quantity * price for each item', () => {
+    const total = computeTotal([
+      { quantity: 2, price: 10 },
+      { quantity: 1, price: 5 },
+    ]);
+    expect(total).toBe(25);
+  });
+
+  it('returns 0 for an empty item list', () => {
+    expect(computeTotal([])).toBe(0);
+  });
+
+  it('does not throw and returns 0 when items is null', () => {
+    expect(() => computeTotal(null)).not.toThrow();
+    expect(computeTotal(null)).toBe(0);
+  });
+
+  it('reflects the reset-to-null scenario: form.reset() clears items but total stays valid', () => {
+    const form = buildForm();
+    form.get('fornecedor')?.setValue(mockFornecedor);
+    form.get('items')?.setValue([{ quantity: 3, price: 4 }] as any);
+    expect(computeTotal(form.get('items')?.value as any)).toBe(12);
+
+    form.reset();
+
+    expect(form.get('items')?.value).toBeNull();
+    expect(() => computeTotal(form.get('items')?.value as any)).not.toThrow();
+    expect(computeTotal(form.get('items')?.value as any)).toBe(0);
+  });
 });

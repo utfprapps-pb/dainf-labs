@@ -1,5 +1,5 @@
 import { CommonModule, DatePipe } from '@angular/common';
-import { Component, inject, OnInit, viewChild } from '@angular/core';
+import { Component, computed, inject, model, OnInit, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
   FormBuilder,
@@ -14,6 +14,8 @@ import { SearchSelectComponent } from '@/shared/components/search-select/search-
 import { SubItemFormComponent } from '@/shared/components/subitem-form/subitem-form.component';
 import { Column, CrudConfig } from '@/shared/crud/crud';
 import { CrudComponent } from '@/shared/crud/crud.component';
+import { SearchRequest, SearchFilter } from '@/shared/models/search';
+import { dateOrderValidator } from '@/shared/validator/date-order.validator';
 import { ButtonModule } from 'primeng/button';
 import { DatePickerModule } from 'primeng/datepicker';
 import { FieldsetModule } from 'primeng/fieldset';
@@ -70,15 +72,18 @@ export class ReservationComponent implements OnInit {
 
   crud = viewChild(CrudComponent);
 
-  form: FormGroup = this.formBuilder.group({
-    id: [{ value: null, disabled: true }],
-    description: [''],
-    observation: [''],
-    reservationDate: [null, Validators.required],
-    withdrawalDate: [null, Validators.required],
-    user: [null],
-    items: [[], [Validators.required, Validators.minLength(1)]],
-  });
+  form: FormGroup = this.formBuilder.group(
+    {
+      id: [{ value: null, disabled: true }],
+      description: [''],
+      observation: [''],
+      reservationDate: [null, Validators.required],
+      withdrawalDate: [null, Validators.required],
+      user: [null],
+      items: [[], [Validators.required, Validators.minLength(1)]],
+    },
+    { validators: dateOrderValidator('reservationDate', 'withdrawalDate') },
+  );
 
   reservationItemForm: FormGroup = this.formBuilder.group({
     id: [null],
@@ -107,6 +112,14 @@ export class ReservationComponent implements OnInit {
     { field: 'item.name', header: 'Item' },
     { field: 'quantity', header: 'Quantidade' },
   ];
+
+  idFilter = model<string | undefined>();
+  searchRequest = computed<SearchRequest>(() => {
+    const filters: SearchFilter[] = [];
+    if (this.idFilter())
+      filters.push({ field: 'id', value: this.idFilter(), type: 'EQUALS' });
+    return <SearchRequest>{ filters };
+  });
 
   ngOnInit(): void {
     const data = this.context.consume('cart');

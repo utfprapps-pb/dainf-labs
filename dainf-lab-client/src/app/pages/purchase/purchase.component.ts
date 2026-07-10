@@ -134,8 +134,13 @@ export class PurchaseComponent implements OnInit {
   dateFilter = model<string | undefined>();
   userFilter = model<User | undefined>();
   fornecedorFilter = model<Fornecedor | undefined>();
+  idFilter = model<string | undefined>();
   searchRequest = computed<SearchRequest>(() => {
     const filters: SearchFilter[] = [];
+
+    if (this.idFilter()) {
+      filters.push({ field: 'id', value: this.idFilter(), type: 'EQUALS' });
+    }
 
     if (this.dateFilter()) {
       filters.push({
@@ -164,8 +169,8 @@ export class PurchaseComponent implements OnInit {
   });
 
   ngOnInit() {
-    this.form.get('items')?.valueChanges.subscribe((items: PurchaseItem[]) => {
-      const total = items.reduce(
+    this.form.get('items')?.valueChanges.subscribe((items: PurchaseItem[] | null) => {
+      const total = (items ?? []).reduce(
         (acc, item) => acc + item.quantity * item.price,
         0,
       );

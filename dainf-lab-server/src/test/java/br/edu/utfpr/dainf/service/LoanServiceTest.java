@@ -2,6 +2,7 @@ package br.edu.utfpr.dainf.service;
 
 import br.edu.utfpr.dainf.enums.InventoryTransactionType;
 import br.edu.utfpr.dainf.enums.LoanStatus;
+import br.edu.utfpr.dainf.exception.WarnException;
 import br.edu.utfpr.dainf.model.Item;
 import br.edu.utfpr.dainf.model.Loan;
 import br.edu.utfpr.dainf.model.LoanItem;
@@ -20,18 +21,21 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class LoanServiceTest {
 
     @Mock LoanRepository repository;
-    @Mock InventoryService inventoryService;
+    @Mock InventoryDiffService inventoryDiffService;
     @Mock UserService userService;
     @Mock ReturnRepository returnRepository;
     @Mock LoanMailService loanMailService;
@@ -47,7 +51,7 @@ class LoanServiceTest {
     }
 
     @Test
-    void save_newLoan_callsUpdateTransactionWithZeroOldQty() {
+    void save_newLoan_callsApplyDiffWithNullEntityId() {
         Item item = item(1L);
         BigDecimal qty = new BigDecimal("4");
         Loan entity = loan(null, item, qty);
@@ -56,18 +60,16 @@ class LoanServiceTest {
 
         loanService.save(entity);
 
-        verify(inventoryService).updateTransaction(item, BigDecimal.ZERO, InventoryTransactionType.LOAN, qty);
+        verify(inventoryDiffService).applyDiff(isNull(), any(), any(), eq(InventoryTransactionType.LOAN));
     }
 
     @Test
-    void save_updateLoan_callsUpdateTransactionWithOldQty() {
+    void save_updateLoan_callsApplyDiffWithEntityId() {
         Item item = item(1L);
-        BigDecimal oldQty = new BigDecimal("4");
-        BigDecimal newQty = new BigDecimal("9");
-        Loan existing = loan(1L, item, oldQty);
+        Loan existing = loan(1L, item, new BigDecimal("4"));
         existing.setBorrower(user);
         existing.setStatus(LoanStatus.COMPLETED);
-        Loan entity = loan(1L, item, newQty);
+        Loan entity = loan(1L, item, new BigDecimal("9"));
         entity.setBorrower(user);
         entity.setStatus(LoanStatus.ONGOING);
 
@@ -78,17 +80,16 @@ class LoanServiceTest {
 
         loanService.save(entity);
 
-        verify(inventoryService).updateTransaction(item, oldQty, InventoryTransactionType.LOAN, newQty);
+        verify(inventoryDiffService).applyDiff(eq(1L), any(), any(), eq(InventoryTransactionType.LOAN));
     }
 
     @Test
-    void save_updateLoan_itemNotInExisting_callsUpdateTransactionWithZeroOldQty() {
+    void save_updateLoan_itemNotInExisting_callsApplyDiffWithEntityId() {
         Item newItem = item(2L);
-        BigDecimal qty = new BigDecimal("6");
         Loan existing = loan(1L, item(1L), new BigDecimal("4"));
         existing.setBorrower(user);
         existing.setStatus(LoanStatus.COMPLETED);
-        Loan entity = loan(1L, newItem, qty);
+        Loan entity = loan(1L, newItem, new BigDecimal("6"));
         entity.setBorrower(user);
         entity.setStatus(LoanStatus.ONGOING);
 
@@ -99,11 +100,11 @@ class LoanServiceTest {
 
         loanService.save(entity);
 
-        verify(inventoryService).updateTransaction(newItem, BigDecimal.ZERO, InventoryTransactionType.LOAN, qty);
+        verify(inventoryDiffService).applyDiff(eq(1L), any(), any(), eq(InventoryTransactionType.LOAN));
     }
 
     @Test
-    void save_noItems_noInventoryInteraction() {
+    void save_noItems_applyDiffCalledWithEmptyNewList() {
         Loan entity = new Loan();
         entity.setLoanDate(Instant.now());
         entity.setStatus(LoanStatus.ONGOING);
@@ -113,7 +114,47 @@ class LoanServiceTest {
 
         loanService.save(entity);
 
-        verifyNoInteractions(inventoryService);
+        verify(inventoryDiffService).applyDiff(any(), any(), eq(List.of()), eq(InventoryTransactionType.LOAN));
+    }
+
+    // --- deadline vs loanDate ordering ---
+
+    @Test
+    void save_deadlineBeforeLoanDate_throwsWarnException() {
+        Loan entity = new Loan();
+        entity.setLoanDate(Instant.now());
+        entity.setDeadline(Instant.now().minus(1, ChronoUnit.DAYS));
+        entity.setItems(List.of());
+
+        assertThrows(WarnException.class, () -> loanService.save(entity));
+
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void save_deadlineEqualsLoanDate_doesNotThrow() {
+        Instant now = Instant.now();
+        Loan entity = new Loan();
+        entity.setLoanDate(now);
+        entity.setDeadline(now);
+        entity.setItems(List.of());
+
+        when(repository.save(any())).thenReturn(entity);
+
+        assertDoesNotThrow(() -> loanService.save(entity));
+    }
+
+    @Test
+    void save_deadlineAfterLoanDate_doesNotThrow() {
+        Instant now = Instant.now();
+        Loan entity = new Loan();
+        entity.setLoanDate(now);
+        entity.setDeadline(now.plus(7, ChronoUnit.DAYS));
+        entity.setItems(List.of());
+
+        when(repository.save(any())).thenReturn(entity);
+
+        assertDoesNotThrow(() -> loanService.save(entity));
     }
 
     // --- refreshStatus / deadline status resolution ---
