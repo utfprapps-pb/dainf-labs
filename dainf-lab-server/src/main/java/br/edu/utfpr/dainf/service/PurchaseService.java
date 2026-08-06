@@ -7,6 +7,7 @@ import br.edu.utfpr.dainf.model.PurchaseItem;
 import br.edu.utfpr.dainf.repository.PurchaseRepository;
 import br.edu.utfpr.dainf.shared.CrudService;
 import br.edu.utfpr.dainf.shared.ItemListValidator;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +31,7 @@ public class PurchaseService extends CrudService<Long, Purchase, PurchaseReposit
     }
 
     @Override
+    @Transactional
     @TransactsInventory(type = InventoryTransactionType.PURCHASE)
     public Purchase save(Purchase entity) {
         ItemListValidator.validateNoDuplicates(entity.getItems(), i -> i.getItem().getId());

@@ -109,6 +109,18 @@ public class InventoryService extends CrudService<Long, Inventory, InventoryRepo
     }
 
     /**
+     * Records an audit trail entry for a transaction that does not affect the
+     * inventory balance (e.g. an ISSUE derived from a loan return, whose quantity
+     * was already deducted by the original LOAN transaction).
+     */
+    @Transactional
+    public void auditOnly(Item item, BigDecimal quantity, InventoryTransactionType type, Long referenceId) {
+        Inventory inventory = findByItem(item);
+        Transaction transaction = TransactionFactory.create(type);
+        auditor.audit(inventory, quantity, transaction, type, referenceId);
+    }
+
+    /**
      * Retrieves existing inventory or creates a empty one
      */
     public Inventory findByItem(Item item) {

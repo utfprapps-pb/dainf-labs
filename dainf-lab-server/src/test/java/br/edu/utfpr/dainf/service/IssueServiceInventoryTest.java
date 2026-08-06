@@ -374,14 +374,45 @@ class IssueServiceInventoryTest {
     class HandleTransactionFlag {
 
         @Test
-        void handleTransactionFalse_noInventoryChange() {
+        void handleTransactionFalse_noQuantityChange_butAuditRecorded() {
+            // quantity effect is intentionally skipped (LOAN already covers it), but the
+            // event must still be traceable in the inventory audit trail
             Item item = item();
             givenStock(item, "50");
 
             issueService.save(newIssue(ii(item, "20")), false);
 
             assertEquals(bd("50"), stockOf(item));
-            verifyNoInteractions(inventoryRepository);
+            verify(inventoryRepository, never()).save(any());
+            verify(auditor).audit(any(), eq(bd("20")), any(), eq(InventoryTransactionType.ISSUE), any());
+        }
+
+        @Test
+        void handleTransactionFalse_multipleItems_eachAudited() {
+            Item a = item(), b = item(), c = item();
+            givenStock(a, "30");
+            givenStock(b, "20");
+            givenStock(c, "10");
+
+            issueService.save(newIssue(ii(a, "5"), ii(b, "8"), ii(c, "3")), false);
+
+            assertEquals(bd("30"), stockOf(a));
+            assertEquals(bd("20"), stockOf(b));
+            assertEquals(bd("10"), stockOf(c));
+            verify(auditor).audit(any(), eq(bd("5")), any(), eq(InventoryTransactionType.ISSUE), any());
+            verify(auditor).audit(any(), eq(bd("8")), any(), eq(InventoryTransactionType.ISSUE), any());
+            verify(auditor).audit(any(), eq(bd("3")), any(), eq(InventoryTransactionType.ISSUE), any());
+        }
+
+        @Test
+        void handleTransactionFalse_zeroQuantityItem_noAuditRecorded() {
+            Item item = item();
+            givenStock(item, "50");
+
+            issueService.save(newIssue(ii(item, "0")), false);
+
+            assertEquals(bd("50"), stockOf(item));
+            verifyNoInteractions(auditor);
         }
 
         @Test
@@ -395,15 +426,16 @@ class IssueServiceInventoryTest {
         }
 
         @Test
-        void handleTransactionFalse_onUpdate_noInventoryChange() {
+        void handleTransactionFalse_onUpdate_noQuantityChange_butAuditRecorded() {
             Item item = item();
             givenStock(item, "40");
 
             // handleTransaction=false means findById is never called (existing is not loaded)
             issueService.save(existingIssue(1L, ii(item, "25")), false);
 
-            // No change despite different qty, because handleTransaction=false
+            // No quantity change despite different qty, because handleTransaction=false
             assertEquals(bd("40"), stockOf(item));
+            verify(auditor).audit(any(), eq(bd("25")), any(), eq(InventoryTransactionType.ISSUE), eq(1L));
         }
     }
 

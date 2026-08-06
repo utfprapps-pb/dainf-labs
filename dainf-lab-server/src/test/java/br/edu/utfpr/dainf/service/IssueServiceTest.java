@@ -78,7 +78,7 @@ class IssueServiceTest {
     }
 
     @Test
-    void save_handleTransactionFalse_skipsInventory() {
+    void save_handleTransactionFalse_skipsApplyDiffButRecordsAuditOnly() {
         Item item = item(1L);
         Issue entity = issue(null, item, new BigDecimal("3"));
 
@@ -86,7 +86,8 @@ class IssueServiceTest {
 
         issueService.save(entity, false);
 
-        verifyNoInteractions(inventoryDiffService);
+        verify(inventoryDiffService, never()).applyDiff(any(), any(), any(), any());
+        verify(inventoryDiffService).auditOnly(isNull(), any(), eq(InventoryTransactionType.ISSUE));
     }
 
     @Test

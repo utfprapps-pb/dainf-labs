@@ -57,6 +57,14 @@ public class ExceptionHandlerAdvice {
         return new WarnMessage(HttpStatus.BAD_REQUEST.value(), exception.getMessage(), request.getServletPath(), errors);
     }
 
+    @ExceptionHandler({InvalidTransactionException.class})
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public WarnMessage handlerInvalidTransactionException(InvalidTransactionException exception, HttpServletRequest request) {
+        Map<String, String> errors = new HashMap<>();
+        errors.put("message", exception.getMessage());
+        return new WarnMessage(HttpStatus.BAD_REQUEST.value(), exception.getMessage(), request.getServletPath(), errors);
+    }
+
     @ExceptionHandler({ServletRequestBindingException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public WarnMessage handlerServletRequestBindingException(ServletRequestBindingException exception, HttpServletRequest request) {

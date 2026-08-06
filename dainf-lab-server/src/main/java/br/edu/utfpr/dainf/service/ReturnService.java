@@ -8,6 +8,7 @@ import br.edu.utfpr.dainf.repository.IssueRepository;
 import br.edu.utfpr.dainf.repository.ReturnRepository;
 import br.edu.utfpr.dainf.shared.CrudService;
 import br.edu.utfpr.dainf.shared.ItemListValidator;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Service;
 
@@ -40,6 +41,7 @@ public class ReturnService extends CrudService<Long, Return, ReturnRepository> {
     }
 
     @Override
+    @Transactional
     @TransactsInventory(type = InventoryTransactionType.RETURN)
     public Return save(Return entity) {
         ItemListValidator.validateNoDuplicates(entity.getItems(), i -> i.getItem().getId());
