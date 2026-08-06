@@ -52,4 +52,23 @@ public class InventoryDiffService {
             }
         }
     }
+
+    /**
+     * Records an audit trail entry per item without validating or mutating the
+     * inventory balance. Used for transactions whose quantity effect is already
+     * accounted for elsewhere (e.g. an ISSUE derived from a loan return).
+     */
+    public <I extends InventoryLineItem> void auditOnly(
+            Long entityId,
+            List<I> items,
+            InventoryTransactionType type) {
+
+        for (I item : items) {
+            BigDecimal quantity = item.inventoryQuantity();
+            if (quantity == null || quantity.compareTo(BigDecimal.ZERO) <= 0) {
+                continue;
+            }
+            inventoryService.auditOnly(item.getItem(), quantity, type, entityId);
+        }
+    }
 }

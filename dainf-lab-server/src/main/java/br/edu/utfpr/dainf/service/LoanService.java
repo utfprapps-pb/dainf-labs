@@ -16,6 +16,7 @@ import br.edu.utfpr.dainf.search.request.SearchRequest;
 import br.edu.utfpr.dainf.search.request.filter.SearchFilter;
 import br.edu.utfpr.dainf.shared.CrudService;
 import br.edu.utfpr.dainf.shared.ItemListValidator;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.security.access.AccessDeniedException;
@@ -69,6 +70,7 @@ public class LoanService extends CrudService<Long, Loan, LoanRepository> {
     }
 
     @Override
+    @Transactional
     @TransactsInventory(type = InventoryTransactionType.LOAN)
     public Loan save(Loan entity) {
         ItemListValidator.validateNoDuplicates(entity.getItems(), i -> i.getItem().getId());

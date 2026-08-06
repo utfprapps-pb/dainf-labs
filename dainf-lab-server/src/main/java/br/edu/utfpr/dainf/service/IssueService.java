@@ -57,6 +57,8 @@ public class IssueService extends CrudService<Long, Issue, IssueRepository> {
 
         if (handleTransaction) {
             inventoryDiffService.applyDiff(saved.getId(), oldItems, saved.getItems(), InventoryTransactionType.ISSUE);
+        } else {
+            inventoryDiffService.auditOnly(saved.getId(), saved.getItems(), InventoryTransactionType.ISSUE);
         }
 
         return saved;
