@@ -25,7 +25,7 @@ public class ItemDTO implements Identifiable<Long> {
     @NotBlank
     @NotNull
     @NotEmpty(message = "O campo 'Nome' é obrigatório")
-    @Size(max = 50, message = "O campo 'Nome' deve ter no máximo 50 caracteres")
+    @Size(max = 100, message = "O campo 'Nome' deve ter no máximo 100 caracteres")
     private String name;
 
     private String description;

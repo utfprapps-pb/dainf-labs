@@ -12,7 +12,7 @@ describe('ItemComponent forms', () => {
   function buildForm() {
     return fb.group({
       id: [{ value: null as any, disabled: true }],
-      name: [null as string | null, Validators.compose([Validators.required, Validators.maxLength(50)])],
+      name: [null as string | null, Validators.compose([Validators.required, Validators.maxLength(100)])],
       description: [null as string | null],
       price: [null as number | null, Validators.min(0)],
       category: [null as any, Validators.required],
@@ -57,9 +57,9 @@ describe('ItemComponent forms', () => {
     expect(form.invalid).toBeTrue();
   });
 
-  it('is invalid when name exceeds 50 characters', () => {
+  it('is invalid when name exceeds 100 characters', () => {
     const form = buildForm();
-    form.patchValue({ name: 'A'.repeat(51), type: 'CONSUMABLE' });
+    form.patchValue({ name: 'A'.repeat(101), type: 'CONSUMABLE' });
     form.get('category')?.setValue(mockCategory);
     expect(form.invalid).toBeTrue();
     expect(form.get('name')?.errors?.['maxlength']).toBeTruthy();
