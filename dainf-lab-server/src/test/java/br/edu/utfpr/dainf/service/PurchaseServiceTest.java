@@ -64,6 +64,22 @@ class PurchaseServiceTest {
     }
 
     @Test
+    void save_updatePurchase_preservesResponsibleUser() {
+        Item item = item(1L);
+        User responsibleUser = new User();
+        Purchase existing = purchase(1L, item, new BigDecimal("10"));
+        existing.setUser(responsibleUser);
+        Purchase entity = purchase(1L, item, new BigDecimal("15"));
+
+        when(repository.findById(1L)).thenReturn(Optional.of(existing));
+        when(repository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        purchaseService.save(entity);
+
+        verify(repository).save(argThat(saved -> saved.getUser() == responsibleUser));
+    }
+
+    @Test
     void save_updatePurchase_itemNotInExisting_callsApplyDiffWithEntityId() {
         Item newItem = item(2L);
         Purchase existing = purchase(1L, item(1L), new BigDecimal("10"));

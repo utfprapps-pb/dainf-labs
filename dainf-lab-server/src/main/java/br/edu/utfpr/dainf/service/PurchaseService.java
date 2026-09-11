@@ -42,6 +42,10 @@ public class PurchaseService extends CrudService<Long, Purchase, PurchaseReposit
         Purchase existing = entity.getId() != null ? repository.findById(entity.getId()).orElse(null) : null;
         List<PurchaseItem> oldItems = existing != null ? new ArrayList<>(existing.getItems()) : List.of();
 
+        if (existing != null) {
+            entity.setUser(existing.getUser());
+        }
+
         for (PurchaseItem item : entity.getItems()) {
             item.setPurchase(entity);
         }
