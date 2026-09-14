@@ -100,7 +100,7 @@ class ItemControllerTest extends CrudControllerTest<ItemDTO> {
     @Test
     void createWithNameExceedingMaxLength_returns400() throws Exception {
         ItemDTO dto = ItemDTO.builder()
-                .name("A".repeat(51))
+                .name("A".repeat(101))
                 .category(category)
                 .type(ItemType.CONSUMABLE)
                 .build();

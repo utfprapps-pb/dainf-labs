@@ -126,10 +126,11 @@ export class LoanComponent implements OnInit, AfterViewInit {
 
   disabled = signal(false);
 
-  config: CrudConfig<Loan> = {
+  config = computed<CrudConfig<Loan>>(() => ({
     title: 'Empréstimos',
     dialogWidth: '80vw',
-  };
+    allowUpdate: this.hasAdvancedPrivileges(),
+  }));
 
   form: FormGroup = this.formBuilder.group(
     {
@@ -299,6 +300,10 @@ export class LoanComponent implements OnInit, AfterViewInit {
 
   openEdit(row: Loan) {
     this.crud()?.edit(row);
+  }
+
+  openView(row: Loan) {
+    this.crud()?.openById(row.id);
   }
 
   openPendingItemsDialog() {
