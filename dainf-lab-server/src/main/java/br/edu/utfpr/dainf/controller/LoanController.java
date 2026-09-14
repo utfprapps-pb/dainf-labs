@@ -28,6 +28,14 @@ public class LoanController extends CrudController<Long, Loan, LoanDTO, LoanRepo
         super(Loan.class, LoanDTO.class);
     }
 
+    @Override
+    @GetMapping("/{id}")
+    @RolesAllowed({UserRole.ADMIN, UserRole.LAB_TECHNICIAN, UserRole.STUDENT, UserRole.PROFESSOR})
+    public ResponseEntity<LoanDTO> findById(@PathVariable Long id) {
+        return service.findByIdForRead(id)
+                .map(entity -> ResponseEntity.ok(toDto(entity)))
+                .orElse(ResponseEntity.notFound().build());
+    }
 
     @Override
     @PostMapping("/search")

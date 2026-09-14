@@ -2,7 +2,7 @@
   #crud
   [columns]="cols"
   [service]="loanService"
-  [config]="config"
+  [config]="config()"
   [form]="form"
   [formTemplate]="crudForm"
   [filtersTemplate]="filters"
@@ -96,6 +96,14 @@
 </ng-template>
 
 <ng-template #actions let-row>
+  <p-button
+    icon="pi pi-eye"
+    class="mr-2"
+    severity="secondary"
+    pTooltip="Ver empréstimo"
+    *ngIf="!hasAdvancedPrivileges()"
+    (click)="openView(row)"
+  ></p-button>
   <p-button
     icon="pi pi-pencil"
     class="mr-2"

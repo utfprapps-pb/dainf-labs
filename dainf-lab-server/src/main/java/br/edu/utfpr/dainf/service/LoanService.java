@@ -29,6 +29,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 public class LoanService extends CrudService<Long, Loan, LoanRepository> {
@@ -67,6 +68,13 @@ public class LoanService extends CrudService<Long, Loan, LoanRepository> {
         }
 
         return super.search(request);
+    }
+
+    public Optional<Loan> findByIdForRead(Long id) {
+        return repository.findById(id).map(loan -> {
+            validateAccess(loan);
+            return loan;
+        });
     }
 
     @Override
