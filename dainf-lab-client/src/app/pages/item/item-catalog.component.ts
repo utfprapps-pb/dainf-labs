@@ -82,6 +82,8 @@ export class ItemCatalogComponent implements OnInit, OnDestroy {
   totalRecords = signal(0);
   loading = signal(true);
   imageUrls = signal<Record<string, string>>({});
+  private imagePathsByItem: Record<string, string[]> = {};
+  private imagePathIndexesByItem: Record<string, number> = {};
 
   first = signal(0);
   rows = signal(12);
@@ -184,7 +186,10 @@ export class ItemCatalogComponent implements OnInit, OnDestroy {
 
   onImageError(item: Item) {
     const key = String(item.id);
+    const paths = this.imagePathsByItem[key] || [];
+    const nextIndex = (this.imagePathIndexesByItem[key] ?? -1) + 1;
     this.imageUrls.update((urls) => ({ ...urls, [key]: this.placeholderImage }));
+    this.tryImagePaths(paths, nextIndex, key);
   }
 
   private prefetchImageForItem(item: Item) {
@@ -192,12 +197,17 @@ export class ItemCatalogComponent implements OnInit, OnDestroy {
     if (this.imageUrls()[key]) return;
 
     const paths = this.extractImagePaths(item.images);
+    this.imagePathsByItem[key] = paths;
     this.tryImagePaths(paths, 0, key);
   }
 
   private tryImagePaths(paths: string[], index: number, key: string) {
-    if (index >= paths.length) return;
+    if (index >= paths.length) {
+      this.imageUrls.update((urls) => ({ ...urls, [key]: this.placeholderImage }));
+      return;
+    }
 
+    this.imagePathIndexesByItem[key] = index;
     const path = paths[index];
 
     if (path.startsWith('http')) {
@@ -206,8 +216,16 @@ export class ItemCatalogComponent implements OnInit, OnDestroy {
     }
 
     this.storageService.getSignedUrl(path, 'GET').subscribe({
-      next: (url) => this.imageUrls.update((urls) => ({ ...urls, [key]: url })),
-      error: () => this.tryImagePaths(paths, index + 1, key),
+      next: (url) => {
+        if (this.imagePathIndexesByItem[key] === index) {
+          this.imageUrls.update((urls) => ({ ...urls, [key]: url }));
+        }
+      },
+      error: () => {
+        if (this.imagePathIndexesByItem[key] === index) {
+          this.tryImagePaths(paths, index + 1, key);
+        }
+      },
     });
   }
 
