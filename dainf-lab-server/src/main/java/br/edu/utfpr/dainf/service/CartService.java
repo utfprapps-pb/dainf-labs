@@ -7,10 +7,8 @@ import br.edu.utfpr.dainf.model.Item;
 import br.edu.utfpr.dainf.model.User;
 import br.edu.utfpr.dainf.repository.CartRepository;
 import br.edu.utfpr.dainf.repository.ItemRepository;
-import br.edu.utfpr.dainf.shared.CrudService;
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,16 +18,20 @@ import java.util.stream.Collectors;
 public class CartService {
 
     private final CartRepository repository;
+    private final ItemLifecycleService lifecycle;
     private final ItemRepository itemRepository;
     private final UserService userService;
 
-    public CartService(CartRepository repository, ItemRepository itemRepository, UserService userService) {
+    public CartService(CartRepository repository, ItemRepository itemRepository, UserService userService, ItemLifecycleService lifecycle) {
         this.repository = repository;
+        this.lifecycle = lifecycle;
         this.itemRepository = itemRepository;
         this.userService = userService;
     }
 
+    @Transactional
     public Cart manageCart(List<CartItemDTO> itemsDTO) {
+        if (itemsDTO != null) itemsDTO.stream().map(dto -> dto.getItem().getId()).distinct().sorted().forEach(lifecycle::requireActive);
         Cart cart = findCart();
         cart.getItems().clear();
 
@@ -46,7 +48,7 @@ public class CartService {
 
                         return cartItem;
                     })
-                    .collect(Collectors.toList());
+                    .toList();
 
             cart.getItems().addAll(newCartItems);
         }

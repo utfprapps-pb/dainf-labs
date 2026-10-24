@@ -26,6 +26,7 @@ class ReservationServiceTest {
 
     @Mock ReservationRepository repository;
     @Mock UserService userService;
+    @Mock ItemLifecycleService lifecycle;
     @InjectMocks ReservationService reservationService;
 
     @BeforeEach

@@ -22,6 +22,8 @@ import java.util.List;
 public class ItemDTO implements Identifiable<Long> {
     private Long id;
 
+    private boolean active;
+
     @NotBlank
     @NotNull
     @NotEmpty(message = "O campo 'Nome' é obrigatório")

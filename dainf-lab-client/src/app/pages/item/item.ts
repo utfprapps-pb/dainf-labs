@@ -2,6 +2,7 @@ import { Identifiable } from '@/shared/crud/crud';
 import { Category } from '../category/category';
 
 export interface Item extends Identifiable {
+  active: boolean;
   name: string;
   description: string;
   price: number;

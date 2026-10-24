@@ -5,6 +5,9 @@ import br.edu.utfpr.dainf.enums.UserRole;
 import br.edu.utfpr.dainf.model.Item;
 import br.edu.utfpr.dainf.repository.ItemRepository;
 import br.edu.utfpr.dainf.search.request.SearchRequest;
+import br.edu.utfpr.dainf.search.SearchHandler;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import br.edu.utfpr.dainf.service.InventoryService;
 import br.edu.utfpr.dainf.service.ItemService;
 import br.edu.utfpr.dainf.service.UserService;
@@ -35,7 +38,7 @@ public class ItemController extends CrudController<Long, Item, ItemDTO, ItemRepo
     @Override
     @PostMapping("/search")
     @RolesAllowed({UserRole.ADMIN, UserRole.LAB_TECHNICIAN, UserRole.PROFESSOR, UserRole.STUDENT})
-    public ResponseEntity<PagedModel<ItemDTO>> search(SearchRequest request) {
+    public ResponseEntity<PagedModel<ItemDTO>> search(@RequestBody @Valid SearchRequest request) {
         return super.search(request);
     }
 
@@ -46,6 +49,18 @@ public class ItemController extends CrudController<Long, Item, ItemDTO, ItemRepo
             throw new AccessDeniedException("Você não tem acesso a esse recurso.");
         }
         return storageService.getSignedUrl("item", objectName, 3600, method);
+    }
+
+    public record ActiveRequest(@NotNull Boolean active) {}
+
+    @PutMapping("/{id}/active")
+    public ResponseEntity<ItemDTO> changeActive(@PathVariable Long id, @RequestBody @Valid ActiveRequest request) {
+        return ResponseEntity.ok(toDto(service.changeActive(id, request.active())));
+    }
+
+    @PostMapping("/search/all")
+    public ResponseEntity<PagedModel<ItemDTO>> searchAll(@RequestBody @Valid SearchRequest request) {
+        return ResponseEntity.ok(toPageDTO(service.searchAll(request), SearchHandler.getPageable(request)));
     }
 
     @Override

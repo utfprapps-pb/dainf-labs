@@ -23,9 +23,11 @@ import java.util.Objects;
 public class ReservationService extends CrudService<Long, Reservation, ReservationRepository> {
 
     private final UserService userService;
+    private final ItemLifecycleService lifecycle;
 
-    public ReservationService(UserService userService) {
+    public ReservationService(UserService userService, ItemLifecycleService lifecycle) {
         this.userService = userService;
+        this.lifecycle = lifecycle;
     }
 
     @Override
@@ -44,8 +46,11 @@ public class ReservationService extends CrudService<Long, Reservation, Reservati
     }
 
     @Override
+    @jakarta.transaction.Transactional
     public Reservation save(Reservation entity) {
         validateAccess(entity);
+        if (entity.getItems() != null) entity.getItems().stream().map(line -> line.getItem().getId())
+                .distinct().sorted().forEach(lifecycle::requireActive);
         if (entity.getReservationDate() != null && entity.getWithdrawalDate() != null
                 && entity.getWithdrawalDate().isBefore(entity.getReservationDate())) {
             throw new WarnException("A data de retirada não pode ser anterior à data da reserva.");

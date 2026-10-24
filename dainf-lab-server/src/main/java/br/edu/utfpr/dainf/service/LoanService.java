@@ -102,6 +102,7 @@ public class LoanService extends CrudService<Long, Loan, LoanRepository> {
 
         Loan existing = entity.getId() != null ? repository.findById(entity.getId()).orElse(null) : null;
         List<LoanItem> oldItems = existing != null ? new ArrayList<>(existing.getItems()) : List.of();
+        inventoryDiffService.validateChanges(oldItems, entity.getItems());
 
         for (LoanItem item : entity.getItems()) {
             item.setLoan(entity);

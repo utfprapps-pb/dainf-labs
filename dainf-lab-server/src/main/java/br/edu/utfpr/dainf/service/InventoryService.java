@@ -1,6 +1,7 @@
 package br.edu.utfpr.dainf.service;
 
 import br.edu.utfpr.dainf.enums.InventoryTransactionType;
+import br.edu.utfpr.dainf.inventory.InventoryLineItem;
 import br.edu.utfpr.dainf.inventory.TransactionFactory;
 import br.edu.utfpr.dainf.inventory.TransactionProcessor;
 import br.edu.utfpr.dainf.inventory.auditor.TransactionAuditor;
@@ -14,15 +15,18 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 public class InventoryService extends CrudService<Long, Inventory, InventoryRepository> {
 
     private final TransactionAuditor auditor;
+    private final ItemLifecycleService lifecycle;
     private final ConfigurationService configurationService;
 
-    public InventoryService(TransactionAuditor auditor, ConfigurationService configurationService) {
+    public InventoryService(TransactionAuditor auditor, ConfigurationService configurationService, ItemLifecycleService lifecycle) {
         this.auditor = auditor;
+        this.lifecycle = lifecycle;
         this.configurationService = configurationService;
     }
 
@@ -44,6 +48,7 @@ public class InventoryService extends CrudService<Long, Inventory, InventoryRepo
 
     @Transactional
     public void handleTransaction(Item item, BigDecimal quantity, InventoryTransactionType type, Long referenceId) {
+        lifecycle.requireActive(item.getId());
         Inventory inventory = findByItem(item);
 
         TransactionProcessor processor = createProcessor(type);
@@ -54,6 +59,7 @@ public class InventoryService extends CrudService<Long, Inventory, InventoryRepo
 
     @Transactional
     public void undoTransaction(Item item, BigDecimal oldQuantity, InventoryTransactionType oldType) {
+        lifecycle.requireActive(item.getId());
         Inventory inventory = findByItem(item);
 
         InventoryTransactionType reverseType = TransactionFactory.reverseType(oldType);
@@ -135,6 +141,11 @@ public class InventoryService extends CrudService<Long, Inventory, InventoryRepo
         boolean useMinimumStockValidator = configurationService.get().isUseMinimumStockValidator();
         TransactionValidator validator = TransactionFactory.createValidators(type, useMinimumStockValidator);
         return new TransactionProcessor(transaction, validator, auditor);
+    }
+
+    public void validateChanges(List<? extends InventoryLineItem> oldItems,
+                                List<? extends InventoryLineItem> newItems) {
+        lifecycle.validateChanges(oldItems, newItems);
     }
 
     private BigDecimal defaultZero(BigDecimal value) {
