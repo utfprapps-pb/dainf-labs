@@ -4,15 +4,23 @@ import br.edu.utfpr.dainf.dto.AssetDTO;
 import br.edu.utfpr.dainf.dto.CategoryDTO;
 import br.edu.utfpr.dainf.dto.ItemDTO;
 import br.edu.utfpr.dainf.enums.ItemType;
+import br.edu.utfpr.dainf.enums.UserRole;
+import br.edu.utfpr.dainf.model.User;
+import br.edu.utfpr.dainf.search.request.SearchRequest;
+import br.edu.utfpr.dainf.search.request.filter.SearchFilter;
 import br.edu.utfpr.dainf.shared.CrudControllerTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
 import java.util.List;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class ItemControllerTest extends CrudControllerTest<ItemDTO> {
@@ -38,6 +46,7 @@ class ItemControllerTest extends CrudControllerTest<ItemDTO> {
     @Override
     protected ItemDTO createValidObject() {
         return ItemDTO.builder()
+                .restricted(true)
                 .name("Teste")
                 .description("Descrição")
                 .price(BigDecimal.TEN)
@@ -149,5 +158,45 @@ class ItemControllerTest extends CrudControllerTest<ItemDTO> {
                 .type(ItemType.CONSUMABLE)
                 .build();
         performCreate(dto).andExpect(status().isCreated());
+    }
+
+    @Test
+    void searchHidesRestrictedItemFromStudent() throws Exception {
+        Long itemId = createResource();
+        SearchRequest request = SearchRequest.builder()
+                .filters(List.of(new SearchFilter("id", itemId, SearchFilter.Type.EQUALS)))
+                .build();
+
+        mockMvc.perform(post("/items/search")
+                        .with(user(userWithRole(UserRole.ROLE_STUDENT)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJson(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isEmpty());
+    }
+
+    @Test
+    void searchShowsRestrictedItemToStaff() throws Exception {
+        Long itemId = createResource();
+        SearchRequest request = SearchRequest.builder()
+                .filters(List.of(new SearchFilter("id", itemId, SearchFilter.Type.EQUALS)))
+                .build();
+
+        mockMvc.perform(post("/items/search")
+                        .with(user(userWithRole(UserRole.ROLE_LAB_TECHNICIAN)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJson(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].id").value(itemId))
+                .andExpect(jsonPath("$.content[0].restricted").value(true));
+    }
+
+    private User userWithRole(UserRole role) {
+        User user = new User();
+        user.setEmail(role.name().toLowerCase() + "@utfpr.edu.br");
+        user.setPassword("Teste123456!");
+        user.setRole(role);
+        user.setEnabled(true);
+        return user;
     }
 }

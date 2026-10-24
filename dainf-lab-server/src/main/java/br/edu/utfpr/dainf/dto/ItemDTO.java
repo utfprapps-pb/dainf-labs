@@ -22,6 +22,8 @@ import java.util.List;
 public class ItemDTO implements Identifiable<Long> {
     private Long id;
 
+    private Boolean restricted = false;
+
     @NotBlank
     @NotNull
     @NotEmpty(message = "O campo 'Nome' é obrigatório")
@@ -46,4 +48,8 @@ public class ItemDTO implements Identifiable<Long> {
 
     @NotNull(message = "O campo 'Tipo' é obrigatório")
     private ItemType type;
+
+    public Boolean getRestricted() {
+        return Boolean.TRUE.equals(restricted);
+    }
 }

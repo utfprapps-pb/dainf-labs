@@ -12,7 +12,7 @@ import { LabelValuePipe } from '@/shared/pipes/label-value.pipe';
 import { CartService } from '@/shared/services/cart.service';
 import { StorageImplService } from '@/shared/storage/storage-impl.service';
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, model } from '@angular/core';
+import { AfterViewInit, Component, computed, inject, model, TemplateRef, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
   FormBuilder,
@@ -27,6 +27,8 @@ import { FieldsetModule } from 'primeng/fieldset';
 import { TableModule } from 'primeng/table';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
+import { TagModule } from 'primeng/tag';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TooltipModule } from 'primeng/tooltip';
 import { Category } from '../category/category';
 import { CategoryService } from '../category/category.service';
@@ -52,6 +54,8 @@ import { ItemService } from './item.service';
     StaticSelectComponent,
     PhotoAttachmentComponent,
     ButtonModule,
+    TagModule,
+    ToggleSwitchModule,
     TooltipModule,
     TableModule
   ],
@@ -67,7 +71,10 @@ import { ItemService } from './item.service';
   selector: 'app-item',
   templateUrl: 'item.component.html',
 })
-export class ItemComponent {
+export class ItemComponent implements AfterViewInit {
+  restrictedTemplate = viewChild<TemplateRef<any>>('restrictedTemplate');
+
+  templateMap: Map<keyof Item | string, TemplateRef<any>> | undefined;
   userService = inject(UserService);
   itemService = inject(ItemService);
   categoryService = inject(CategoryService);
@@ -92,6 +99,7 @@ export class ItemComponent {
 
   form: FormGroup = this.formBuilder.group({
     id: [{ value: null, disabled: true }],
+    restricted: [false],
     name: [
       null,
       Validators.compose([Validators.required, Validators.maxLength(100)]),
@@ -131,6 +139,7 @@ export class ItemComponent {
   cols: Column<Item>[] = [
     { field: 'id', header: 'Código' },
     { field: 'name', header: 'Nome' },
+    { field: 'restricted', header: 'Uso' },
     { field: 'category.description', header: 'Categoria' },
     { field: 'quantity', header: 'Quantidade' },
     {
@@ -148,17 +157,30 @@ export class ItemComponent {
     { field: 'location', header: 'Localização' },
   ];
 
+  restrictedOptions: LabelValue<boolean | null>[] = [
+    { label: 'Todos', value: null },
+    { label: 'Sim', value: true },
+    { label: 'Não', value: false },
+  ];
+
   nameFilter = model<string | undefined>();
   typeFilter = model<string | undefined>();
   categoryFilter = model<Category | undefined>();
   siorgFilter = model<string | undefined>();
   locationFilter = model<string | undefined>();
   idFilter = model<string | undefined>();
+  restrictedFilter = model<boolean | null>(null);
 
   searchRequest = computed<SearchRequest>(() => {
     const filters: SearchFilter[] = [];
     if (this.idFilter())
       filters.push({ field: 'id', value: this.idFilter(), type: 'EQUALS' });
+    if (this.restrictedFilter() !== null)
+      filters.push({
+        field: 'restricted',
+        value: this.restrictedFilter(),
+        type: 'EQUALS',
+      });
     if (this.nameFilter())
       filters.push({ field: 'name', value: this.nameFilter(), type: 'ILIKE' });
     if (this.typeFilter())
@@ -183,6 +205,12 @@ export class ItemComponent {
       });
     return <SearchRequest>{ filters };
   });
+
+  ngAfterViewInit(): void {
+    this.templateMap = new Map([
+      ['restricted', this.restrictedTemplate()!],
+    ]);
+  }
 
   addToCart(item: Item): void {
     this.cartService.addItem(item);
