@@ -60,7 +60,7 @@
 
     <app-input-container
       label="Tipo"
-      class="col-span-12 md:col-span-6 lg:col-span-3"
+      class="col-span-12 md:col-span-6 lg:col-span-4"
     >
       <app-static-select
         [options]="itemTypeOptions"
@@ -123,33 +123,40 @@
       </app-input-container>
     }
 
-    <app-input-container
-      label="Uso restrito"
-      class="col-span-12 md:col-span-6 lg:col-span-4"
+    <p-fieldset
+      legend="Visibilidade e permissionamento"
+      class="col-span-12"
     >
-      <p-toggleswitch class="mt-2" formControlName="restricted" />
-      <small class="text-muted-color">
-        Oculto para alunos e professores; somente o laboratório pode emprestar.
-      </small>
-    </app-input-container>
+      <div class="grid grid-cols-12 gap-4 pt-4">
+        <app-input-container
+          label="Uso restrito"
+          class="col-span-12 md:col-span-4"
+        >
+          <p-toggleswitch class="mt-2" formControlName="restricted" />
+          <small class="text-muted-color">
+            Oculto para alunos e professores; somente o laboratório pode emprestar.
+          </small>
+        </app-input-container>
 
-    <app-input-container
-      label="Visível para grupos"
-      class="col-span-12 lg:col-span-8"
-    >
-      <p-multiselect
-        [options]="groups()"
-        optionLabel="name"
-        dataKey="id"
-        formControlName="groups"
-        display="chip"
-        [filter]="true"
-        placeholder="Selecione os grupos"
-        appendTo="body"
-        class="w-full"
-      />
-      <small class="text-muted-color">Vazio = visível para todos</small>
-    </app-input-container>
+        <app-input-container
+          label="Visível para grupos"
+          class="col-span-12 md:col-span-8"
+        >
+          <p-multiselect
+            [options]="groups()"
+            optionLabel="name"
+            dataKey="id"
+            formControlName="groups"
+            display="chip"
+            [filter]="true"
+            placeholder="Selecione os grupos"
+            appendTo="body"
+            class="w-full"
+          />
+          <small class="text-muted-color">Vazio = visível para todos</small>
+        </app-input-container>
+      </div>
+    </p-fieldset>
 
     <app-input-container label="Fotos" class="col-span-12">
       <app-photo-attachment
