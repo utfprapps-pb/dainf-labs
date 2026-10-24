@@ -21,6 +21,8 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { ConfirmationService, MenuItem, MessageService } from 'primeng/api';
+import { extractErrorMessage } from '@/shared/utils/error.utils';
 import { ButtonModule } from 'primeng/button';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { FieldsetModule } from 'primeng/fieldset';
@@ -31,6 +33,7 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { Select } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { MenuModule } from 'primeng/menu';
 import { TooltipModule } from 'primeng/tooltip';
 import { catchError, map, of, switchMap } from 'rxjs';
 import { Category } from '../category/category';
@@ -41,7 +44,7 @@ import { LoanService } from '../loan/loan.service';
 import { UserService } from '../user/user.service';
 import { ActiveLoansDialog } from './active-loans-dialog/active-loans-dialog';
 import { Asset, Item, ItemType } from './item';
-import { ItemService } from './item.service';
+import { AllItemsService } from './item.service';
 
 @Component({
   standalone: true,
@@ -63,11 +66,12 @@ import { ItemService } from './item.service';
     ButtonModule,
     TagModule,
     ToggleSwitchModule,
+    MenuModule,
     TooltipModule,
     TableModule
   ],
   providers: [
-    ItemService,
+    AllItemsService,
     CategoryService,
     GroupService,
     UserService,
@@ -85,7 +89,7 @@ export class ItemComponent implements AfterViewInit {
 
   templateMap: Map<keyof Item | string, TemplateRef<any>> | undefined;
   userService = inject(UserService);
-  itemService = inject(ItemService);
+  itemService = inject(AllItemsService);
   categoryService = inject(CategoryService);
   groupService = inject(GroupService);
   loanService = inject(LoanService);
@@ -93,8 +97,11 @@ export class ItemComponent implements AfterViewInit {
   labelValue = inject(LabelValuePipe);
   cartService = inject(CartService);
   dialogService = inject(DialogService);
+  confirmationService = inject(ConfirmationService);
+  messageService = inject(MessageService);
 
   dialogRef: DynamicDialogRef | undefined;
+  private readonly itemActionCache = new WeakMap<Item, MenuItem[]>();
 
   userHasAdvancedPrivileges = toSignal(this.userService.hasAdvancedPrivileges(), { initialValue: false });
 
@@ -165,6 +172,7 @@ export class ItemComponent implements AfterViewInit {
     { field: 'name', header: 'Nome' },
     { field: 'restricted', header: 'Uso' },
     { field: 'groups', header: 'Grupos' },
+    { field: 'active', header: 'Situação', transform: item => item.active ? 'Ativo' : 'Inativo' },
     { field: 'category.description', header: 'Categoria' },
     { field: 'quantity', header: 'Quantidade' },
     {
@@ -188,6 +196,20 @@ export class ItemComponent implements AfterViewInit {
     { label: 'Não', value: false },
   ];
 
+  activeFilter = model<string>('active');
+  activeOptions = [
+    { label: 'Ativos', value: 'active' },
+    { label: 'Inativos', value: 'inactive' },
+    { label: 'Todos', value: 'all' },
+  ];
+
+  stockFilter = model<string>('all');
+  stockOptions = [
+    { label: 'Todos', value: 'all' },
+    { label: 'Saldo zerado', value: 'ZERO' },
+    { label: 'Com saldo', value: 'POSITIVE' },
+  ];
+
   nameFilter = model<string | undefined>();
   typeFilter = model<string | undefined>();
   categoryFilter = model<Category | undefined>();
@@ -199,6 +221,16 @@ export class ItemComponent implements AfterViewInit {
 
   searchRequest = computed<SearchRequest>(() => {
     const filters: SearchFilter[] = [];
+    if (this.activeFilter() === 'active' || this.activeFilter() === 'inactive') {
+      filters.push({ field: 'active', value: this.activeFilter() === 'active', type: 'EQUALS' });
+    }
+    if (this.stockFilter() !== 'all') {
+      filters.push({
+        field: 'stockStatus',
+        value: this.stockFilter(),
+        type: 'EQUALS',
+      });
+    }
     if (this.idFilter())
       filters.push({ field: 'id', value: this.idFilter(), type: 'EQUALS' });
     if (this.restrictedFilter() !== null)
@@ -243,6 +275,47 @@ export class ItemComponent implements AfterViewInit {
       ['restricted', this.restrictedTemplate()!],
       ['groups', this.groupsTemplate()!],
     ]);
+  }
+
+  changeActive(item: Item, crud: CrudComponent<Item>): void {
+    const active = !item.active;
+    this.confirmationService.confirm({
+      header: active ? 'Reativar item' : 'Inativar item',
+      message: active
+        ? `Reativar "${item.name}" para novas operações?`
+        : `Inativar “${item.name}”?<br>O histórico será mantido.`,
+      acceptLabel: 'Confirmar',
+      rejectLabel: 'Cancelar',
+      accept: () => this.itemService.setActive(item.id, active).subscribe({
+        next: () => {
+          crud.loadItems();
+          this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: active ? 'Item reativado.' : 'Item inativado.' });
+        },
+        error: error => this.messageService.add({ severity: 'warn', summary: 'Atenção', detail: extractErrorMessage(error) }),
+      }),
+    });
+  }
+
+  itemActions(item: Item, crud: CrudComponent<Item>): MenuItem[] {
+    const cachedActions = this.itemActionCache.get(item);
+    if (cachedActions) {
+      return cachedActions;
+    }
+
+    const actions: MenuItem[] = [
+      {
+        label: 'Excluir',
+        icon: 'pi pi-trash',
+        command: () => queueMicrotask(() => crud.deleteOne(item)),
+      },
+      {
+        label: item.active ? 'Inativar' : 'Reativar',
+        icon: item.active ? 'pi pi-ban' : 'pi pi-check-circle',
+        command: () => queueMicrotask(() => this.changeActive(item, crud)),
+      },
+    ];
+    this.itemActionCache.set(item, actions);
+    return actions;
   }
 
   addToCart(item: Item): void {

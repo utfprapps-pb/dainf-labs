@@ -5,6 +5,7 @@ import { Group } from '../group/group';
 export interface Item extends Identifiable {
   restricted?: boolean;
   groups?: Group[];
+  active: boolean;
   name: string;
   description: string;
   price: number;

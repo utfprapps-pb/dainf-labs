@@ -48,8 +48,12 @@ public class ReturnService extends CrudService<Long, Return, ReturnRepository> {
 
         Return existing = entity.getId() != null ? repository.findById(entity.getId()).orElse(null) : null;
         List<ReturnItem> oldItems = existing != null ? new ArrayList<>(existing.getItems()) : List.of();
+        inventoryDiffService.validateChanges(oldItems, entity.getItems());
 
         Loan loan = resolveLoan(entity);
+        if (existing != null && !existing.getLoan().getId().equals(loan.getId())) {
+            throw new WarnException("Não é possível alterar o empréstimo de uma devolução existente.");
+        }
         entity.setLoan(loan);
         validateReturnQuantities(entity, loan);
 
@@ -70,6 +74,15 @@ public class ReturnService extends CrudService<Long, Return, ReturnRepository> {
             loanService.refreshStatus(saved.getLoan());
         }
         return saved;
+    }
+
+    @Override
+    @Transactional
+    public void deleteById(Long id) {
+        repository.findById(id).ifPresent(entity -> {
+            inventoryDiffService.validateChanges(entity.getItems(), List.of());
+            repository.delete(entity);
+        });
     }
 
     public Return findByLoanId(Long loanId) {

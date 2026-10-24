@@ -22,10 +22,12 @@ public class ReservationService extends CrudService<Long, Reservation, Reservati
 
     private final UserService userService;
     private final ItemService itemService;
+    private final ItemLifecycleService lifecycle;
 
-    public ReservationService(UserService userService, ItemService itemService) {
+    public ReservationService(UserService userService, ItemService itemService, ItemLifecycleService lifecycle) {
         this.userService = userService;
         this.itemService = itemService;
+        this.lifecycle = lifecycle;
     }
 
     @Override
@@ -44,8 +46,11 @@ public class ReservationService extends CrudService<Long, Reservation, Reservati
     }
 
     @Override
+    @jakarta.transaction.Transactional
     public Reservation save(Reservation entity) {
         validateAccess(entity);
+        if (entity.getItems() != null) entity.getItems().stream().map(line -> line.getItem().getId())
+                .distinct().sorted().forEach(lifecycle::requireActive);
         if (entity.getItems() != null && !userService.hasPrivilegedAcess()) {
             List<Item> items = entity.getItems().stream()
                     .map(ReservationItem::getItem)

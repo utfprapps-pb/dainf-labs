@@ -18,11 +18,13 @@ public class CartService {
 
     private final CartRepository repository;
     private final ItemService itemService;
+    private final ItemLifecycleService lifecycle;
     private final UserService userService;
 
-    public CartService(CartRepository repository, ItemService itemService, UserService userService) {
+    public CartService(CartRepository repository, ItemService itemService, UserService userService, ItemLifecycleService lifecycle) {
         this.repository = repository;
         this.itemService = itemService;
+        this.lifecycle = lifecycle;
         this.userService = userService;
     }
 
@@ -35,6 +37,7 @@ public class CartService {
                         .orElseThrow(() -> new WarnException("Item não encontrado")))
                 .toList();
         itemService.validateVisible(items);
+        if (itemsDTO != null) itemsDTO.stream().map(dto -> dto.getItem().getId()).distinct().sorted().forEach(lifecycle::requireActive);
 
         Cart cart = findCart();
         cart.getItems().clear();
