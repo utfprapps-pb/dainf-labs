@@ -40,6 +40,13 @@ public class UserController extends CrudController<Long, User, UserDTO, UserRepo
     }
 
     @Override
+    @PutMapping("/{id}")
+    @RolesAllowed({UserRole.ADMIN, UserRole.LAB_TECHNICIAN})
+    public ResponseEntity<Long> update(@RequestBody @Valid UserDTO dto, @PathVariable Long id) {
+        return super.update(dto, id);
+    }
+
+    @Override
     @PostMapping("/search")
     @RolesAllowed({UserRole.ADMIN, UserRole.LAB_TECHNICIAN})
     public ResponseEntity<PagedModel<UserDTO>> search(SearchRequest request) {

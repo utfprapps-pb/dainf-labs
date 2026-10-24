@@ -1,4 +1,5 @@
 import { Identifiable } from "@/shared/crud/crud";
+import { Group } from '../group/group';
 
 export interface User extends Identifiable {
   id: number;
@@ -10,4 +11,5 @@ export interface User extends Identifiable {
   role?: string;
   enabled?: boolean;
   emailVerificado?: boolean;
+  groups?: Group[];
 }

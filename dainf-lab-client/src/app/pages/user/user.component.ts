@@ -6,6 +6,7 @@ import { TelefonePipe } from '@/shared/pipes/telefone.pipe';
 import { utfprEmailValidator } from '@/shared/validator/utfpr-email.validator';
 import { passwordStrengthValidator } from '@/shared/validator/password.validator';
 import { AfterViewInit, Component, computed, inject, model, signal, TemplateRef, viewChild } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import {
   FormBuilder,
   FormGroup,
@@ -16,11 +17,13 @@ import {
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
+import { MultiSelectModule } from 'primeng/multiselect';
 import { Select } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TooltipModule } from 'primeng/tooltip';
-import { catchError, take, tap } from 'rxjs';
+import { catchError, map, take, tap } from 'rxjs';
+import { GroupService } from '../group/group.service';
 import { User } from './user';
 import { UserService } from './user.service';
 
@@ -31,6 +34,7 @@ import { UserService } from './user.service';
     FormsModule,
     ReactiveFormsModule,
     InputTextModule,
+    MultiSelectModule,
     InputContainerComponent,
     Select,
     Button,
@@ -40,7 +44,7 @@ import { UserService } from './user.service';
   ],
   selector: 'app-user',
   templateUrl: 'user.component.html',
-  providers: [UserService, TelefonePipe],
+  providers: [UserService, GroupService, TelefonePipe],
 })
 export class UserComponent implements AfterViewInit {
   roleTemplate = viewChild<TemplateRef<any>>('roleTemplate');
@@ -50,6 +54,7 @@ export class UserComponent implements AfterViewInit {
   emailNaoVerificado = signal(false);
 
   userService = inject(UserService);
+  groupService = inject(GroupService);
   confirmationService = inject(ConfirmationService);
   messageService = inject(MessageService);
   formBuilder = inject(FormBuilder);
@@ -64,7 +69,15 @@ export class UserComponent implements AfterViewInit {
     role: [null, Validators.required],
     password: [null, Validators.compose([Validators.minLength(6), passwordStrengthValidator()])],
     enabled: [true],
+    groups: [[]],
   });
+
+  groups = toSignal(
+    this.groupService
+      .search({ rows: 1000, filters: [] })
+      .pipe(map((page) => page.content)),
+    { initialValue: [] },
+  );
 
   cols: Column<User>[] = [
     { field: 'email', header: 'E-mail' },

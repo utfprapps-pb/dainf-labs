@@ -2,8 +2,10 @@ package br.edu.utfpr.dainf.shared;
 
 import br.edu.utfpr.dainf.search.SearchHandler;
 import br.edu.utfpr.dainf.search.request.SearchRequest;
+import br.edu.utfpr.dainf.search.request.filter.SearchFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.io.Serializable;
@@ -30,7 +32,16 @@ public abstract class CrudService<ID extends Serializable, E extends Identifiabl
         return null;
     }
 
+    protected Specification<E> extraSpecification() {
+        return null;
+    }
+
+    protected Specification<E> customSpecification(SearchFilter filter) {
+        return null;
+    }
+
     public Page<E> search(SearchRequest request) {
-        return new SearchHandler<>(getSpecExecutor()).handle(request);
+        return new SearchHandler<>(getSpecExecutor(), this::customSpecification)
+                .handle(request, extraSpecification());
     }
 }

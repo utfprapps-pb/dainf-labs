@@ -12,7 +12,9 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Builder
 @Getter
@@ -23,6 +25,9 @@ public class ItemDTO implements Identifiable<Long> {
     private Long id;
 
     private Boolean restricted = false;
+
+    @Builder.Default
+    private Set<GroupDTO> groups = new HashSet<>();
 
     @NotBlank
     @NotNull

@@ -2,6 +2,7 @@ package br.edu.utfpr.dainf.service;
 
 import br.edu.utfpr.dainf.enums.UserRole;
 import br.edu.utfpr.dainf.exception.WarnException;
+import br.edu.utfpr.dainf.model.Group;
 import br.edu.utfpr.dainf.model.Item;
 import br.edu.utfpr.dainf.model.User;
 import br.edu.utfpr.dainf.repository.ItemRepository;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -108,9 +110,61 @@ class ItemServiceTest {
         assertTrue(itemService.isVisibleTo(item, user(UserRole.ROLE_LAB_TECHNICIAN)));
     }
 
+    @Test
+    void isVisibleToAllowsItemWhenUserBelongsToAnActiveGroup() {
+        Group robotinic = group(1L, true);
+        Item item = new Item();
+        item.setGroups(Set.of(robotinic));
+        User student = user(UserRole.ROLE_STUDENT);
+        student.setGroups(Set.of(robotinic));
+
+        assertTrue(itemService.isVisibleTo(item, student));
+    }
+
+    @Test
+    void isVisibleToHidesItemFromUserInAnotherGroup() {
+        Item item = new Item();
+        item.setGroups(Set.of(group(1L, true)));
+        User student = user(UserRole.ROLE_STUDENT);
+        student.setGroups(Set.of(group(2L, true)));
+
+        assertFalse(itemService.isVisibleTo(item, student));
+    }
+
+    @Test
+    void isVisibleToHidesItemWhenSharedGroupIsInactive() {
+        Group inactiveGroup = group(1L, false);
+        Item item = new Item();
+        item.setGroups(Set.of(inactiveGroup));
+        User student = user(UserRole.ROLE_STUDENT);
+        student.setGroups(Set.of(inactiveGroup));
+
+        assertFalse(itemService.isVisibleTo(item, student));
+    }
+
+    @Test
+    void isVisibleToKeepsRestrictedItemHiddenFromGroupMember() {
+        Group robotinic = group(1L, true);
+        Item item = new Item();
+        item.setRestricted(true);
+        item.setGroups(Set.of(robotinic));
+        User student = user(UserRole.ROLE_STUDENT);
+        student.setGroups(Set.of(robotinic));
+
+        assertFalse(itemService.isVisibleTo(item, student));
+    }
+
     private User user(UserRole role) {
         User user = new User();
         user.setRole(role);
         return user;
+    }
+
+    private Group group(Long id, boolean active) {
+        Group group = new Group();
+        group.setId(id);
+        group.setName("Grupo " + id);
+        group.setActive(active);
+        return group;
     }
 }

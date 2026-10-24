@@ -1,0 +1,51 @@
+<app-crud
+  [columns]="cols"
+  [service]="groupService"
+  [config]="config"
+  [form]="form"
+  [formTemplate]="crudForm"
+  [filtersTemplate]="filters"
+  [searchRequest]="searchRequest()"
+></app-crud>
+
+<ng-template #crudForm>
+  <form [formGroup]="form" class="grid grid-cols-12 gap-4">
+    <app-input-container
+      label="Código"
+      class="col-span-12 md:col-span-2"
+    >
+      <input type="text" pInputText formControlName="id" fluid />
+    </app-input-container>
+
+    <app-input-container label="Nome" class="col-span-12 md:col-span-7">
+      <input type="text" pInputText formControlName="name" fluid />
+    </app-input-container>
+
+    <app-input-container label="Ativo" class="col-span-12 md:col-span-3">
+      <p-toggleswitch class="mt-2" formControlName="active" />
+    </app-input-container>
+
+    <app-input-container label="Descrição" class="col-span-12">
+      <textarea pTextarea formControlName="description" rows="4"></textarea>
+    </app-input-container>
+  </form>
+</ng-template>
+
+<ng-template #filters>
+  <div class="grid grid-cols-12 gap-4">
+    <app-input-container label="Nome" class="col-span-12">
+      <input type="text" pInputText [(ngModel)]="nameFilter" fluid />
+    </app-input-container>
+
+    <app-input-container label="Status" class="col-span-12">
+      <select
+        class="w-full p-2 border rounded-md bg-transparent"
+        [(ngModel)]="activeFilter"
+      >
+        <option [ngValue]="null">Todos</option>
+        <option [ngValue]="true">Ativo</option>
+        <option [ngValue]="false">Inativo</option>
+      </select>
+    </app-input-container>
+  </div>
+</ng-template>

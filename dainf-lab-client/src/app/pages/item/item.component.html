@@ -19,6 +19,16 @@
   }
 </ng-template>
 
+<ng-template #groupsTemplate let-row>
+  <div class="flex flex-wrap gap-1">
+    @for (group of row.groups; track group.id) {
+      <p-tag [value]="group.name" severity="info" />
+    } @empty {
+      <span class="text-muted-color">Público</span>
+    }
+  </div>
+</ng-template>
+
 <ng-template #crudForm>
   <form [formGroup]="form" class="grid grid-cols-12 gap-4">
     <app-input-container
@@ -56,16 +66,6 @@
         [options]="itemTypeOptions"
         formControlName="type"
       ></app-static-select>
-    </app-input-container>
-
-    <app-input-container
-      label="Uso restrito"
-      class="col-span-12 md:col-span-6 lg:col-span-4"
-    >
-      <p-toggleswitch class="mt-2" formControlName="restricted" />
-      <small class="text-muted-color">
-        Oculto para alunos e professores; somente o laboratório pode emprestar.
-      </small>
     </app-input-container>
 
     <app-input-container
@@ -122,6 +122,34 @@
         <input type="text" pInputText id="location" formControlName="location" fluid />
       </app-input-container>
     }
+
+    <app-input-container
+      label="Uso restrito"
+      class="col-span-12 md:col-span-6 lg:col-span-4"
+    >
+      <p-toggleswitch class="mt-2" formControlName="restricted" />
+      <small class="text-muted-color">
+        Oculto para alunos e professores; somente o laboratório pode emprestar.
+      </small>
+    </app-input-container>
+
+    <app-input-container
+      label="Visível para grupos"
+      class="col-span-12 lg:col-span-8"
+    >
+      <p-multiselect
+        [options]="groups()"
+        optionLabel="name"
+        dataKey="id"
+        formControlName="groups"
+        display="chip"
+        [filter]="true"
+        placeholder="Selecione os grupos"
+        appendTo="body"
+        class="w-full"
+      />
+      <small class="text-muted-color">Vazio = visível para todos</small>
+    </app-input-container>
 
     <app-input-container label="Fotos" class="col-span-12">
       <app-photo-attachment
@@ -196,6 +224,19 @@
       [options]="restrictedOptions"
       [(ngModel)]="restrictedFilter"
     ></app-static-select>
+  </app-input-container>
+
+  <app-input-container label="Grupo" class="col-span-12">
+    <p-select
+      [options]="groups()"
+      [(ngModel)]="groupFilter"
+      optionLabel="name"
+      dataKey="id"
+      placeholder="Todos"
+      [showClear]="true"
+      appendTo="body"
+      class="w-full"
+    />
   </app-input-container>
 
   <app-input-container label="Tipo" class="col-span-12">
