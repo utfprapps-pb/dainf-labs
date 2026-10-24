@@ -12,8 +12,11 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class SearchHandler<ID extends Serializable, E extends Identifiable<ID>> {
@@ -31,18 +34,52 @@ public class SearchHandler<ID extends Serializable, E extends Identifiable<ID>> 
     }
 
     public Page<E> handle(SearchRequest searchRequest) {
-        List<Specification<E>> specifications = createSpecifications(searchRequest.getFilters());
+        return handle(searchRequest, null, Collections.emptyMap());
+    }
+
+    public Page<E> handle(SearchRequest searchRequest, Specification<E> additionalSpecification) {
+        return handle(searchRequest, additionalSpecification, Collections.emptyMap());
+    }
+
+    public Page<E> handle(
+            SearchRequest searchRequest,
+            Specification<E> additionalSpecification,
+            Map<String, Function<SearchFilter, Specification<E>>> customFilters
+    ) {
+        List<Specification<E>> specifications = createSpecifications(searchRequest.getFilters(), customFilters);
         Pageable pageable = getPageable(searchRequest);
+        Specification<E> specification = Specification.allOf(specifications);
+        if (additionalSpecification != null) {
+            specification = specification.and(additionalSpecification);
+        }
         return executor.findAll(
-                Specification.allOf(specifications),
+                specification,
                 pageable
         );
     }
 
     List<Specification<E>> createSpecifications(List<SearchFilter> filters) {
+        return createSpecifications(filters, Collections.emptyMap());
+    }
+
+    List<Specification<E>> createSpecifications(
+            List<SearchFilter> filters,
+            Map<String, Function<SearchFilter, Specification<E>>> customFilters
+    ) {
+        if (filters == null) {
+            return Collections.emptyList();
+        }
         return filters.stream()
-                .map(this::buildSpecification)
+                .map(filter -> buildSpecification(filter, customFilters))
                 .collect(Collectors.toList());
+    }
+
+    Specification<E> buildSpecification(
+            SearchFilter filter,
+            Map<String, Function<SearchFilter, Specification<E>>> customFilters
+    ) {
+        Function<SearchFilter, Specification<E>> customFilter = customFilters.get(filter.getField());
+        return customFilter == null ? buildSpecification(filter) : customFilter.apply(filter);
     }
 
     Specification<E> buildSpecification(SearchFilter filter) {

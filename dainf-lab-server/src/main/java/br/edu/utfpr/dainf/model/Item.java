@@ -29,6 +29,9 @@ public class Item implements Identifiable<Long> {
     @Column(name = "id")
     private Long id;
 
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private boolean active = true;
+
     @NotBlank
     @NotNull
     @NotEmpty(message = "O campo 'Nome' é obrigatório")

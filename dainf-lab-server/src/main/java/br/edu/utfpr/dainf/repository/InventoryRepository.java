@@ -21,7 +21,7 @@ public interface InventoryRepository extends CrudRepository<Long, Inventory> {
                 inv.item.category.description
             )
             FROM Inventory inv
-            WHERE inv.item.minimumStock IS NOT NULL
+            WHERE inv.item.active = true AND inv.item.minimumStock IS NOT NULL
               AND inv.quantity < inv.item.minimumStock
             ORDER BY inv.quantity ASC
             """)

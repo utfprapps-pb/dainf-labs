@@ -78,7 +78,7 @@ class InventoryOperationsE2ETest {
 
         auditor = new DefaultTransactionAuditor(inventoryTransactionService, userService);
 
-        inventoryService = new InventoryService(auditor, configurationService);
+        inventoryService = new InventoryService(auditor, configurationService, org.mockito.Mockito.mock(ItemLifecycleService.class));
         ReflectionTestUtils.setField(inventoryService, "repository", inventoryRepository);
 
         inventoryDiffService = new InventoryDiffService(inventoryService);

@@ -165,56 +165,80 @@
 </ng-template>
 
 <ng-template #filters>
-  <app-input-container label="Código" class="col-span-12">
-    <input type="text" pInputText [(ngModel)]="idFilter" fluid />
-  </app-input-container>
-  <app-input-container label="Nome" class="col-span-12">
-    <input type="text" pInputText id="name" [(ngModel)]="nameFilter" fluid />
-  </app-input-container>
+  <div class="grid grid-cols-12 gap-6">
+    <app-input-container label="Situação" class="col-span-12">
+      <app-static-select [options]="activeOptions" [(ngModel)]="activeFilter"></app-static-select>
+    </app-input-container>
+    <app-input-container label="Saldo" class="col-span-12">
+      <app-static-select [options]="stockOptions" [(ngModel)]="stockFilter"></app-static-select>
+    </app-input-container>
+    <app-input-container label="Código" class="col-span-12">
+      <input type="text" pInputText [(ngModel)]="idFilter" fluid />
+    </app-input-container>
+    <app-input-container label="Nome" class="col-span-12">
+      <input type="text" pInputText id="name" [(ngModel)]="nameFilter" fluid />
+    </app-input-container>
 
-  <app-input-container label="Tipo" class="col-span-12">
-    <app-static-select
-      [options]="itemTypeOptions"
-      [(ngModel)]="typeFilter"
-    ></app-static-select>
-  </app-input-container>
+    <app-input-container label="Tipo" class="col-span-12">
+      <app-static-select
+        [options]="itemTypeOptions"
+        [(ngModel)]="typeFilter"
+      ></app-static-select>
+    </app-input-container>
 
-  <app-input-container label="Categoria" class="col-span-12">
-    <app-category-select [(ngModel)]="categoryFilter"></app-category-select>
-  </app-input-container>
+    <app-input-container label="Categoria" class="col-span-12">
+      <app-category-select [(ngModel)]="categoryFilter"></app-category-select>
+    </app-input-container>
 
-  <app-input-container label="Siorg" class="col-span-12">
-    <input type="text" pInputText id="siorg" [(ngModel)]="siorgFilter" fluid />
-  </app-input-container>
+    <app-input-container label="Siorg" class="col-span-12">
+      <input type="text" pInputText id="siorg" [(ngModel)]="siorgFilter" fluid />
+    </app-input-container>
 
-  <app-input-container label="Localização" class="col-span-12">
-    <input type="text" pInputText id="location" [(ngModel)]="locationFilter" />
-  </app-input-container>
+    <app-input-container label="Localização" class="col-span-12">
+      <input type="text" pInputText id="location" [(ngModel)]="locationFilter" />
+    </app-input-container>
+  </div>
 </ng-template>
 
 <ng-template #customActions let-row>
-  <p-button
-    icon="pi pi-cart-plus"
-    pTooltip="Adicionar ao Carrinho"
-    styleClass="mr-2"
-    tooltipPosition="left"
-    (click)="addToCart(row)"
-  ></p-button>
+  <div class="flex flex-nowrap items-center gap-2 whitespace-nowrap">
+    <p-button
+      icon="pi pi-cart-plus"
+      [disabled]="!row.active"
+      pTooltip="Adicionar ao Carrinho"
+      tooltipPosition="left"
+      (click)="addToCart(row)"
+    ></p-button>
 
-  @if (userHasAdvancedPrivileges()) {
-    <p-button
-      icon="pi pi-clock"
-      pTooltip="Ver empréstimos do item"
-      styleClass="p-button-secondary mr-2"
-      tooltipPosition="left"
-      (click)="showActiveLoans(row)"
-    ></p-button>
-    <p-button
-      icon="pi pi-pencil"
-      styleClass="p-button-secondary mr-2"
-      pTooltip="Editar"
-      tooltipPosition="left"
-      (click)="crud.edit(row)"
-    ></p-button>
-  }
+    @if (userHasAdvancedPrivileges()) {
+      <p-button
+        icon="pi pi-clock"
+        pTooltip="Ver empréstimos do item"
+        styleClass="p-button-secondary"
+        tooltipPosition="left"
+        (click)="showActiveLoans(row)"
+      ></p-button>
+      <p-button
+        icon="pi pi-pencil"
+        styleClass="p-button-secondary"
+        pTooltip="Editar"
+        tooltipPosition="left"
+        (click)="crud.edit(row)"
+      ></p-button>
+      <p-menu
+        #actionsMenu
+        [model]="itemActions(row, crud)"
+        [popup]="true"
+        appendTo="body"
+      ></p-menu>
+      <p-button
+        icon="pi pi-cog"
+        styleClass="p-button-secondary"
+        pTooltip="Ações"
+        tooltipPosition="left"
+        ariaLabel="Ações do item"
+        (onClick)="actionsMenu.toggle($event)"
+      ></p-button>
+    }
+  </div>
 </ng-template>

@@ -53,7 +53,7 @@ class LoanServiceInventoryTest {
         store.clear();
         idSeq = 1;
 
-        inventoryService = new InventoryService(auditor, configurationService);
+        inventoryService = new InventoryService(auditor, configurationService, org.mockito.Mockito.mock(ItemLifecycleService.class));
         ReflectionTestUtils.setField(inventoryService, "repository", inventoryRepository);
 
         inventoryDiffService = new InventoryDiffService(inventoryService);

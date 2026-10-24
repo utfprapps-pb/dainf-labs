@@ -33,6 +33,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class InventoryServiceTest {
 
+    @Mock ItemLifecycleService lifecycle;
     @Mock InventoryRepository repository;
     @Mock ConfigurationService configurationService;
     @Mock TransactionAuditor auditor;
