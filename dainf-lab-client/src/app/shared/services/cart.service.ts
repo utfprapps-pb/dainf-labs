@@ -35,9 +35,14 @@ export class CartService extends BaseService {
     ).subscribe();
   }
 
-  private saveCart(): void {
+  private saveCart(successMessage?: string): void {
     this._http.put<CartItem[]>(this._apiUrl, this.cartItems()).pipe(
-      tap(updatedItems => this.cartItems.set(updatedItems)),
+      tap(updatedItems => {
+        this.cartItems.set(updatedItems);
+        if (successMessage) {
+          this.messageService.add({ severity: 'success', summary: 'Adicionado', detail: successMessage });
+        }
+      }),
       catchError(err => {
         console.error("Failed to save cart", err);
         this.messageService.add({ severity: 'error', summary: 'Erro', detail: extractErrorMessage(err, 'Falha ao salvar carrinho.') });
@@ -60,8 +65,7 @@ export class CartService extends BaseService {
       const newItem: CartItem = { id: 0, item: itemToAdd, quantity: quantity };
       this.cartItems.set([...currentItems, newItem]);
     }
-    this.saveCart();
-    this.messageService.add({ severity: 'success', summary: 'Adicionado', detail: `${itemToAdd.name} adicionado ao carrinho.` });
+    this.saveCart(`${itemToAdd.name} adicionado ao carrinho.`);
   }
 
   removeItem(itemId: number): void {

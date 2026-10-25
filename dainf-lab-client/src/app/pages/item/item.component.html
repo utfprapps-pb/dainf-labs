@@ -8,7 +8,16 @@
   [formTemplate]="crudForm"
   [filtersTemplate]="filters"
   [searchRequest]="searchRequest()"
+  [templateMap]="templateMap"
 ></app-crud>
+
+<ng-template #restrictedTemplate let-row>
+  @if (row.restricted) {
+    <p-tag value="Restrito" severity="warn" />
+  } @else {
+    <p-tag value="Comum" severity="secondary" />
+  }
+</ng-template>
 
 <ng-template #crudForm>
   <form [formGroup]="form" class="grid grid-cols-12 gap-4">
@@ -47,6 +56,16 @@
         [options]="itemTypeOptions"
         formControlName="type"
       ></app-static-select>
+    </app-input-container>
+
+    <app-input-container
+      label="Uso restrito"
+      class="col-span-12 md:col-span-6 lg:col-span-4"
+    >
+      <p-toggleswitch class="mt-2" formControlName="restricted" />
+      <small class="text-muted-color">
+        Oculto para alunos e professores; somente o laboratório pode emprestar.
+      </small>
     </app-input-container>
 
     <app-input-container
@@ -170,6 +189,13 @@
   </app-input-container>
   <app-input-container label="Nome" class="col-span-12">
     <input type="text" pInputText id="name" [(ngModel)]="nameFilter" fluid />
+  </app-input-container>
+
+  <app-input-container label="Uso restrito" class="col-span-12">
+    <app-static-select
+      [options]="restrictedOptions"
+      [(ngModel)]="restrictedFilter"
+    ></app-static-select>
   </app-input-container>
 
   <app-input-container label="Tipo" class="col-span-12">

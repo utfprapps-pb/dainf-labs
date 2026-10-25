@@ -1,12 +1,9 @@
 package br.edu.utfpr.dainf.service;
 
-import br.edu.utfpr.dainf.enums.UserRole;
 import br.edu.utfpr.dainf.exception.WarnException;
-import br.edu.utfpr.dainf.model.Loan;
-import br.edu.utfpr.dainf.model.Purchase;
+import br.edu.utfpr.dainf.model.Item;
 import br.edu.utfpr.dainf.model.Reservation;
-import br.edu.utfpr.dainf.model.User;
-import br.edu.utfpr.dainf.repository.PurchaseRepository;
+import br.edu.utfpr.dainf.model.ReservationItem;
 import br.edu.utfpr.dainf.repository.ReservationRepository;
 import br.edu.utfpr.dainf.search.request.SearchRequest;
 import br.edu.utfpr.dainf.search.request.filter.SearchFilter;
@@ -17,15 +14,18 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @Service
 public class ReservationService extends CrudService<Long, Reservation, ReservationRepository> {
 
     private final UserService userService;
+    private final ItemService itemService;
 
-    public ReservationService(UserService userService) {
+    public ReservationService(UserService userService, ItemService itemService) {
         this.userService = userService;
+        this.itemService = itemService;
     }
 
     @Override
@@ -46,6 +46,17 @@ public class ReservationService extends CrudService<Long, Reservation, Reservati
     @Override
     public Reservation save(Reservation entity) {
         validateAccess(entity);
+        if (entity.getItems() != null && !userService.hasPrivilegedAcess()) {
+            List<Item> items = entity.getItems().stream()
+                    .map(ReservationItem::getItem)
+                    .map(item -> itemService.findById(item.getId())
+                            .orElseThrow(() -> new WarnException("Item não encontrado")))
+                    .toList();
+            itemService.validateVisible(items);
+            for (int index = 0; index < entity.getItems().size(); index++) {
+                entity.getItems().get(index).setItem(items.get(index));
+            }
+        }
         if (entity.getReservationDate() != null && entity.getWithdrawalDate() != null
                 && entity.getWithdrawalDate().isBefore(entity.getReservationDate())) {
             throw new WarnException("A data de retirada não pode ser anterior à data da reserva.");
