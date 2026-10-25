@@ -12,6 +12,8 @@ describe('ItemComponent forms', () => {
   function buildForm() {
     return fb.group({
       id: [{ value: null as any, disabled: true }],
+      restricted: [false],
+      groups: [[] as unknown[]],
       name: [null as string | null, Validators.compose([Validators.required, Validators.maxLength(100)])],
       description: [null as string | null],
       price: [null as number | null, Validators.min(0)],
@@ -40,6 +42,14 @@ describe('ItemComponent forms', () => {
 
   it('starts invalid with no fields filled', () => {
     expect(buildForm().invalid).toBeTrue();
+  });
+
+  it('starts with unrestricted use', () => {
+    expect(buildForm().get('restricted')?.value).toBeFalse();
+  });
+
+  it('starts visible to all groups', () => {
+    expect(buildForm().get('groups')?.value).toEqual([]);
   });
 
   it('is invalid without name', () => {

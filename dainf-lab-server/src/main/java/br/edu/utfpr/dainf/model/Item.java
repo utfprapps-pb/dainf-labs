@@ -13,7 +13,9 @@ import lombok.Setter;
 import org.hibernate.envers.Audited;
 
 import java.math.BigDecimal;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -28,6 +30,17 @@ public class Item implements Identifiable<Long> {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
+
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean restricted;
+
+    @ManyToMany
+    @JoinTable(
+            name = "item_access_group",
+            joinColumns = @JoinColumn(name = "item_id"),
+            inverseJoinColumns = @JoinColumn(name = "access_group_id")
+    )
+    private Set<Group> groups = new HashSet<>();
 
     @NotBlank
     @NotNull

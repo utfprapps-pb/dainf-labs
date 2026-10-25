@@ -18,6 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.Date;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -56,7 +57,7 @@ public class AuthTest {
                     null, "admin@utfpr.edu.br", "Teste123456!", "Admin",
                     "2562529", "5546988358080", null,
                     true, null, null,
-                    UserRole.ROLE_ADMIN, true, null, null
+                    UserRole.ROLE_ADMIN, true, Set.of(), null, null
             ));
         }
     }
@@ -71,7 +72,7 @@ public class AuthTest {
                     null, email, "Teste123456!", "Test User",
                     "9999999", "5546988000001", null,
                     true, null, null,
-                    UserRole.ROLE_STUDENT, true, null, null
+                    UserRole.ROLE_STUDENT, true, Set.of(), null, null
             ));
         }
     }

@@ -16,6 +16,7 @@ import { ReservationComponent } from './reservation/reservation.component';
 import { FornecedorComponent } from './supplier/fornecedor.component';
 import { UserComponent } from './user/user.component';
 import { ItemWrapperComponent } from './item/item-wrapper.component';
+import { GroupComponent } from './group/group.component';
 
 export default [
   {
@@ -25,6 +26,7 @@ export default [
       { path: 'category', component: CategoryComponent, canActivate: [RoleGuard] },
       { path: 'supplier', component: FornecedorComponent, canActivate: [RoleGuard] },
       { path: 'user', component: UserComponent, canActivate: [RoleGuard] },
+      { path: 'group', component: GroupComponent, canActivate: [RoleGuard] },
       { path: 'item', component: ItemWrapperComponent, canActivate: [RoleGuard] },
       { path: 'purchase', component: PurchaseComponent, canActivate: [RoleGuard] },
       { path: 'loan', component: LoanComponent, canActivate: [RoleGuard] },

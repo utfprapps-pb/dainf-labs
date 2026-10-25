@@ -241,8 +241,9 @@ public class UserService extends CrudService<Long, User, UserRepository> impleme
     }
 
     public boolean hasPrivilegedAcess() {
-        String role = getCurrentUser().getRole().name();
-        return List.of(UserRole.ADMIN, UserRole.LAB_TECHNICIAN).contains(role);
+        User currentUser = getCurrentUser();
+        return currentUser != null && List.of(UserRole.ROLE_ADMIN, UserRole.ROLE_LAB_TECHNICIAN)
+                .contains(currentUser.getRole());
     }
 
     public void validateEnabled(User user) {

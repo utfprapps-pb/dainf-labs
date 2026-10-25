@@ -1,7 +1,10 @@
 import { Identifiable } from '@/shared/crud/crud';
 import { Category } from '../category/category';
+import { Group } from '../group/group';
 
 export interface Item extends Identifiable {
+  restricted?: boolean;
+  groups?: Group[];
   name: string;
   description: string;
   price: number;

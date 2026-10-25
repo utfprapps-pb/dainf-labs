@@ -1,52 +1,53 @@
 package br.edu.utfpr.dainf.service;
 
 import br.edu.utfpr.dainf.dto.CartItemDTO;
+import br.edu.utfpr.dainf.exception.WarnException;
 import br.edu.utfpr.dainf.model.Cart;
 import br.edu.utfpr.dainf.model.CartItem;
 import br.edu.utfpr.dainf.model.Item;
 import br.edu.utfpr.dainf.model.User;
 import br.edu.utfpr.dainf.repository.CartRepository;
-import br.edu.utfpr.dainf.repository.ItemRepository;
-import br.edu.utfpr.dainf.shared.CrudService;
-import jakarta.persistence.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class CartService {
 
     private final CartRepository repository;
-    private final ItemRepository itemRepository;
+    private final ItemService itemService;
     private final UserService userService;
 
-    public CartService(CartRepository repository, ItemRepository itemRepository, UserService userService) {
+    public CartService(CartRepository repository, ItemService itemService, UserService userService) {
         this.repository = repository;
-        this.itemRepository = itemRepository;
+        this.itemService = itemService;
         this.userService = userService;
     }
 
+    @Transactional
     public Cart manageCart(List<CartItemDTO> itemsDTO) {
+        List<Item> items = itemsDTO == null
+                ? List.of()
+                : itemsDTO.stream()
+                .map(dto -> itemService.findById(dto.getItem().getId())
+                        .orElseThrow(() -> new WarnException("Item não encontrado")))
+                .toList();
+        itemService.validateVisible(items);
+
         Cart cart = findCart();
         cart.getItems().clear();
 
         if (itemsDTO != null) {
-            List<CartItem> newCartItems = itemsDTO.stream()
-                    .map(dto -> {
-                        Item item = itemRepository.findById(dto.getItem().getId())
-                                .orElseThrow(() -> new EntityNotFoundException("Item não encontrado com ID: " + dto.getItem().getId()));
-
-                        CartItem cartItem = new CartItem();
-                        cartItem.setItem(item);
-                        cartItem.setQuantity(dto.getQuantity());
-                        cartItem.setCart(cart);
-
-                        return cartItem;
-                    })
-                    .collect(Collectors.toList());
+            List<CartItem> newCartItems = new ArrayList<>();
+            for (int index = 0; index < itemsDTO.size(); index++) {
+                CartItem cartItem = new CartItem();
+                cartItem.setItem(items.get(index));
+                cartItem.setQuantity(itemsDTO.get(index).getQuantity());
+                cartItem.setCart(cart);
+                newCartItems.add(cartItem);
+            }
 
             cart.getItems().addAll(newCartItems);
         }
