@@ -7,6 +7,9 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 import lombok.*;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @ValidUser
 @Getter
 @Setter
@@ -42,6 +45,9 @@ public class UserDTO implements Identifiable<Long> {
     private UserRole role;
 
     private boolean enabled;
+
+    @Builder.Default
+    private Set<GroupDTO> groups = new HashSet<>();
 
     public UserDTO(Long id) {
         this.id = id;

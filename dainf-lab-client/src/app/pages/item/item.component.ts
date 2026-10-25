@@ -27,11 +27,16 @@ import { FieldsetModule } from 'primeng/fieldset';
 import { TableModule } from 'primeng/table';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
+import { MultiSelectModule } from 'primeng/multiselect';
+import { Select } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TooltipModule } from 'primeng/tooltip';
+import { map, of, switchMap } from 'rxjs';
 import { Category } from '../category/category';
 import { CategoryService } from '../category/category.service';
+import { Group } from '../group/group';
+import { GroupService } from '../group/group.service';
 import { LoanService } from '../loan/loan.service';
 import { UserService } from '../user/user.service';
 import { ActiveLoansDialog } from './active-loans-dialog/active-loans-dialog';
@@ -45,6 +50,8 @@ import { ItemService } from './item.service';
     FormsModule,
     ReactiveFormsModule,
     InputTextModule,
+    MultiSelectModule,
+    Select,
     InputContainerComponent,
     CrudComponent,
     CategorySelectComponent,
@@ -62,6 +69,7 @@ import { ItemService } from './item.service';
   providers: [
     ItemService,
     CategoryService,
+    GroupService,
     UserService,
     LabelValuePipe,
     CategoryTreeNodePipe,
@@ -73,11 +81,13 @@ import { ItemService } from './item.service';
 })
 export class ItemComponent implements AfterViewInit {
   restrictedTemplate = viewChild<TemplateRef<any>>('restrictedTemplate');
+  groupsTemplate = viewChild<TemplateRef<any>>('groupsTemplate');
 
   templateMap: Map<keyof Item | string, TemplateRef<any>> | undefined;
   userService = inject(UserService);
   itemService = inject(ItemService);
   categoryService = inject(CategoryService);
+  groupService = inject(GroupService);
   loanService = inject(LoanService);
   formBuilder = inject(FormBuilder);
   labelValue = inject(LabelValuePipe);
@@ -87,6 +97,18 @@ export class ItemComponent implements AfterViewInit {
   dialogRef: DynamicDialogRef | undefined;
 
   userHasAdvancedPrivileges = toSignal(this.userService.hasAdvancedPrivileges(), { initialValue: false });
+
+  groups = toSignal(
+    this.userService.hasAdvancedPrivileges().pipe(
+      switchMap((hasPrivileges) =>
+        hasPrivileges
+          ? this.groupService.search({ rows: 1000, filters: [] })
+          : of({ content: [] }),
+      ),
+      map((page) => page.content),
+    ),
+    { initialValue: [] },
+  );
 
   storageService = new StorageImplService(
     `${this.itemService._url}/storage`,
@@ -100,6 +122,7 @@ export class ItemComponent implements AfterViewInit {
   form: FormGroup = this.formBuilder.group({
     id: [{ value: null, disabled: true }],
     restricted: [false],
+    groups: [[]],
     name: [
       null,
       Validators.compose([Validators.required, Validators.maxLength(100)]),
@@ -140,6 +163,7 @@ export class ItemComponent implements AfterViewInit {
     { field: 'id', header: 'Código' },
     { field: 'name', header: 'Nome' },
     { field: 'restricted', header: 'Uso' },
+    { field: 'groups', header: 'Grupos' },
     { field: 'category.description', header: 'Categoria' },
     { field: 'quantity', header: 'Quantidade' },
     {
@@ -170,6 +194,7 @@ export class ItemComponent implements AfterViewInit {
   locationFilter = model<string | undefined>();
   idFilter = model<string | undefined>();
   restrictedFilter = model<boolean | null>(null);
+  groupFilter = model<Group | null>(null);
 
   searchRequest = computed<SearchRequest>(() => {
     const filters: SearchFilter[] = [];
@@ -179,6 +204,12 @@ export class ItemComponent implements AfterViewInit {
       filters.push({
         field: 'restricted',
         value: this.restrictedFilter(),
+        type: 'EQUALS',
+      });
+    if (this.groupFilter())
+      filters.push({
+        field: 'groups',
+        value: this.groupFilter()?.id,
         type: 'EQUALS',
       });
     if (this.nameFilter())
@@ -209,6 +240,7 @@ export class ItemComponent implements AfterViewInit {
   ngAfterViewInit(): void {
     this.templateMap = new Map([
       ['restricted', this.restrictedTemplate()!],
+      ['groups', this.groupsTemplate()!],
     ]);
   }
 

@@ -21,6 +21,7 @@ describe('UserComponent form', () => {
       role: [null as string | null, Validators.required],
       password: [null as string | null, Validators.compose([Validators.minLength(6), passwordStrengthValidator()])],
       enabled: [true],
+      groups: [[] as unknown[]],
     });
   }
 
@@ -135,5 +136,9 @@ describe('UserComponent form', () => {
     expect(form.get('telefone')?.value).toBeNull();
     expect(form.get('documento')?.value).toBeNull();
     expect(form.valid).toBeTrue();
+  });
+
+  it('starts without access groups', () => {
+    expect(buildForm().get('groups')?.value).toEqual([]);
   });
 });

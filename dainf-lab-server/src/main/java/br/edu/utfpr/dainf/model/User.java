@@ -16,8 +16,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.Instant;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Entity
@@ -68,6 +70,15 @@ public class User implements UserDetails, Identifiable<Long> {
     private UserRole role;
 
     private boolean enabled;
+
+    @ManyToMany
+    @JoinTable(
+            name = "user_access_group",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "access_group_id")
+    )
+    @Builder.Default
+    private Set<Group> groups = new HashSet<>();
 
     @AuditRedacted
     private String clearanceCode;

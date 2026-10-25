@@ -88,6 +88,11 @@ public class MenuConfig {
                     .allowedRoles(Set.of(UserRole.ROLE_ADMIN, UserRole.ROLE_LAB_TECHNICIAN))
                     .build()),
 
+            Map.entry("group", MenuItemDTO.builder()
+                    .label("Grupos").icon("pi pi-sitemap").routerLink("group")
+                    .allowedRoles(Set.of(UserRole.ROLE_ADMIN, UserRole.ROLE_LAB_TECHNICIAN))
+                    .build()),
+
             Map.entry("config", MenuItemDTO.builder()
                     .label("Configurações").icon("pi pi-cog").routerLink("configuration")
                     .allowedRoles(Set.of(UserRole.ROLE_ADMIN))
@@ -135,7 +140,8 @@ public class MenuConfig {
                                 baseItems.get("item"),
                                 baseItems.get("category"),
                                 baseItems.get("supplier"),
-                                baseItems.get("user")
+                                baseItems.get("user"),
+                                baseItems.get("group")
                         ))
                         .build(),
                 MenuItemDTO.builder()

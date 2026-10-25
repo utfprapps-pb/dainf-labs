@@ -14,16 +14,24 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class SearchHandler<ID extends Serializable, E extends Identifiable<ID>> {
 
     final SearchFilterAdapter searchFilterAdapter = new SearchFilterAdapter();
     final JpaSpecificationExecutor<E> executor;
+    final Function<SearchFilter, Specification<E>> customSpecificationFactory;
 
     public SearchHandler(JpaSpecificationExecutor<E> executor) {
+        this(executor, filter -> null);
+    }
+
+    public SearchHandler(JpaSpecificationExecutor<E> executor,
+                         Function<SearchFilter, Specification<E>> customSpecificationFactory) {
         Objects.requireNonNull(executor, "A JpaSpecificationExecutor must be provided");
         this.executor = executor;
+        this.customSpecificationFactory = customSpecificationFactory;
     }
 
     public static Pageable getPageable(SearchRequest searchRequest) {
@@ -31,7 +39,12 @@ public class SearchHandler<ID extends Serializable, E extends Identifiable<ID>> 
     }
 
     public Page<E> handle(SearchRequest searchRequest) {
+        return handle(searchRequest, null);
+    }
+
+    public Page<E> handle(SearchRequest searchRequest, Specification<E> extraSpecification) {
         List<Specification<E>> specifications = createSpecifications(searchRequest.getFilters());
+        if (extraSpecification != null) specifications.add(extraSpecification);
         Pageable pageable = getPageable(searchRequest);
         return executor.findAll(
                 Specification.allOf(specifications),
@@ -40,12 +53,15 @@ public class SearchHandler<ID extends Serializable, E extends Identifiable<ID>> 
     }
 
     List<Specification<E>> createSpecifications(List<SearchFilter> filters) {
+        if (filters == null) return new java.util.ArrayList<>();
         return filters.stream()
                 .map(this::buildSpecification)
                 .collect(Collectors.toList());
     }
 
     Specification<E> buildSpecification(SearchFilter filter) {
+        Specification<E> customSpecification = customSpecificationFactory.apply(filter);
+        if (customSpecification != null) return customSpecification;
         return (root, query, criteriaBuilder) -> searchFilterAdapter.adapt(filter, root, query, criteriaBuilder);
     }
 }

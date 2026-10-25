@@ -88,6 +88,20 @@
           formControlName="password"
         />
       </app-input-container>
+
+      <app-input-container label="Grupos" class="col-span-12">
+        <p-multiselect
+          [options]="groups()"
+          optionLabel="name"
+          dataKey="id"
+          formControlName="groups"
+          display="chip"
+          [filter]="true"
+          placeholder="Selecione os grupos"
+          appendTo="body"
+          class="w-full"
+        />
+      </app-input-container>
     </form>
   </div>
 </ng-template>
