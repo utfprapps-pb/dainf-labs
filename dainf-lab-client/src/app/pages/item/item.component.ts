@@ -32,7 +32,7 @@ import { Select } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TooltipModule } from 'primeng/tooltip';
-import { map, of, switchMap } from 'rxjs';
+import { catchError, map, of, switchMap } from 'rxjs';
 import { Category } from '../category/category';
 import { CategoryService } from '../category/category.service';
 import { Group } from '../group/group';
@@ -106,8 +106,9 @@ export class ItemComponent implements AfterViewInit {
           : of({ content: [] }),
       ),
       map((page) => page.content),
+      catchError(() => of([] as Group[])),
     ),
-    { initialValue: [] },
+    { initialValue: [] as Group[] },
   );
 
   storageService = new StorageImplService(
