@@ -6,6 +6,8 @@
   [formTemplate]="crudForm"
   [filtersTemplate]="filters"
   [searchRequest]="searchRequest()"
+  (entityLoad)="onEntityLoad($event)"
+  (saved)="onSaved($event)"
 ></app-crud>
 
 <ng-template #crudForm>
@@ -27,6 +29,21 @@
 
     <app-input-container label="Descrição" class="col-span-12">
       <textarea pTextarea formControlName="description" rows="4"></textarea>
+    </app-input-container>
+
+    <app-input-container label="Usuários" class="col-span-12">
+      <p-multiselect
+        [options]="users()"
+        optionLabel="nome"
+        dataKey="id"
+        formControlName="users"
+        display="chip"
+        [filter]="true"
+        filterBy="nome,email,documento"
+        placeholder="Selecione os usuários do grupo"
+        appendTo="body"
+        class="w-full"
+      />
     </app-input-container>
   </form>
 </ng-template>

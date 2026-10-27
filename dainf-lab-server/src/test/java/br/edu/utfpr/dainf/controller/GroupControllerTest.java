@@ -6,7 +6,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class GroupControllerTest extends CrudControllerTest<GroupDTO> {
@@ -50,6 +53,38 @@ class GroupControllerTest extends CrudControllerTest<GroupDTO> {
                         .with(user("student").roles("STUDENT"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(asJson(createValidObject())))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("Você não tem permissão para realizar essa ação."));
+    }
+
+    @Test
+    void laboratoryTechnicianCanLinkUsersToGroup() throws Exception {
+        String location = mockMvc.perform(post("/groups")
+                        .with(user("technician").roles("LAB_TECHNICIAN"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJson(createValidObject())))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        long groupId = Long.parseLong(location.trim());
+
+        mockMvc.perform(put("/groups/" + groupId + "/users")
+                        .with(user("technician").roles("LAB_TECHNICIAN"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("[]"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/groups/" + groupId + "/users")
+                        .with(user("technician").roles("LAB_TECHNICIAN")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isEmpty());
+    }
+
+    @Test
+    void ordinaryUserCannotLinkUsersToGroup() throws Exception {
+        mockMvc.perform(put("/groups/1/users")
+                        .with(user("student").roles("STUDENT"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("[]"))
                 .andExpect(status().isForbidden());
     }
 }

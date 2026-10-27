@@ -5,6 +5,7 @@ import jakarta.validation.ConstraintViolationException;
 import org.jboss.logging.Logger;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -18,6 +19,8 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class ExceptionHandlerAdvice {
+
+    public static final String FORBIDDEN_MESSAGE = "Você não tem permissão para realizar essa ação.";
 
     private static final Logger LOGGER = Logger.getLogger(ExceptionHandlerAdvice.class);
 
@@ -71,6 +74,14 @@ public class ExceptionHandlerAdvice {
         Map<String, String> errors = new HashMap<>();
         errors.put("message", exception.getMessage());
         return new WarnMessage(HttpStatus.BAD_REQUEST.value(), exception.getMessage(), request.getServletPath(), errors);
+    }
+
+    @ExceptionHandler({AccessDeniedException.class})
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public WarnMessage handlerAccessDeniedException(AccessDeniedException exception, HttpServletRequest request) {
+        Map<String, String> errors = new HashMap<>();
+        errors.put("message", FORBIDDEN_MESSAGE);
+        return new WarnMessage(HttpStatus.FORBIDDEN.value(), FORBIDDEN_MESSAGE, request.getServletPath(), errors);
     }
 
     @ExceptionHandler({Exception.class})
