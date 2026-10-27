@@ -22,6 +22,7 @@ import { ToolbarModule } from 'primeng/toolbar';
 import {
   catchError,
   debounceTime,
+  EMPTY,
   finalize,
   Observable,
   skip,
@@ -74,6 +75,8 @@ export class CrudComponent<T extends Identifiable> implements OnInit {
 
   cancelClick = output<void>();
   saveClick = output<void>();
+  /** Emitted after a successful save, before the form is reset, with the saved id and the submitted form value. */
+  saved = output<{ id: number; item: T }>();
   entityLoad = output<T>();
 
   items = signal<Page<T> | undefined>(undefined);
@@ -128,6 +131,10 @@ export class CrudComponent<T extends Identifiable> implements OnInit {
       .pipe(
         tap((result) => {
           this.items.set(result);
+        }),
+        catchError((error) => {
+          this._showWarn(extractErrorMessage(error, 'Falha ao carregar os registros.'));
+          return EMPTY;
         }),
         finalize(() => this.loadingItems.set(false)),
       )
@@ -193,7 +200,8 @@ export class CrudComponent<T extends Identifiable> implements OnInit {
     this.loadingSave.set(true);
     this._save(item)
       ?.pipe(
-        tap(() => {
+        tap((result) => {
+          this.saved.emit({ id: item.id || Number(result), item });
           this.cancel();
           this.loadItems(this.lastPagination?.page, this.lastPagination?.rows);
           this.saveClick.emit();

@@ -6,6 +6,7 @@ import br.edu.utfpr.dainf.shared.CrudRepository;
 import br.edu.utfpr.dainf.spec.UserSpecExecutor;
 import org.springframework.data.jpa.repository.EntityGraph;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends CrudRepository<Long, User>, UserSpecExecutor {
@@ -13,4 +14,7 @@ public interface UserRepository extends CrudRepository<Long, User>, UserSpecExec
     Optional<User> findByEmail(String email);
     Optional<User> findByEmailVerificationToken(String token);
     Optional<User> findByClearanceCode(String clearanceCode);
+
+    @EntityGraph(attributePaths = "groups")
+    List<User> findAllByGroups_Id(Long groupId);
 }

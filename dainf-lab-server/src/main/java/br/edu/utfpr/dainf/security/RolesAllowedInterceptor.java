@@ -3,7 +3,7 @@ package br.edu.utfpr.dainf.security;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -34,8 +34,7 @@ public class RolesAllowedInterceptor implements HandlerInterceptor {
         if (auth == null || auth.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .noneMatch(a -> Arrays.asList(finalRolesAllowed.value()).contains(a))) {
-            response.setStatus(HttpStatus.FORBIDDEN.value());
-            return false;
+            throw new AccessDeniedException("Access denied for " + request.getMethod() + " " + request.getRequestURI());
         }
 
         return true;
