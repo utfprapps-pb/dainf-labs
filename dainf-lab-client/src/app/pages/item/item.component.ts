@@ -231,7 +231,7 @@ export class ItemComponent implements AfterViewInit {
       });
     if (this.locationFilter())
       filters.push({
-        field: this.typeFilter() === 'CONSUMABLE' ? 'location' : 'assets.location',
+        field: 'location',
         value: this.locationFilter(),
         type: 'ILIKE',
       });

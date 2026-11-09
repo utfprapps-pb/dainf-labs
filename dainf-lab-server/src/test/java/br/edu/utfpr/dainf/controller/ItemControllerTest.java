@@ -276,6 +276,76 @@ class ItemControllerTest extends CrudControllerTest<ItemDTO> {
         assertEquals(1, result.path("page").path("totalElements").asInt());
     }
 
+    @Test
+    void searchByLocationIgnoresWhitespaceDifferences() throws Exception {
+        String prefix = "LOC-SPACE-" + UUID.randomUUID();
+        ItemDTO item = ItemDTO.builder()
+                .name(prefix)
+                .category(category)
+                .type(ItemType.DURABLE)
+                .assets(List.of(AssetDTO.builder().serialNumber(prefix + "-SN").location("A2-P6").build()))
+                .build();
+        Long itemId = extractId(performCreate(item).andExpect(status().isCreated()).andReturn());
+
+        SearchRequest request = SearchRequest.builder()
+                .filters(List.of(
+                        new SearchFilter("name", prefix, SearchFilter.Type.ILIKE),
+                        new SearchFilter("location", "A2 - P6", SearchFilter.Type.ILIKE)
+                ))
+                .build();
+
+        var result = searchAs(request, userWithRole(UserRole.ROLE_ADMIN));
+
+        assertEquals(Set.of(itemId), contentIds(result));
+    }
+
+    @Test
+    void searchByLocationFindsConsumableItemRegardlessOfTypeFilter() throws Exception {
+        String prefix = "LOC-CONSUMABLE-" + UUID.randomUUID();
+        String location = "A3 - P1 | A5 - P4";
+        ItemDTO item = ItemDTO.builder()
+                .name(prefix)
+                .category(category)
+                .type(ItemType.CONSUMABLE)
+                .location(location)
+                .build();
+        Long itemId = extractId(performCreate(item).andExpect(status().isCreated()).andReturn());
+
+        SearchRequest request = SearchRequest.builder()
+                .filters(List.of(
+                        new SearchFilter("name", prefix, SearchFilter.Type.ILIKE),
+                        new SearchFilter("location", location, SearchFilter.Type.ILIKE)
+                ))
+                .build();
+
+        var result = searchAs(request, userWithRole(UserRole.ROLE_ADMIN));
+
+        assertEquals(Set.of(itemId), contentIds(result));
+    }
+
+    @Test
+    void searchByLocationDoesNotMatchUnrelatedItems() throws Exception {
+        String prefix = "LOC-NOMATCH-" + UUID.randomUUID();
+        ItemDTO item = ItemDTO.builder()
+                .name(prefix)
+                .category(category)
+                .type(ItemType.CONSUMABLE)
+                .location("B1-P9")
+                .build();
+        extractId(performCreate(item).andExpect(status().isCreated()).andReturn());
+
+        SearchRequest request = SearchRequest.builder()
+                .filters(List.of(
+                        new SearchFilter("name", prefix, SearchFilter.Type.ILIKE),
+                        new SearchFilter("location", "Z9 - Z9", SearchFilter.Type.ILIKE)
+                ))
+                .build();
+
+        var result = searchAs(request, userWithRole(UserRole.ROLE_ADMIN));
+
+        assertEquals(Set.of(), contentIds(result));
+    }
+
     private Group createGroup(String name, boolean active) {
         Group group = new Group();
         group.setName(name);
