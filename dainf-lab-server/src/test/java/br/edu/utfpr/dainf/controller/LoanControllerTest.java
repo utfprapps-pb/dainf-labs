@@ -203,4 +203,15 @@ class LoanControllerTest extends CrudControllerTest<LoanDTO> {
         dto.setItems(List.of(new LoanItemDTO(null, item, true, BigDecimal.ONE)));
         performCreate(dto).andExpect(status().isBadRequest());
     }
+
+    @Test
+    void createWithObservationLongerThan255Chars_isAccepted() throws Exception {
+        LoanDTO dto = new LoanDTO();
+        dto.setBorrower(borrower);
+        dto.setLoanDate(Instant.now());
+        dto.setDeadline(Instant.now().plus(7, ChronoUnit.DAYS));
+        dto.setItems(List.of(new LoanItemDTO(null, item, true, BigDecimal.ONE)));
+        dto.setObservation("Observação longa. ".repeat(30));
+        performCreate(dto).andExpect(status().isCreated());
+    }
 }

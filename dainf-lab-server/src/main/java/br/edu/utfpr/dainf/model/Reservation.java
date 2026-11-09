@@ -28,7 +28,7 @@ public class Reservation implements Identifiable<Long> {
     @Column(name = "description")
     private String description;
 
-    @Column(name = "observation")
+    @Column(name = "observation", columnDefinition = "text")
     private String observation;
 
     @Column(name = "reservation_date")

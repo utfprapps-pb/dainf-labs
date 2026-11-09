@@ -102,11 +102,20 @@ public class ItemService extends CrudService<Long, Item, ItemRepository> {
 
     @Override
     protected Specification<Item> customSpecification(SearchFilter filter) {
-        if (!"groups".equals(filter.getField()) || filter.getValue() == null) return null;
-        Long groupId = filter.getValue() instanceof Number number
-                ? number.longValue()
-                : Long.valueOf(filter.getValue().toString());
-        return ItemSpecifications.belongsToGroup(groupId);
+        if (filter.getValue() == null) return null;
+
+        if ("groups".equals(filter.getField())) {
+            Long groupId = filter.getValue() instanceof Number number
+                    ? number.longValue()
+                    : Long.valueOf(filter.getValue().toString());
+            return ItemSpecifications.belongsToGroup(groupId);
+        }
+
+        if ("location".equals(filter.getField()) || "assets.location".equals(filter.getField())) {
+            return ItemSpecifications.matchesLocation(filter.getValue().toString());
+        }
+
+        return null;
     }
 
     public boolean isVisibleTo(Item item, User user) {
