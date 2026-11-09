@@ -38,7 +38,7 @@ public class Loan implements Identifiable<Long> {
     @Column(name = "deadline")
     private Instant deadline;
 
-    @Column(name = "observation")
+    @Column(name = "observation", columnDefinition = "text")
     private String observation;
 
     @OneToMany(mappedBy = "loan", cascade = CascadeType.ALL, orphanRemoval = true)

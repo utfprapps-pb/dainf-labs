@@ -32,7 +32,7 @@ public class Return implements Identifiable<Long> {
     @Column(name = "return_date")
     private Instant returnDate;
 
-    @Column(name = "observation")
+    @Column(name = "observation", columnDefinition = "text")
     private String observation;
 
     @OneToMany(mappedBy = "aReturn", cascade = CascadeType.ALL, orphanRemoval = true)

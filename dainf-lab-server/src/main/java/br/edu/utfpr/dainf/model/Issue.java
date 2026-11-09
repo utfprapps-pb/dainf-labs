@@ -30,7 +30,7 @@ public class Issue implements Identifiable<Long> {
     @Column(name = "date", nullable = false)
     private Instant date;
 
-    @Column(name = "observation")
+    @Column(name = "observation", columnDefinition = "text")
     private String observation;
 
     @ManyToOne
