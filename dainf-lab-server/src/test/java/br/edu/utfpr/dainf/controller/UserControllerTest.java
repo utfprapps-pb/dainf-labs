@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
 import java.util.Set;
+import java.util.UUID;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -30,12 +31,12 @@ class UserControllerTest extends CrudControllerTest<UserDTO> {
 
     @Override
     protected UserDTO createValidObject() {
-        Integer random = (int) (Math.random() * 10000);
+        String unique = UUID.randomUUID().toString().replace("-", "").substring(0, 16);
         return UserDTO.builder()
-                .email(random + "@utfpr.edu.br")
+                .email(unique + "@utfpr.edu.br")
                 .password("Teste123456!")
                 .nome("teste")
-                .documento("odfdso")
+                .documento(unique)
                 .telefone("teste")
                 .fotoUrl("teste")
                 .emailVerificado(false)

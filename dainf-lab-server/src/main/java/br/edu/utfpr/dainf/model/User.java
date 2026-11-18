@@ -18,6 +18,7 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -83,6 +84,29 @@ public class User implements UserDetails, Identifiable<Long> {
     @AuditRedacted
     private String clearanceCode;
     private Instant clearanceDate;
+
+    /**
+     * Normaliza e-mail (trim + minúsculas) e documento (trim, vazio vira null) antes de persistir,
+     * para que a unicidade não seja burlada por variações de caixa ou espaços.
+     */
+    @PrePersist
+    @PreUpdate
+    void normalize() {
+        this.email = normalizeEmail(this.email);
+        this.documento = normalizeDocumento(this.documento);
+    }
+
+    public static String normalizeEmail(String email) {
+        if (email == null) return null;
+        String trimmed = email.trim();
+        return trimmed.isEmpty() ? null : trimmed.toLowerCase(Locale.ROOT);
+    }
+
+    public static String normalizeDocumento(String documento) {
+        if (documento == null) return null;
+        String trimmed = documento.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

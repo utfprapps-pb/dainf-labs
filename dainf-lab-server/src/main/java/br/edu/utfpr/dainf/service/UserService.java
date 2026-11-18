@@ -21,6 +21,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.Instant;
@@ -76,6 +77,12 @@ public class UserService extends CrudService<Long, User, UserRepository> impleme
                 .orElse(false);
     }
 
+    /**
+     * Transacional: o INSERT é enviado ao banco (flush) antes do e-mail, então uma violação dos
+     * índices únicos falha logo; e se o envio do e-mail falhar, o cadastro é desfeito, permitindo
+     * que a pessoa tente de novo com os mesmos dados em vez de ficar com um registro "órfão".
+     */
+    @Transactional
     public User register(User user) {
         user.setEnabled(false);
         user.setEmailVerificado(false);
@@ -83,6 +90,7 @@ public class UserService extends CrudService<Long, User, UserRepository> impleme
         user.setEmailVerificationExpiresAt(Instant.now().plus(24, ChronoUnit.HOURS));
 
         User saved = save(user);
+        repository.flush();
 
         String mailContent = mailService.buildTemplate("email-verification", Map.of(
                 "nome", saved.getNome(),

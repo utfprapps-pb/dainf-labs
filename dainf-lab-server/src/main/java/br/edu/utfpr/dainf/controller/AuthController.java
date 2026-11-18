@@ -2,6 +2,7 @@ package br.edu.utfpr.dainf.controller;
 
 import br.edu.utfpr.dainf.dto.AuthResponse;
 import br.edu.utfpr.dainf.dto.UserSignupDTO;
+import br.edu.utfpr.dainf.model.User;
 import br.edu.utfpr.dainf.exception.WarnMessage;
 import br.edu.utfpr.dainf.security.JwtService;
 import br.edu.utfpr.dainf.service.AuthService;
@@ -38,7 +39,7 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody AuthRequest request, HttpServletResponse response) {
         try {
             AuthResponse authResponse = authService.login(request.email(), request.password());
-            String refreshToken = jwtService.generateRefreshToken(request.email());
+            String refreshToken = jwtService.generateRefreshToken(User.normalizeEmail(request.email()));
 
             long maxAge = request.rememberMe() ? jwtService.getRefreshExpirationMs() / 1000 : -1;
             ResponseCookie cookie = authService.createRefreshCookie(refreshToken, maxAge);

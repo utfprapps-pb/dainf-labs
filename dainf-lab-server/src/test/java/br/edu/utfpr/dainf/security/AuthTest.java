@@ -70,11 +70,16 @@ public class AuthTest {
         if (userRepository.findByEmail(email).isEmpty()) {
             userService.save(new User(
                     null, email, "Teste123456!", "Test User",
-                    "9999999", "5546988000001", null,
+                    uniqueDocumento(email), "5546988000001", null,
                     true, null, null,
                     UserRole.ROLE_STUDENT, true, Set.of(), null, null
             ));
         }
+    }
+
+    /** RA/SIAPE é único (ux_app_user_documento): derivado do e-mail para ser estável entre execuções. */
+    private static String uniqueDocumento(String email) {
+        return String.valueOf(Math.abs((long) email.hashCode()));
     }
 
     /** Logs in and returns the raw refresh token value from the Set-Cookie header. */

@@ -108,6 +108,8 @@
         <p-button
           label="Cadastrar"
           styleClass="w-full mt-8"
+          [loading]="submitting"
+          [disabled]="submitting"
           (onClick)="signUpClick()"
         ></p-button>
 

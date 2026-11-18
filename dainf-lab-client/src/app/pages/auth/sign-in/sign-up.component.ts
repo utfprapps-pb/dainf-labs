@@ -48,6 +48,9 @@ export class SignUpComponent {
   private _fb = inject(FormBuilder);
   private _messageService = inject(MessageService);
 
+  /** Evita envios duplicados (clique duplo / clique repetido enquanto o servidor responde). */
+  submitting = false;
+
   form: FormGroup = this._fb.group(
     {
       nome: [null, Validators.compose([Validators.required, nameValidator(), Validators.minLength(5), Validators.maxLength(100)])],
@@ -78,6 +81,10 @@ export class SignUpComponent {
   }
 
   signUpClick(): void {
+    if (this.submitting) {
+      return;
+    }
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this._messageService.add({
@@ -95,15 +102,20 @@ export class SignUpComponent {
       nome: userData.nome,
       documento: userData.documento,
       telefone: userData.telefone,
-      email: userData.email,
+      email: (userData.email ?? '').trim().toLowerCase(),
       password: userData.password,
     };
+
+    this.submitting = true;
+    this.form.disable({ emitEvent: false });
 
     this._authService.signUp(payload).subscribe({
       next: (res) => {
         this._router.navigate(['login']);
       },
       error: (err) => {
+        this.submitting = false;
+        this.form.enable({ emitEvent: false });
         this._messageService.add({
           severity: 'warn',
           summary: 'Falha ao realizar cadastro',
