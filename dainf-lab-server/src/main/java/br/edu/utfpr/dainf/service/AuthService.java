@@ -2,6 +2,7 @@ package br.edu.utfpr.dainf.service;
 
 import br.edu.utfpr.dainf.dto.AuthResponse;
 import br.edu.utfpr.dainf.dto.UserSignupDTO;
+import br.edu.utfpr.dainf.model.User;
 import br.edu.utfpr.dainf.security.JwtService;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,6 +23,7 @@ public class AuthService {
     }
 
     public AuthResponse login(String email, String password) {
+        email = User.normalizeEmail(email);
         authManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
         String token = jwtService.generateToken(email);
         long expiresIn = jwtService.getJwtExpirationMs() / 1000;

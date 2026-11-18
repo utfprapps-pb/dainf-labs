@@ -1,5 +1,6 @@
 package br.edu.utfpr.dainf.exception;
 
+import br.edu.utfpr.dainf.config.UserUniqueIndexInitializer;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import org.jboss.logging.Logger;
@@ -35,6 +36,15 @@ public class ExceptionHandlerAdvice {
     @ExceptionHandler({DataIntegrityViolationException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public WarnMessage handlerSQLException(DataIntegrityViolationException exception, HttpServletRequest request) {
+        String cause = String.valueOf(exception.getMostSpecificCause().getMessage());
+        if (cause.contains(UserUniqueIndexInitializer.EMAIL_INDEX)) {
+            return new WarnMessage(HttpStatus.BAD_REQUEST.value(), "Informações inválidas", request.getServletPath(),
+                    Map.of("email", "O e-mail informado já está em uso"));
+        }
+        if (cause.contains(UserUniqueIndexInitializer.DOCUMENTO_INDEX)) {
+            return new WarnMessage(HttpStatus.BAD_REQUEST.value(), "Informações inválidas", request.getServletPath(),
+                    Map.of("documento", "O RA/SIAPE informado já está cadastrado"));
+        }
         return new WarnMessage(HttpStatus.BAD_REQUEST.value(), "Erro na integridade dos dados", request.getServletPath(), null);
     }
 
