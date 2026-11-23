@@ -35,6 +35,7 @@ public class ItemDTO implements Identifiable<Long> {
     @Size(max = 100, message = "O campo 'Nome' deve ter no máximo 100 caracteres")
     private String name;
 
+    @Size(max = 5000, message = "O campo 'Descrição' deve ter no máximo 5000 caracteres")
     private String description;
 
     @DecimalMin(value = "0", message = "O campo 'Preço' não pode ser negativo")

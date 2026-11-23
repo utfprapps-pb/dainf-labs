@@ -47,15 +47,17 @@
 
     <app-input-container
       label="Descrição"
-      class="col-span-12 md:col-span-6 lg:col-span-4"
+      class="col-span-12"
     >
-      <input
-        type="text"
-        pInputText
+      <textarea
+        pTextarea
         id="description"
         formControlName="description"
+        rows="5"
+        [autoResize]="true"
         fluid
-      />
+        placeholder="Especificações técnicas, acessórios, observações de uso..."
+      ></textarea>
     </app-input-container>
 
     <app-input-container

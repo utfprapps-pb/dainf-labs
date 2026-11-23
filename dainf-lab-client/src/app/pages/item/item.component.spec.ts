@@ -15,7 +15,7 @@ describe('ItemComponent forms', () => {
       restricted: [false],
       groups: [[] as unknown[]],
       name: [null as string | null, Validators.compose([Validators.required, Validators.maxLength(100)])],
-      description: [null as string | null],
+      description: [null as string | null, Validators.maxLength(5000)],
       price: [null as number | null, Validators.min(0)],
       category: [null as any, Validators.required],
       assets: [null as any],
@@ -95,6 +95,20 @@ describe('ItemComponent forms', () => {
     form.patchValue({ name: 'Equipamento Teste', type: 'DURABLE' });
     form.get('category')?.setValue(mockCategory);
     expect(form.valid).toBeTrue();
+  });
+
+  it('description accepts multiline text and preserves line breaks', () => {
+    const form = buildForm();
+    const text = 'Tensão de operação: 5V\nCorrente máx.: 2A\nInterface: I2C';
+    form.get('description')?.setValue(text);
+    expect(form.get('description')?.valid).toBeTrue();
+    expect(form.get('description')?.value).toBe(text);
+  });
+
+  it('description rejects more than 5000 characters', () => {
+    const form = buildForm();
+    form.get('description')?.setValue('a'.repeat(5001));
+    expect(form.get('description')?.errors?.['maxlength']).toBeTruthy();
   });
 
   it('description, price, location, siorg are optional', () => {
