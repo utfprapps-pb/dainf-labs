@@ -62,6 +62,7 @@ public class ReservationService extends CrudService<Long, Reservation, Reservati
             throw new WarnException("A data de retirada não pode ser anterior à data da reserva.");
         }
         if (entity.getId() == null) {
+            userService.validateNoOverdueLoans(userService.getCurrentUser());
             entity.setUser(userService.getCurrentUser());
         }
         if (entity.getItems() != null) {

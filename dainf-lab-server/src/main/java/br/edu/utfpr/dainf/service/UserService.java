@@ -266,6 +266,17 @@ public class UserService extends CrudService<Long, User, UserRepository> impleme
         }
     }
 
+    /**
+     * Impede novas solicitações (reservas/empréstimos) de quem possui empréstimo em atraso,
+     * até que as pendências sejam regularizadas.
+     */
+    public void validateNoOverdueLoans(User user) {
+        if (user == null || user.getId() == null) return;
+        if (loanRepository.existsByBorrowerIdAndStatus(user.getId(), LoanStatus.OVERDUE)) {
+            throw new WarnException("Existem itens em atraso para este usuário. Regularize as pendências (devolução) antes de solicitar novos itens.");
+        }
+    }
+
     public Map<String, Object> validateClearance(String code) {
         User user = repository.findByClearanceCode(code)
                 .orElseThrow(() -> new UsernameNotFoundException("Código inválido"));
