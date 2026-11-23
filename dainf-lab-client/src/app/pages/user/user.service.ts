@@ -1,7 +1,7 @@
 import { CrudService } from '@/shared/crud/crud.service';
 import { Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
-import { User } from './user';
+import { User, UserProfile } from './user';
 
 @Injectable()
 export class UserService extends CrudService<User> {
@@ -15,6 +15,10 @@ export class UserService extends CrudService<User> {
 
   getCurrentUser(): Observable<User> {
     return this._http.get<User>(`${this._url}/me`);
+  }
+
+  updateProfile(profile: UserProfile): Observable<User> {
+    return this._http.put<User>(`${this._url}/me`, profile);
   }
 
   getRole(): Observable<string> {
