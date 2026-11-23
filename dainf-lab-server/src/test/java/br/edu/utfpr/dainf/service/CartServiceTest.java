@@ -31,6 +31,7 @@ class CartServiceTest {
     @Mock CartRepository repository;
     @Mock ItemService itemService;
     @Mock UserService userService;
+    @Mock ItemLifecycleService lifecycle;
     @InjectMocks CartService cartService;
 
     @Test
