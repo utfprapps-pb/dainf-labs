@@ -24,6 +24,10 @@ public class InventoryDiffService {
         this.inventoryService = inventoryService;
     }
 
+    public void validateChanges(List<? extends InventoryLineItem> oldItems, List<? extends InventoryLineItem> newItems) {
+        inventoryService.validateChanges(oldItems, newItems);
+    }
+
     public <I extends InventoryLineItem> void applyDiff(
             Long entityId,
             List<I> oldItems,

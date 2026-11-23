@@ -28,6 +28,7 @@ public class ItemDTO implements Identifiable<Long> {
 
     @Builder.Default
     private Set<GroupDTO> groups = new HashSet<>();
+    private boolean active;
 
     @NotBlank
     @NotNull

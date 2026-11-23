@@ -6,6 +6,7 @@ import br.edu.utfpr.dainf.model.Group;
 import br.edu.utfpr.dainf.model.Item;
 import br.edu.utfpr.dainf.model.User;
 import br.edu.utfpr.dainf.repository.ItemRepository;
+import br.edu.utfpr.dainf.search.SearchHandler;
 import br.edu.utfpr.dainf.search.request.SearchRequest;
 import br.edu.utfpr.dainf.search.request.filter.SearchFilter;
 import br.edu.utfpr.dainf.shared.CrudService;
@@ -18,10 +19,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Service;
+import jakarta.transaction.Transactional;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -30,12 +33,16 @@ import java.util.stream.Collectors;
 @Service
 public class ItemService extends CrudService<Long, Item, ItemRepository> {
 
+    private static final String STOCK_STATUS_FILTER = "stockStatus";
+
     private final StorageService storageService;
     private final UserService userService;
+    private final ItemLifecycleService lifecycle;
 
-    public ItemService(StorageService storageService, UserService userService) {
+    public ItemService(StorageService storageService, UserService userService, ItemLifecycleService lifecycle) {
         this.storageService = storageService;
         this.userService = userService;
+        this.lifecycle = lifecycle;
     }
 
     @Override
@@ -44,7 +51,9 @@ public class ItemService extends CrudService<Long, Item, ItemRepository> {
     }
 
     @Override
+    @Transactional
     public Item save(Item entity) {
+        entity.setActive(entity.getId() == null || lifecycle.lock(entity.getId()).isActive());
         Optional.ofNullable(entity.getAssets()).ifPresent(assets ->
                 assets.forEach(asset -> asset.setItem(entity))
         );
@@ -63,7 +72,26 @@ public class ItemService extends CrudService<Long, Item, ItemRepository> {
     }
 
     @Override
+    public void deleteById(Long id) {
+        lifecycle.delete(id);
+    }
+
+    public Item changeActive(Long id, boolean active) {
+        return lifecycle.changeActive(id, active);
+    }
+
+    /** Busca apenas itens ativos (catálogo, empréstimo, saída, entrada). */
+    @Override
     public Page<Item> search(SearchRequest request) {
+        return search(request, true);
+    }
+
+    /** Busca incluindo itens inativos (gestão de cadastro). */
+    public Page<Item> searchAll(SearchRequest request) {
+        return search(request, false);
+    }
+
+    private Page<Item> search(SearchRequest request, boolean activeOnly) {
         if (!userService.hasPrivilegedAcess()) {
             List<SearchFilter> filters = request.getFilters() == null
                     ? new ArrayList<>()
@@ -71,7 +99,16 @@ public class ItemService extends CrudService<Long, Item, ItemRepository> {
             filters.add(new SearchFilter("restricted", false, SearchFilter.Type.EQUALS));
             request.setFilters(filters);
         }
-        return super.search(request);
+
+        Specification<Item> specification = Specification.allOf(
+                activeOnly ? ItemSpecifications.active() : null,
+                extraSpecification()
+        );
+        return new SearchHandler<>(getSpecExecutor(), this::customSpecification).handle(
+                request,
+                specification,
+                Map.of(STOCK_STATUS_FILTER, ItemSpecifications::stockStatus)
+        );
     }
 
     @Override

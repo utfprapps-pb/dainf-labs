@@ -41,6 +41,8 @@ public class Item implements Identifiable<Long> {
             inverseJoinColumns = @JoinColumn(name = "access_group_id")
     )
     private Set<Group> groups = new HashSet<>();
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private boolean active = true;
 
     @NotBlank
     @NotNull
