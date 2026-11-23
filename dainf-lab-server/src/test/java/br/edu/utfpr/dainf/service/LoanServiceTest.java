@@ -64,6 +64,18 @@ class LoanServiceTest {
     }
 
     @Test
+    void save_newLoanForBorrowerWithOverdueLoan_isBlocked() {
+        Loan entity = loan(null, item(1L), new BigDecimal("1"));
+        entity.setBorrower(user);
+        doThrow(new br.edu.utfpr.dainf.exception.WarnException("Existem itens em atraso"))
+                .when(userService).validateNoOverdueLoans(user);
+
+        assertThrows(br.edu.utfpr.dainf.exception.WarnException.class, () -> loanService.save(entity));
+
+        verify(repository, never()).save(any());
+    }
+
+    @Test
     void save_updateLoan_callsApplyDiffWithEntityId() {
         Item item = item(1L);
         Loan existing = loan(1L, item, new BigDecimal("4"));

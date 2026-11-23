@@ -1,0 +1,57 @@
+<div class="card">
+  <h3 class="mt-0 mb-1">Meu perfil</h3>
+  <p class="text-muted-color mb-6">Atualize seus dados cadastrais e sua senha.</p>
+
+  <form [formGroup]="form" class="grid grid-cols-12 gap-4" (ngSubmit)="save()">
+    <app-input-container label="E-mail" class="col-span-12 md:col-span-6">
+      <input type="email" pInputText id="email" formControlName="email" fluid />
+    </app-input-container>
+
+    <app-input-container label="Nome" class="col-span-12 md:col-span-6">
+      <input type="text" pInputText id="nome" formControlName="nome" fluid />
+    </app-input-container>
+
+    <app-input-container label="RA/SIAPE" class="col-span-12 md:col-span-6">
+      <input type="text" pInputText id="documento" formControlName="documento" maxlength="16" fluid />
+    </app-input-container>
+
+    <app-input-container label="Telefone" class="col-span-12 md:col-span-6">
+      <p-inputmask
+        id="telefone"
+        formControlName="telefone"
+        mask="(99) 99999-9999"
+        [unmask]="true"
+        placeholder="(__) _____-____"
+        class="w-full"
+      ></p-inputmask>
+    </app-input-container>
+
+    <div class="col-span-12">
+      <h4 class="mt-4 mb-0">Alterar senha</h4>
+      <p class="text-muted-color text-sm mt-1">Preencha apenas se desejar trocar a senha.</p>
+    </div>
+
+    <app-input-container label="Senha atual" class="col-span-12 md:col-span-4">
+      <p-password id="currentPassword" formControlName="currentPassword" [feedback]="false" [toggleMask]="true" [fluid]="true" autocomplete="current-password"></p-password>
+    </app-input-container>
+
+    <app-input-container label="Nova senha" class="col-span-12 md:col-span-4">
+      <p-password id="newPassword" formControlName="newPassword" [feedback]="false" [toggleMask]="true" [fluid]="true" autocomplete="new-password"></p-password>
+    </app-input-container>
+
+    <app-input-container label="Confirmar nova senha" class="col-span-12 md:col-span-4">
+      <p-password id="confirmPassword" formControlName="confirmPassword" [feedback]="false" [toggleMask]="true" [fluid]="true" autocomplete="new-password"></p-password>
+    </app-input-container>
+
+    @if (form.touched && form.errors?.['passwordMismatch']) {
+      <small class="col-span-12 text-red-500">A confirmação não confere com a nova senha.</small>
+    }
+    @if (form.touched && form.errors?.['currentPasswordRequired']) {
+      <small class="col-span-12 text-red-500">Informe a senha atual para alterar a senha.</small>
+    }
+
+    <div class="col-span-12 flex justify-end pt-4">
+      <p-button label="Salvar" type="submit" icon="pi pi-check" severity="success" [loading]="saving" [disabled]="saving"></p-button>
+    </div>
+  </form>
+</div>

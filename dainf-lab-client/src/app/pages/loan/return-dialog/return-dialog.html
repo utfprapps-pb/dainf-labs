@@ -61,6 +61,7 @@
       <ng-template pTemplate="header">
         <tr>
           <th>Item</th>
+          <th>Localização</th>
           <th>Emprestado</th>
           <th>Pendente</th>
           <th>Devolvido</th>
@@ -71,6 +72,7 @@
       <ng-template pTemplate="body" let-item>
         <tr>
           <td>{{ item.item.name }}</td>
+          <td>{{ item.item.location || '-' }}</td>
           <td>{{ item.quantity }}</td>
           <td>
             {{ item.quantity - (item.quantityReturned || 0) - (item.quantityIssued || 0) }}

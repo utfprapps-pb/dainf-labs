@@ -32,6 +32,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { Select } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
+import { TextareaModule } from 'primeng/textarea';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { MenuModule } from 'primeng/menu';
 import { TooltipModule } from 'primeng/tooltip';
@@ -53,6 +54,7 @@ import { AllItemsService } from './item.service';
     FormsModule,
     ReactiveFormsModule,
     InputTextModule,
+    TextareaModule,
     MultiSelectModule,
     Select,
     InputContainerComponent,
@@ -135,7 +137,7 @@ export class ItemComponent implements AfterViewInit {
       null,
       Validators.compose([Validators.required, Validators.maxLength(100)]),
     ],
-    description: [null],
+    description: [null, Validators.maxLength(5000)],
     price: [null, Validators.min(0)],
     category: [null, Validators.required],
     assets: [null],
