@@ -19,9 +19,11 @@ import java.util.Objects;
 @Service
 public class SolicitationService extends CrudService<Long, Solicitation, SolicitationRepository> {
     private final UserService userService;
+    private final ItemLifecycleService lifecycle;
 
-    public SolicitationService(UserService userService) {
+    public SolicitationService(UserService userService, ItemLifecycleService lifecycle) {
         this.userService = userService;
+        this.lifecycle = lifecycle;
     }
 
     @Override
@@ -48,8 +50,11 @@ public class SolicitationService extends CrudService<Long, Solicitation, Solicit
     }
 
     @Override
+    @jakarta.transaction.Transactional
     public Solicitation save(Solicitation entity) {
         validateAccess(entity);
+        if (entity.getItems() != null) entity.getItems().stream().map(line -> line.getItem().getId())
+                .distinct().sorted().forEach(lifecycle::requireActive);
         if (entity.getId() == null) {
             entity.setUser(userService.getCurrentUser());
         }

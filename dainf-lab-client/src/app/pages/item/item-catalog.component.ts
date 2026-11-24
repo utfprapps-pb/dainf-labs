@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, computed, inject, model, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { PaginatorModule } from 'primeng/paginator';
 import { SelectButtonModule } from 'primeng/selectbutton';
@@ -28,6 +29,7 @@ import { ItemService } from './item.service';
     SelectButtonModule,
     PaginatorModule,
     SkeletonModule,
+    DialogModule,
   ],
   providers: [ItemService],
   templateUrl: './item-catalog.component.html',
@@ -81,6 +83,8 @@ export class ItemCatalogComponent implements OnInit, OnDestroy {
   items = signal<Item[]>([]);
   totalRecords = signal(0);
   loading = signal(true);
+  selectedItem = signal<Item | null>(null);
+  detailsVisible = signal(false);
   imageUrls = signal<Record<string, string>>({});
   private imagePathsByItem: Record<string, string[]> = {};
   private imagePathIndexesByItem: Record<string, number> = {};
@@ -159,6 +163,26 @@ export class ItemCatalogComponent implements OnInit, OnDestroy {
 
   addToCart(item: Item) {
     this.cartService.addItem(item);
+  }
+
+  openDetails(item: Item) {
+    this.selectedItem.set(item);
+    this.detailsVisible.set(true);
+  }
+
+  closeDetails() {
+    this.detailsVisible.set(false);
+  }
+
+  onDetailsVisibleChange(visible: boolean) {
+    this.detailsVisible.set(visible);
+  }
+
+  addSelectedToCart() {
+    const item = this.selectedItem();
+    if (!item) return;
+    this.addToCart(item);
+    this.closeDetails();
   }
 
   getSeverity(item: Item) {

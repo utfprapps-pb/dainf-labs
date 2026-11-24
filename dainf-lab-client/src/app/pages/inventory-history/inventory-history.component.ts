@@ -22,7 +22,7 @@ import { Router } from '@angular/router';
 import { DatePickerModule } from 'primeng/datepicker';
 import { TagModule } from 'primeng/tag';
 import { Item } from '../item/item';
-import { ItemService } from '../item/item.service';
+import { AllItemsService } from '../item/item.service';
 import { InventoryTransaction, InventoryTransactionType } from './inventory-history';
 import { InventoryHistoryService } from './inventory-history.service';
 
@@ -40,7 +40,7 @@ const ADDITION_TYPES: InventoryTransactionType[] = ['PURCHASE', 'RETURN'];
     TagModule,
     CrudComponent,
   ],
-  providers: [InventoryHistoryService, ItemService, LabelValuePipe, DatePipe],
+  providers: [InventoryHistoryService, AllItemsService, LabelValuePipe, DatePipe],
   selector: 'app-inventory-history',
   templateUrl: 'inventory-history.component.html',
 })
@@ -50,7 +50,7 @@ export class InventoryHistoryComponent implements AfterViewInit {
 
   private router = inject(Router);
   inventoryHistoryService = inject(InventoryHistoryService);
-  itemService = inject(ItemService);
+  itemService = inject(AllItemsService);
   labelValue = inject(LabelValuePipe);
   datePipe = inject(DatePipe);
 

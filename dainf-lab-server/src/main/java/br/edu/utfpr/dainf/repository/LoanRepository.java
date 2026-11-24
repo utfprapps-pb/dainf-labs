@@ -20,6 +20,8 @@ import java.util.List;
 public interface LoanRepository extends CrudRepository<Long, Loan>, LoanSpecExecutor {
     List<Loan> findByBorrowerAndStatusIn(User borrower, List<LoanStatus> statuses);
 
+    boolean existsByBorrowerIdAndStatus(Long borrowerId, LoanStatus status);
+
     @Query("SELECT li FROM LoanItem li " +
             "JOIN FETCH li.loan l " +
             "JOIN FETCH l.borrower " +

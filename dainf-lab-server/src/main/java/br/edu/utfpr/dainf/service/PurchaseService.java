@@ -41,6 +41,7 @@ public class PurchaseService extends CrudService<Long, Purchase, PurchaseReposit
 
         Purchase existing = entity.getId() != null ? repository.findById(entity.getId()).orElse(null) : null;
         List<PurchaseItem> oldItems = existing != null ? new ArrayList<>(existing.getItems()) : List.of();
+        inventoryDiffService.validateChanges(oldItems, entity.getItems());
 
         if (existing != null) {
             entity.setUser(existing.getUser());

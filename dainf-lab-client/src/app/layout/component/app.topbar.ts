@@ -123,6 +123,11 @@ import { UserDropdownComponent } from './user-dropdown.component';
 export class AppTopbar implements OnInit {
   userMenuItems: MenuItem[] = [
     {
+      label: 'Meu perfil',
+      icon: 'pi pi-user-edit',
+      command: () => this.router.navigate(['/profile']),
+    },
+    {
       label: 'Logout',
       icon: 'pi pi-sign-out',
       command: () => this.logout(),

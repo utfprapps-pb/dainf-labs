@@ -1,6 +1,7 @@
 package br.edu.utfpr.dainf.controller;
 
 import br.edu.utfpr.dainf.dto.UserDTO;
+import br.edu.utfpr.dainf.dto.UserProfileDTO;
 import br.edu.utfpr.dainf.enums.UserRole;
 import br.edu.utfpr.dainf.model.User;
 import br.edu.utfpr.dainf.repository.UserRepository;
@@ -58,6 +59,12 @@ public class UserController extends CrudController<Long, User, UserDTO, UserRepo
     public UserDTO getCurrentUser() {
         User currentUser = service.getCurrentUser();
         return toDto(currentUser);
+    }
+
+    @PutMapping("/me")
+    @RolesAllowed({UserRole.ADMIN, UserRole.LAB_TECHNICIAN, UserRole.PROFESSOR, UserRole.STUDENT})
+    public UserDTO updateCurrentUser(@RequestBody @Valid UserProfileDTO profile) {
+        return toDto(service.updateProfile(profile));
     }
 
     @PostMapping(value = "clearance")

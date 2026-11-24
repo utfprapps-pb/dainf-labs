@@ -33,6 +33,7 @@ class ReservationServiceTest {
     @Mock ReservationRepository repository;
     @Mock UserService userService;
     @Mock ItemService itemService;
+    @Mock ItemLifecycleService lifecycle;
     @InjectMocks ReservationService reservationService;
 
     @BeforeEach
@@ -108,6 +109,20 @@ class ReservationServiceTest {
 
         verify(itemService, never()).validateVisible(any());
         verify(repository).save(reservation);
+    }
+
+    @Test
+    void save_newReservationFromUserWithOverdueLoan_isBlocked() {
+        Reservation reservation = validReservation();
+        br.edu.utfpr.dainf.model.User current = new br.edu.utfpr.dainf.model.User();
+        current.setId(7L);
+        when(userService.getCurrentUser()).thenReturn(current);
+        doThrow(new WarnException("Existem itens em atraso"))
+                .when(userService).validateNoOverdueLoans(current);
+
+        assertThrows(WarnException.class, () -> reservationService.save(reservation));
+
+        verify(repository, never()).save(any());
     }
 
     private Reservation validReservation() {

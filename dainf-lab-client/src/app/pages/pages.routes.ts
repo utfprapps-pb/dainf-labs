@@ -17,6 +17,7 @@ import { FornecedorComponent } from './supplier/fornecedor.component';
 import { UserComponent } from './user/user.component';
 import { ItemWrapperComponent } from './item/item-wrapper.component';
 import { GroupComponent } from './group/group.component';
+import { ProfileComponent } from './profile/profile.component';
 
 export default [
   {
@@ -37,6 +38,7 @@ export default [
       { path: 'configuration', component: ConfigurationComponent, canActivate: [RoleGuard] },
       { path: 'audit', component: AuditComponent, canActivate: [RoleGuard] },
       { path: 'about', component: AboutComponent, canActivate: [RoleGuard] },
+      { path: 'profile', component: ProfileComponent },
     ]
   },
 ] as Routes;

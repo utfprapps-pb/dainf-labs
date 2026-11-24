@@ -1,5 +1,6 @@
 package br.edu.utfpr.dainf.service;
 
+import br.edu.utfpr.dainf.dto.UserProfileDTO;
 import br.edu.utfpr.dainf.enums.LoanStatus;
 import br.edu.utfpr.dainf.enums.UserRole;
 import br.edu.utfpr.dainf.exception.WarnException;
@@ -68,6 +69,38 @@ public class UserService extends CrudService<Long, User, UserRepository> impleme
         } else {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
         }
+        return repository.save(user);
+    }
+
+    /**
+     * Permite que o usuário autenticado altere apenas seus próprios dados cadastrais
+     * (nome, telefone, RA/Siape e senha). E-mail, perfil e status permanecem inalterados.
+     */
+    @Transactional
+    public User updateProfile(UserProfileDTO profile) {
+        User current = getCurrentUser();
+        if (current == null || current.getId() == null) {
+            throw new WarnException("Usuário não autenticado.");
+        }
+        User user = repository.findById(current.getId())
+                .orElseThrow(() -> new WarnException("Usuário não encontrado."));
+
+        String documento = User.normalizeDocumento(profile.getDocumento());
+        if (documento != null && repository.existsByDocumentoNormalizedAndIdNot(documento, user.getId())) {
+            throw new WarnException("O RA/SIAPE informado já está cadastrado");
+        }
+
+        if (profile.getNewPassword() != null && !profile.getNewPassword().isBlank()) {
+            if (profile.getCurrentPassword() == null
+                    || !passwordEncoder.matches(profile.getCurrentPassword(), user.getPassword())) {
+                throw new WarnException("A senha atual informada está incorreta.");
+            }
+            user.setPassword(passwordEncoder.encode(profile.getNewPassword()));
+        }
+
+        user.setNome(profile.getNome());
+        user.setTelefone(profile.getTelefone());
+        user.setDocumento(documento);
         return repository.save(user);
     }
 
@@ -263,6 +296,17 @@ public class UserService extends CrudService<Long, User, UserRepository> impleme
                 throw new WarnException("O usuário ainda não realizou a confirmação do cadastro via e-mail.");
             }
             throw new WarnException("Não é possível realizar operações para um usuário inativo.");
+        }
+    }
+
+    /**
+     * Impede novas solicitações (reservas/empréstimos) de quem possui empréstimo em atraso,
+     * até que as pendências sejam regularizadas.
+     */
+    public void validateNoOverdueLoans(User user) {
+        if (user == null || user.getId() == null) return;
+        if (loanRepository.existsByBorrowerIdAndStatus(user.getId(), LoanStatus.OVERDUE)) {
+            throw new WarnException("Existem itens em atraso para este usuário. Regularize as pendências (devolução) antes de solicitar novos itens.");
         }
     }
 

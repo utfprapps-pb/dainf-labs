@@ -49,6 +49,8 @@ public class IssueService extends CrudService<Long, Issue, IssueRepository> {
                 : null;
         List<IssueItem> oldItems = existing != null ? new ArrayList<>(existing.getItems()) : List.of();
 
+        if (handleTransaction) inventoryDiffService.validateChanges(oldItems, entity.getItems());
+
         for (IssueItem item : entity.getItems()) {
             item.setIssue(entity);
         }
