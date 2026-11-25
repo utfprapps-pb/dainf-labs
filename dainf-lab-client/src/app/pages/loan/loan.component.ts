@@ -288,6 +288,8 @@ export class LoanComponent implements OnInit, AfterViewInit {
       header: `Devolução de empréstimo`,
       width: '60%',
       modal: true,
+      // sem isso o foco automático cai no 1º datepicker e abre o calendário por cima da tabela
+      focusOnShow: false,
       data: { loan },
     });
 
